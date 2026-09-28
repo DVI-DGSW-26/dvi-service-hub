@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { services, type AuthMode, type Category, type Service } from './services'
 
 const CATEGORIES: ('전체' | Category)[] = ['전체', '회사', '업무','인사', '정보', '사내문화']
@@ -9,6 +9,28 @@ const AUTH_LABEL: Record<AuthMode, string> = {
   none: '로그인 없음',
 }
 
+/** /api/auth/me 응답. 미들웨어가 로그인 안 된 접근을 이미 막지만,
+ *  화면이 열린 채 세션이 만료될 수 있어 401 이면 다시 로그인으로 보낸다. */
+interface Me {
+  signedIn: boolean
+  name: string
+  email: string
+  realm: string[]
+  svc: Record<string, string[]>
+}
+
+function canSee(s: Service, me: Me): boolean {
+  switch (s.access.type) {
+    case 'public':
+    case 'any':
+      return true
+    case 'employee':
+      return me.realm.includes('employee')
+    case 'client':
+      return (me.svc[s.access.client] ?? []).includes(s.access.role)
+  }
+}
+
 function matches(s: Service, q: string) {
   const text = `${s.name} ${s.description} ${s.category}`.toLowerCase()
   return text.includes(q.trim().toLowerCase())
@@ -17,21 +39,49 @@ function matches(s: Service, q: string) {
 export default function App() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<(typeof CATEGORIES)[number]>('전체')
+  const [me, setMe] = useState<Me | null>(null)
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((r) => {
+        if (r.status === 401) {
+          window.location.href = '/api/auth/login?next=' + encodeURIComponent(location.pathname)
+          return null
+        }
+        return r.json()
+      })
+      .then((data) => data && setMe(data))
+      .catch(() => setMe(null))
+  }, [])
+
+  const noDept = me !== null && !me.realm.includes('employee')
 
   const visible = useMemo(
     () =>
       services.filter(
-        (s) => (category === '전체' || s.category === category) && matches(s, query),
+        (s) =>
+          (me === null || canSee(s, me)) &&
+          (category === '전체' || s.category === category) &&
+          matches(s, query),
       ),
-    [query, category],
+    [query, category, me],
   )
 
   return (
     <div className="page">
       <header className="header">
-        <div className="brand">
-          <img src="/favicon.svg" alt="" width={28} height={28} />
-          <span>DVI 서비스 허브</span>
+        <div className="header-inner">
+          <div className="brand">
+            <img src="/favicon.svg" alt="" width={28} height={28} />
+            <span>DVI 서비스 허브</span>
+          </div>
+          {me && (
+            <div className="account">
+              <span className="account-name">{me.name}</span>
+              {/* SSO 세션까지 끊는다. 다른 사내 서비스도 함께 로그아웃된다. */}
+              <a className="logout" href="/api/auth/logout">전체 로그아웃</a>
+            </div>
+          )}
         </div>
       </header>
 
@@ -48,6 +98,12 @@ export default function App() {
             autoFocus
           />
         </section>
+
+        {noDept && (
+          <p className="notice">
+            아직 부서가 지정되지 않아 일부 서비스가 보이지 않습니다. 관리팀에 문의해주세요.
+          </p>
+        )}
 
         <nav className="chips" aria-label="카테고리">
           {CATEGORIES.map((c) => (
