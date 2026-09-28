@@ -72,8 +72,7 @@ export default function App() {
       <header className="header">
         <div className="header-inner">
           <div className="brand">
-            <img src="/favicon.svg" alt="" width={28} height={28} />
-            <span>DVI 서비스 허브</span>
+            <img className="brand-logo" src="/logo-portal.svg" alt="DVI Portal" width={121} height={40} />
           </div>
           {me && (
             <div className="account">
