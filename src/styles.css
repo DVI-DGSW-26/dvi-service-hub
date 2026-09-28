@@ -45,18 +45,6 @@ a { color: inherit; text-decoration: none; }
   display: flex; align-items: center; gap: 10px; font-weight: 700;
 }
 
-.account { margin-left: auto; display: flex; gap: 12px; font-size: 14px; font-weight: 500; }
-.account a { color: var(--muted); }
-.account a:hover { color: var(--accent); }
-
-.gate { text-align: center; padding-top: 96px; }
-.gate h1 { font-size: clamp(24px, 4vw, 32px); margin: 0 0 8px; }
-.gate p { color: var(--muted); margin: 0 0 28px; }
-.login-btn {
-  display: inline-block; padding: 14px 28px; border-radius: 12px;
-  background: var(--accent); color: #fff; font-weight: 700;
-}
-
 .main { max-width: 1080px; margin: 0 auto; padding: 32px 16px 64px; }
 
 .hero h1 { font-size: clamp(24px, 4vw, 32px); margin: 0 0 6px; }
