@@ -5,6 +5,24 @@ export type Category = '회사' | '업무' | '인사' | '정보' | '사내문화
 /** 로그인 방식. SSO 전환이 끝난 서비스는 'sso'로 바꾼다. */
 export type AuthMode = 'sso' | 'separate' | 'none'
 
+/**
+ * 이 링크를 누구에게 보여줄 것인가.
+ * 부서 이름으로 판단하지 않는다 — 부서가 늘 때마다 허브를 고치게 된다.
+ * 토큰에 실려온 역할로만 판단한다 (docs/service-hub.md §2).
+ *
+ *   public    로그인과 무관하게 항상 (회사 홈페이지)
+ *   any       항상 표시 — 개별 로그인이라 접근 판단을 그쪽이 한다
+ *   employee  realm 역할 employee — 부서가 배정된 재직자 전부
+ *   client    해당 서비스의 client 역할이 있어야 보인다
+ *
+ * 링크를 숨기는 것은 안내이고 차단이 아니다. 실제 차단은 각 서비스가 한다.
+ */
+export type Access =
+  | { type: 'public' }
+  | { type: 'any' }
+  | { type: 'employee' }
+  | { type: 'client'; client: string; role: string }
+
 export interface ServiceLink {
   label: string
   url: string
@@ -18,6 +36,7 @@ export interface Service {
   /** 첫 번째 링크가 카드의 기본 이동 대상 */
   links: ServiceLink[]
   auth: AuthMode
+  access: Access
   /** public/logos 아래 파일 경로. 없으면 emoji를 표시 */
   logo?: string
   emoji: string
@@ -31,6 +50,7 @@ export const services: Service[] = [
     category: '회사',
     links: [{ label: '열기', url: 'https://homepage-nine-omega-84.vercel.app/' }],
     auth: 'none',
+    access: { type: 'public' },
     logo: '/logos/homepage.png',
     emoji: '🏢',
   },
@@ -40,7 +60,8 @@ export const services: Service[] = [
     description: 'TODO: 서비스 설명을 입력하세요.',
     category: '업무',
     links: [{ label: '열기', url: 'https://dvi-frontend-nine.vercel.app/' }],
-    auth: 'separate',
+    auth: 'separate', // SSO 전환 예정 — client(quality)는 등록돼 있다
+    access: { type: 'any' },
     logo: '/logos/kwak-flow.png',
     emoji: '🌊',
   },
@@ -50,7 +71,8 @@ export const services: Service[] = [
     description: '사내 디지털 명함 · 이메일 서명 서비스',
     category: '업무',
     links: [{ label: '열기', url: 'https://ddingdong.dvi-ind.com/' }],
-    auth: 'separate',
+    auth: 'sso',
+    access: { type: 'employee' },
     logo: '/logos/dding-dong.png',
     emoji: '🔔',
   },
@@ -60,7 +82,8 @@ export const services: Service[] = [
     description: '정부·지자체 지원사업 공고를 지역·카테고리·신청기간으로 검색',
     category: '정보',
     links: [{ label: '열기', url: 'https://dvi-taltal.vercel.app/' }],
-    auth: 'separate',
+    auth: 'sso',
+    access: { type: 'employee' },
     logo: '/logos/taltal.svg',
     emoji: '🔎',
   },
@@ -70,7 +93,8 @@ export const services: Service[] = [
     description: '자산·기자재 관리',
     category: '업무',
     links: [{ label: '열기', url: 'https://honey-go.vercel.app/' }],
-    auth: 'separate',
+    auth: 'sso',
+    access: { type: 'client', client: 'jagigo', role: 'user' },
     logo: '/logos/honey-go.svg',
     emoji: '📦',
   },
@@ -83,7 +107,8 @@ export const services: Service[] = [
       { label: '구성원', url: 'https://hr.dvi-ind.com/' },
       { label: '관리자', url: 'https://hr-admin.dvi-ind.com/' },
     ],
-    auth: 'separate',
+    auth: 'sso',
+    access: { type: 'client', client: 'hi-yo', role: 'user' },
     logo: '/logos/haiyo.png',
     emoji: '👋',
   },
@@ -93,7 +118,8 @@ export const services: Service[] = [
     description: '사내 행사 기록 보관소',
     category: '사내문화',
     links: [{ label: '열기', url: 'https://company-events-theta.vercel.app/' }],
-    auth: 'separate',
+    auth: 'sso',
+    access: { type: 'employee' },
     emoji: '🎉',
   },
 ]
