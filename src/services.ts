@@ -1,6 +1,6 @@
 // 서비스 목록. 새 서비스는 이 배열에 항목을 추가하면 된다.
 
-export type Category = '회사' | '업무' | '인사' | '정보' | '사내문화'
+export type Category = '업무' | '인사' | '정보' | '사내문화'
 
 /** 로그인 방식. SSO 전환이 끝난 서비스는 'sso'로 바꾼다. */
 export type AuthMode = 'sso' | 'separate' | 'none'
@@ -43,17 +43,8 @@ export interface Service {
 }
 
 export const services: Service[] = [
-  {
-    id: 'homepage',
-    name: '회사 홈페이지',
-    description: '디비전(DVISION) 공식 홈페이지',
-    category: '회사',
-    links: [{ label: '열기', url: 'https://homepage-nine-omega-84.vercel.app/' }],
-    auth: 'none',
-    access: { type: 'public' },
-    logo: '/logos/homepage.png',
-    emoji: '🏢',
-  },
+  // 회사 홈페이지는 목록에 두지 않는다 — 대외 공개 사이트라 로그인이 필요한
+  // 사내 서비스 허브의 대상이 아니다 (2026-09-28 결정).
   {
     id: 'kwak-flow',
     name: '콱플로우',
