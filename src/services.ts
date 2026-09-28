@@ -18,6 +18,8 @@ export interface Service {
   /** 첫 번째 링크가 카드의 기본 이동 대상 */
   links: ServiceLink[]
   auth: AuthMode
+  /** public/logos 아래 파일 경로. 없으면 emoji를 표시 */
+  logo?: string
   emoji: string
 }
 
@@ -29,6 +31,7 @@ export const services: Service[] = [
     category: '업무',
     links: [{ label: '열기', url: 'https://dvi-frontend-nine.vercel.app/' }],
     auth: 'separate',
+    logo: '/logos/kwak-flow.png',
     emoji: '🌊',
   },
   {
@@ -38,6 +41,7 @@ export const services: Service[] = [
     category: '업무',
     links: [{ label: '열기', url: 'https://dding-dong.vercel.app/' }],
     auth: 'separate',
+    logo: '/logos/dding-dong.png',
     emoji: '🔔',
   },
   {
@@ -47,6 +51,7 @@ export const services: Service[] = [
     category: '정보',
     links: [{ label: '열기', url: 'https://dvi-taltal.vercel.app/' }],
     auth: 'separate',
+    logo: '/logos/taltal.svg',
     emoji: '🔎',
   },
   {
@@ -56,6 +61,7 @@ export const services: Service[] = [
     category: '업무',
     links: [{ label: '열기', url: 'https://honey-go.vercel.app/' }],
     auth: 'separate',
+    logo: '/logos/honey-go.svg',
     emoji: '📦',
   },
   {
@@ -68,6 +74,7 @@ export const services: Service[] = [
       { label: '관리자', url: 'https://hr-admin.dvi-ind.com/' },
     ],
     auth: 'separate',
+    logo: '/logos/haiyo.png',
     emoji: '👋',
   },
   {

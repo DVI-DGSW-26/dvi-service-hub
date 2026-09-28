@@ -80,9 +80,13 @@ function ServiceCard({ service: s }: { service: Service }) {
   return (
     <li className="card">
       <a className="card-main" href={primary.url} target="_blank" rel="noreferrer">
-        <span className="emoji" aria-hidden>
-          {s.emoji}
-        </span>
+        {s.logo ? (
+          <img className="logo" src={s.logo} alt="" width={44} height={44} />
+        ) : (
+          <span className="emoji" aria-hidden>
+            {s.emoji}
+          </span>
+        )}
         <div>
           <div className="card-title">
             <h2>{s.name}</h2>
