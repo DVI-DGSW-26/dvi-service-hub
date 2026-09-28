@@ -10,6 +10,28 @@ npm run dev     # http://localhost:5173
 npm run build   # dist/ 생성
 ```
 
+로그인까지 포함해 로컬에서 돌리려면 `/api` 함수가 필요하므로 Vercel CLI를 쓴다.
+
+```bash
+cp .env.example .env.local   # 값 채우기
+npx vercel dev               # http://localhost:3000 (로그인 서비스에 등록된 개발용 콜백 주소)
+```
+
+## 로그인
+
+디비전 로그인 서비스(OAuth 2.0 / OIDC)로 로그인한다. `api/auth/*`가 서버 측에서 처리하고,
+세션은 서명된 httpOnly 쿠키(`hub_session`, 8시간)에 보관한다.
+
+| 경로 | 역할 |
+|---|---|
+| `/api/auth/login` | 로그인 서비스로 이동 (state + PKCE) |
+| `/api/auth/callback` | 코드 → 토큰 교환, 세션 쿠키 발급 |
+| `/api/auth/me` | 현재 사용자 (`401`이면 비로그인) |
+| `/api/auth/logout` | 세션 삭제 후 로그인 서비스 로그아웃 |
+
+필요한 환경변수는 `.env.example` 참고. Vercel에는 같은 이름으로 Project → Settings → Environment Variables에 넣는다.
+`AUTH_CLIENT_SECRET`, `SESSION_SECRET`은 절대 커밋하지 않는다.
+
 ## 서비스 추가·수정
 
 `src/services.ts`의 `services` 배열만 고치면 된다.
