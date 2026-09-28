@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { services, type AuthMode, type Category, type Service } from './services'
 
-const CATEGORIES: ('전체' | Category)[] = ['전체', '업무', '인사', '정보', '사내문화']
+const CATEGORIES: ('전체' | Category)[] = ['전체', '회사', '업무','인사', '정보', '사내문화']
 
 const AUTH_LABEL: Record<AuthMode, string> = {
   sso: '회사 계정',
