@@ -49,7 +49,7 @@ export const services: Service[] = [
     name: '띵동',
     description: '사내 디지털 명함 · 이메일 서명 서비스',
     category: '업무',
-    links: [{ label: '열기', url: 'https://dding-dong.vercel.app/' }],
+    links: [{ label: '열기', url: 'https://ddingdong.dvi-ind.com/' }],
     auth: 'separate',
     logo: '/logos/dding-dong.png',
     emoji: '🔔',
