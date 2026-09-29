@@ -89,9 +89,31 @@ export default function App() {
           {me && (
             <div className="account">
               <span className="account-name">{me.name}</span>
-              {/* 허브를 열어둔 채 계정을 만지도록 새 탭으로 연다. */}
-              <a className="account-link" href={ACCOUNT_URL} target="_blank" rel="noreferrer">
-                계정 설정
+              {/* 허브를 열어둔 채 계정을 만지도록 새 탭으로 연다.
+                  글자 대신 톱니 아이콘 — 이름 옆이라 뜻이 통하고, 글자를
+                  못 보는 환경을 위해 aria-label 과 title 을 남긴다. */}
+              <a
+                className="account-link"
+                href={ACCOUNT_URL}
+                target="_blank"
+                rel="noreferrer"
+                title="계정 설정"
+                aria-label="계정 설정"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
               </a>
               {/* SSO 세션까지 끊는다. 다른 사내 서비스도 함께 로그아웃된다. */}
               <a className="logout" href="/api/auth/logout">전체 로그아웃</a>

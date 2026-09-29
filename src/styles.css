@@ -113,8 +113,12 @@ a { color: inherit; text-decoration: none; }
 .header-inner .brand { max-width: none; margin: 0; padding: 14px 0; }
 .account { display: flex; align-items: center; gap: 12px; font-size: 14px; }
 .account-name { color: var(--muted); }
-.account-link { color: var(--muted); text-decoration: none; white-space: nowrap; }
-.account-link:hover { text-decoration: underline; color: var(--text); }
+.account-link {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 8px;
+  color: var(--muted);
+}
+.account-link:hover { color: var(--accent); background: var(--accent-soft); }
 .logout { color: var(--accent); text-decoration: none; font-weight: 600; white-space: nowrap; }
 .logout:hover { text-decoration: underline; }
 
