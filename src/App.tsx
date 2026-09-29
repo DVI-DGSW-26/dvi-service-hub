@@ -11,8 +11,12 @@ const AUTH_LABEL: Record<AuthMode, string> = {
 
 /** 비밀번호·OTP·패스키(지문) 관리 화면. 주소를 외우게 하지 않고 여기서 닿게
  *  한다 — 직원에게 알려주는 주소는 허브 하나라는 원칙(employee-rollout.md).
- *  로그인 도메인과 같아서 SSO 쿠키로 다시 로그인 없이 열린다. */
-const ACCOUNT_URL = 'https://api.dvi-ind.com/dauth/realms/dvi/account/'
+ *  로그인 도메인과 같아서 SSO 쿠키로 다시 로그인 없이 열린다.
+ *
+ *  루트(/account/)가 아니라 로그인 수단 화면으로 바로 보낸다. 계정 콘솔이
+ *  이 화면 하나로 줄어 있어(DVI-auth 테마 content.json) 루트는 비어 있다. */
+const ACCOUNT_URL =
+  'https://api.dvi-ind.com/dauth/realms/dvi/account/account-security/signing-in'
 
 /** /api/auth/me 응답. 미들웨어가 로그인 안 된 접근을 이미 막지만,
  *  화면이 열린 채 세션이 만료될 수 있어 401 이면 다시 로그인으로 보낸다. */
