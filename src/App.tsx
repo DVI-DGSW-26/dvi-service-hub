@@ -115,8 +115,9 @@ export default function App() {
                   <circle cx="12" cy="12" r="3" />
                 </svg>
               </a>
-              {/* SSO 세션까지 끊는다. 다른 사내 서비스도 함께 로그아웃된다. */}
-              <a className="logout" href="/api/auth/logout">전체 로그아웃</a>
+              {/* SSO 세션까지 끊는다 — 다른 사내 서비스도 함께 로그아웃된다.
+                  표기는 짧게 "로그아웃" (2026-09-29). */}
+              <a className="logout" href="/api/auth/logout">로그아웃</a>
             </div>
           )}
         </div>
