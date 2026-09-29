@@ -89,14 +89,13 @@ export default function App() {
           {me && (
             <div className="account">
               <span className="account-name">{me.name}</span>
-              {/* 허브를 열어둔 채 계정을 만지도록 새 탭으로 연다.
+              {/* 같은 탭에서 열어 뒤로 가기로 허브에 돌아오게 한다.
+                  새 탭이면 돌아갈 기록이 없어 뒤로 가기가 막힌다.
                   글자 대신 톱니 아이콘 — 이름 옆이라 뜻이 통하고, 글자를
                   못 보는 환경을 위해 aria-label 과 title 을 남긴다. */}
               <a
                 className="account-link"
                 href={ACCOUNT_URL}
-                target="_blank"
-                rel="noreferrer"
                 title="계정 설정"
                 aria-label="계정 설정"
               >
