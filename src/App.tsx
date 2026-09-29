@@ -9,6 +9,11 @@ const AUTH_LABEL: Record<AuthMode, string> = {
   none: '로그인 없음',
 }
 
+/** 비밀번호·OTP·패스키(지문) 관리 화면. 주소를 외우게 하지 않고 여기서 닿게
+ *  한다 — 직원에게 알려주는 주소는 허브 하나라는 원칙(employee-rollout.md).
+ *  로그인 도메인과 같아서 SSO 쿠키로 다시 로그인 없이 열린다. */
+const ACCOUNT_URL = 'https://api.dvi-ind.com/dauth/realms/dvi/account/'
+
 /** /api/auth/me 응답. 미들웨어가 로그인 안 된 접근을 이미 막지만,
  *  화면이 열린 채 세션이 만료될 수 있어 401 이면 다시 로그인으로 보낸다. */
 interface Me {
@@ -80,6 +85,10 @@ export default function App() {
           {me && (
             <div className="account">
               <span className="account-name">{me.name}</span>
+              {/* 허브를 열어둔 채 계정을 만지도록 새 탭으로 연다. */}
+              <a className="account-link" href={ACCOUNT_URL} target="_blank" rel="noreferrer">
+                계정 설정
+              </a>
               {/* SSO 세션까지 끊는다. 다른 사내 서비스도 함께 로그아웃된다. */}
               <a className="logout" href="/api/auth/logout">전체 로그아웃</a>
             </div>
