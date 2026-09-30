@@ -14,9 +14,14 @@ const AUTH_LABEL: Record<AuthMode, string> = {
  *  로그인 도메인과 같아서 SSO 쿠키로 다시 로그인 없이 열린다.
  *
  *  루트(/account/)가 아니라 로그인 수단 화면으로 바로 보낸다. 계정 콘솔이
- *  이 화면 하나로 줄어 있어(DVI-auth 테마 content.json) 루트는 비어 있다. */
+ *  이 화면 하나로 줄어 있어(DVI-auth 테마 content.json) 루트는 비어 있다.
+ *
+ *  referrer 파라미터는 콘솔 상단에 "돌아가기" 링크를 만든다(Keycloak 내장).
+ *  referrer_uri 는 service-hub client 의 redirect 목록으로 검증된다. */
 const ACCOUNT_URL =
-  'https://api.dvi-ind.com/dauth/realms/dvi/account/account-security/signing-in'
+  'https://api.dvi-ind.com/dauth/realms/dvi/account/account-security/signing-in' +
+  '?referrer=service-hub&referrer_uri=' +
+  encodeURIComponent('https://dvi-service-hub.vercel.app/')
 
 /** /api/auth/me 응답. 미들웨어가 로그인 안 된 접근을 이미 막지만,
  *  화면이 열린 채 세션이 만료될 수 있어 401 이면 다시 로그인으로 보낸다. */
@@ -89,8 +94,8 @@ export default function App() {
           {me && (
             <div className="account">
               <span className="account-name">{me.name}</span>
-              {/* 같은 탭에서 열어 뒤로 가기로 허브에 돌아오게 한다.
-                  새 탭이면 돌아갈 기록이 없어 뒤로 가기가 막힌다.
+              {/* 같은 탭에서 열어 뒤로 가기로 허브에 돌아오게 하고,
+                  referrer 파라미터로 콘솔 안에도 돌아가기 링크를 만든다.
                   글자 대신 톱니 아이콘 — 이름 옆이라 뜻이 통하고, 글자를
                   못 보는 환경을 위해 aria-label 과 title 을 남긴다. */}
               <a
