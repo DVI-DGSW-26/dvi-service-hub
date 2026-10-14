@@ -195,7 +195,11 @@ function ServiceCard({ service: s }: { service: Service }) {
         </div>
       </a>
       <div className="card-foot">
-        <span className={`auth auth-${s.auth}`}>{AUTH_LABEL[s.auth]}</span>
+        {s.inDevelopment ? (
+          <span className="auth auth-dev">개발 중</span>
+        ) : (
+          <span className={`auth auth-${s.auth}`}>{AUTH_LABEL[s.auth]}</span>
+        )}
         {s.links.length > 1 && (
           <div className="links">
             {s.links.map((l) => (

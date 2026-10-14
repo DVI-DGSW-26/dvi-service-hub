@@ -40,6 +40,8 @@ export interface Service {
   /** public/logos 아래 파일 경로. 없으면 emoji를 표시 */
   logo?: string
   emoji: string
+  /** 아직 개발 중인 서비스. 카드에 로그인 방식 대신 '개발 중'을 표시한다 */
+  inDevelopment?: boolean
 }
 
 export const services: Service[] = [
@@ -102,6 +104,18 @@ export const services: Service[] = [
     access: { type: 'client', client: 'hi-yo', role: 'user' },
     logo: '/logos/haiyo.png',
     emoji: '👋',
+  },
+  {
+    id: 'research-note',
+    name: '연구노트',
+    description: '연구노트 · 업무일지 작성',
+    category: '업무',
+    links: [{ label: '열기', url: 'https://research-note-nine.vercel.app/' }],
+    auth: 'separate', // 로그인 미연동 — SSO 붙이면 'sso'와 access를 바꾼다
+    access: { type: 'any' },
+    logo: '/logos/research-note.png',
+    emoji: '📓',
+    inDevelopment: true,
   },
   {
     id: 'company-events',
