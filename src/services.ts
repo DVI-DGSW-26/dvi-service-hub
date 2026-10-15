@@ -136,6 +136,7 @@ export const services: Service[] = [
     auth: 'sso',
     // client(expenses)는 등록돼 있다. 권한 역할 이름이 정해지면 client 로 좁힌다
     access: { type: 'employee' },
+    inDevelopment: true,
     emoji: '🧾',
   },
 ]
