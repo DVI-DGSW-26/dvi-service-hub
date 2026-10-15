@@ -132,10 +132,7 @@ export const services: Service[] = [
     name: '사무실 경비',
     description: '경비 · 임차관리비 · 구독 결제 관리와 연간 집계',
     category: '업무',
-    links: [
-      { label: '열기', url: 'https://expense-management-zefa.vercel.app/' },
-      { label: 'API 문서', url: 'https://api.dvi-ind.com/expenses/swagger-ui/index.html' },
-    ],
+    links: [{ label: '열기', url: 'https://expense-management-zefa.vercel.app/' }],
     auth: 'sso',
     // client(expenses)는 등록돼 있다. 권한 역할 이름이 정해지면 client 로 좁힌다
     access: { type: 'employee' },
