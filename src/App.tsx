@@ -33,6 +33,39 @@ interface Me {
   svc: Record<string, string[]>
 }
 
+type Theme = 'light' | 'dark'
+
+/** 처음 값은 index.html 인라인 스크립트가 <html data-theme> 에 넣어둔 것. */
+function useTheme() {
+  const [theme, setTheme] = useState<Theme>(() =>
+    document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light',
+  )
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+  }, [theme])
+
+  // 직접 고른 적이 없으면 시스템 설정이 바뀔 때 따라간다.
+  useEffect(() => {
+    const mq = matchMedia('(prefers-color-scheme: dark)')
+    const onChange = () => {
+      let saved: string | null = null
+      try { saved = localStorage.getItem('theme') } catch {}
+      if (!saved) setTheme(mq.matches ? 'dark' : 'light')
+    }
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+
+  const toggle = () => {
+    const next: Theme = theme === 'dark' ? 'light' : 'dark'
+    try { localStorage.setItem('theme', next) } catch {}
+    setTheme(next)
+  }
+
+  return [theme, toggle] as const
+}
+
 function canSee(s: Service, me: Me): boolean {
   switch (s.access.type) {
     case 'public':
@@ -54,6 +87,7 @@ export default function App() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<(typeof CATEGORIES)[number]>('전체')
   const [me, setMe] = useState<Me | null>(null)
+  const [theme, toggleTheme] = useTheme()
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -91,39 +125,77 @@ export default function App() {
               <b>DVI</b> Portal
             </span>
           </div>
-          {me && (
-            <div className="account">
-              <span className="account-name">{me.name}</span>
-              {/* 같은 탭에서 열어 뒤로 가기로 허브에 돌아오게 하고,
-                  referrer 파라미터로 콘솔 안에도 돌아가기 링크를 만든다.
-                  글자 대신 톱니 아이콘 — 이름 옆이라 뜻이 통하고, 글자를
-                  못 보는 환경을 위해 aria-label 과 title 을 남긴다. */}
-              <a
-                className="account-link"
-                href={ACCOUNT_URL}
-                title="계정 설정"
-                aria-label="계정 설정"
+          <div className="header-actions">
+            {/* lucide sun / moon — 지금 테마가 아니라 누르면 바뀔 테마를 보여준다. */}
+            <button
+              type="button"
+              className="theme-toggle"
+              onClick={toggleTheme}
+              title={theme === 'dark' ? '밝은 테마로' : '어두운 테마로'}
+              aria-label={theme === 'dark' ? '밝은 테마로' : '어두운 테마로'}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
               >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
+                {theme === 'dark' ? (
+                  <>
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2" />
+                    <path d="M12 20v2" />
+                    <path d="m4.93 4.93 1.41 1.41" />
+                    <path d="m17.66 17.66 1.41 1.41" />
+                    <path d="M2 12h2" />
+                    <path d="M20 12h2" />
+                    <path d="m6.34 17.66-1.41 1.41" />
+                    <path d="m19.07 4.93-1.41 1.41" />
+                  </>
+                ) : (
+                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                )}
+              </svg>
+            </button>
+            {me && (
+              <div className="account">
+                <span className="account-name">{me.name}</span>
+                {/* 같은 탭에서 열어 뒤로 가기로 허브에 돌아오게 하고,
+                    referrer 파라미터로 콘솔 안에도 돌아가기 링크를 만든다.
+                    글자 대신 톱니 아이콘 — 이름 옆이라 뜻이 통하고, 글자를
+                    못 보는 환경을 위해 aria-label 과 title 을 남긴다. */}
+                <a
+                  className="account-link"
+                  href={ACCOUNT_URL}
+                  title="계정 설정"
+                  aria-label="계정 설정"
                 >
-                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-              </a>
-              {/* SSO 세션까지 끊는다 — 다른 사내 서비스도 함께 로그아웃된다.
-                  표기는 짧게 "로그아웃" (2026-09-29). */}
-              <a className="logout" href="/api/auth/logout">로그아웃</a>
-            </div>
-          )}
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </a>
+                {/* SSO 세션까지 끊는다 — 다른 사내 서비스도 함께 로그아웃된다.
+                    표기는 짧게 "로그아웃" (2026-09-29). */}
+                <a className="logout" href="/api/auth/logout">로그아웃</a>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

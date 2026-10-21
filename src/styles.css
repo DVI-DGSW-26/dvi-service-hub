@@ -10,24 +10,25 @@
   --ok-soft: #e6f6ee;
   --warn: #b26b00;
   --warn-soft: #fff4e0;
-  color-scheme: light dark;
+  color-scheme: light;
   font-family: 'Pretendard', system-ui, -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f1115;
-    --surface: #181b22;
-    --text: #eceef3;
-    --muted: #9aa1ae;
-    --border: #2a2f3a;
-    --accent: #6b8cff;
-    --accent-soft: #1f2842;
-    --ok: #4cc38a;
-    --ok-soft: #173326;
-    --warn: #f0b458;
-    --warn-soft: #3a2c14;
-  }
+/* data-theme 은 index.html 의 인라인 스크립트가 첫 렌더 전에 정한다
+   (저장된 선택 → 없으면 시스템 설정). 헤더 버튼으로 바꾼다. */
+:root[data-theme='dark'] {
+  --bg: #0f1115;
+  --surface: #181b22;
+  --text: #eceef3;
+  --muted: #9aa1ae;
+  --border: #2a2f3a;
+  --accent: #6b8cff;
+  --accent-soft: #1f2842;
+  --ok: #4cc38a;
+  --ok-soft: #173326;
+  --warn: #f0b458;
+  --warn-soft: #3a2c14;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -112,14 +113,18 @@ a { color: inherit; text-decoration: none; }
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
 .header-inner .brand { max-width: none; margin: 0; padding: 14px 0; }
+.header-actions { display: flex; align-items: center; gap: 12px; }
 .account { display: flex; align-items: center; gap: 12px; font-size: 14px; }
 .account-name { color: var(--muted); }
-.account-link {
+.account-link,
+.theme-toggle {
   display: flex; align-items: center; justify-content: center;
   width: 32px; height: 32px; border-radius: 8px;
   color: var(--muted);
 }
-.account-link:hover { color: var(--accent); background: var(--accent-soft); }
+.theme-toggle { border: 0; padding: 0; background: none; cursor: pointer; }
+.account-link:hover,
+.theme-toggle:hover { color: var(--accent); background: var(--accent-soft); }
 .logout { color: var(--accent); text-decoration: none; font-weight: 600; white-space: nowrap; }
 .logout:hover { text-decoration: underline; }
 

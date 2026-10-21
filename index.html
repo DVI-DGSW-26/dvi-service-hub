@@ -6,6 +6,17 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>DVI Portal</title>
     <meta name="description" content="DVISION 사내 서비스를 한곳에서" />
+    <!-- 첫 렌더 전에 테마를 정해 밝은 화면이 깜빡이지 않게 한다.
+         저장된 선택이 없으면 시스템 설정을 따른다. -->
+    <script>
+      (function () {
+        var t
+        try { t = localStorage.getItem('theme') } catch (e) {}
+        if (t !== 'light' && t !== 'dark')
+          t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        document.documentElement.dataset.theme = t
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
