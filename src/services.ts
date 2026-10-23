@@ -110,7 +110,7 @@ export const services: Service[] = [
     name: '연구노트',
     description: '연구노트 · 업무일지 작성',
     category: '업무',
-    links: [{ label: '열기', url: 'https://research-note-nine.vercel.app/' }],
+    links: [{ label: '열기', url: 'https://research-note.dvi-ind.com/' }],
     auth: 'separate', // 로그인 미연동 — SSO 붙이면 'sso'와 access를 바꾼다
     access: { type: 'any' },
     logo: '/logos/research-note.png',
