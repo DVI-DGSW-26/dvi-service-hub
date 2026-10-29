@@ -111,11 +111,11 @@ export const services: Service[] = [
     description: '연구노트 · 업무일지 작성',
     category: '업무',
     links: [{ label: '열기', url: 'https://research-note.dvi-ind.com/' }],
-    auth: 'separate', // 로그인 미연동 — SSO 붙이면 'sso'와 access를 바꾼다
+    auth: 'sso', 
     access: { type: 'any' },
     logo: '/logos/research-note.png',
     emoji: '📓',
-    inDevelopment: true,
+    inDevelopment: false, // 2026-10-29 결정: 개발 완료.
   },
   {
     id: 'company-events',
