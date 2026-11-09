@@ -140,4 +140,15 @@ export const services: Service[] = [
     logo: '/logos/expenses.png',
     emoji: '🧾',
   },
+  {
+    id: 'mes',
+    name: 'MES',
+    description: '제조 실행 시스템',
+    category: '업무',
+    links: [{ label: '열기', url: 'https://dvision.dvi-ind.com/' }],
+    auth: 'sso',
+    access: { type: 'client', client: 'mes', role: 'user' },
+    logo: '/logos/homepage.png',
+    emoji: '🏭',
+  }
 ]
