@@ -147,7 +147,7 @@ export const services: Service[] = [
     category: '업무',
     links: [{ label: '열기', url: 'https://dvision.dvi-ind.com/' }],
     auth: 'sso',
-    access: { type: 'client', client: 'mes', role: 'user' },
+    access: { type: 'employee' },
     logo: '/logos/homepage.png',
     emoji: '🏭',
   }
