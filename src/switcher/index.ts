@@ -5,7 +5,8 @@
  *   <script src="https://dvi-service-hub.vercel.app/switcher.js" defer></script>
  *
  * 왼쪽 아래 버튼이 기본이다. 그 자리에 서비스 자체 버튼이 있으면
- * data-position="right" 를 붙여 오른쪽으로 옮긴다.
+ * data-position="right" 를 붙여 오른쪽으로 옮긴다. 화면 아래에 탭바가 있으면
+ * data-offset="76" 처럼 그 높이만큼 버튼을 올린다 (px, 기본 20).
  *
  * 원칙
  * - 서비스 목록은 허브의 services.ts 를 빌드할 때 이 파일에 넣는다.
@@ -206,13 +207,15 @@ function listHtml(hub: string, roles: Roles | null): string {
 function mount(script: HTMLScriptElement | null) {
   const hub = hubOrigin(script)
   const side = script?.dataset.position === 'right' ? 'right' : 'left'
+  const offset = Number(script?.dataset.offset)
+  const bottom = Number.isFinite(offset) && offset >= 0 && offset <= 400 ? offset : 20
 
   const host = document.createElement('div')
   host.setAttribute('data-dvi-switcher', '')
   const root = host.attachShadow({ mode: 'open' })
 
   root.innerHTML =
-    `<style>${CSS}</style>` +
+    `<style>${CSS}.fab{bottom:${bottom}px}</style>` +
     `<div class="wrap ${side} ${hostTheme()}">` +
     `<button class="fab" type="button" aria-haspopup="dialog" aria-expanded="false" ` +
     `aria-label="사내 서비스 이동" title="사내 서비스 이동">${GRID_ICON}</button>` +
@@ -264,8 +267,11 @@ function mount(script: HTMLScriptElement | null) {
     if (w[GLOBAL_FLAG]) return
     w[GLOBAL_FLAG] = true
 
-    // currentScript 는 실행 중일 때만 읽힌다. defer 여도 이 시점엔 있다
-    const script = document.currentScript as HTMLScriptElement | null
+    // currentScript 는 실행 중일 때만 읽힌다. 프레임워크가 스크립트를 끼워 넣는
+    // 방식에 따라 비어 있을 수 있어, 그때는 주소로 태그를 찾는다 (data-* 를 읽으려고)
+    const script =
+      (document.currentScript as HTMLScriptElement | null) ??
+      document.querySelector<HTMLScriptElement>('script[src*="/switcher.js"]')
     const start = () => {
       try { mount(script) } catch (e) { console.warn('[DVI switcher]', e) }
     }
