@@ -33,6 +33,16 @@ interface Me {
   svc: Record<string, string[]>
 }
 
+/** `npm run dev`(vite)에는 /api 가 없어 로그인 정보를 못 받는다.
+ *  화면을 확인할 수 있게 개발 모드에서만 이 가짜 계정을 쓴다. 배포 빌드에는 안 들어간다. */
+const DEV_ME: Me = {
+  signedIn: true,
+  name: '테스트',
+  email: 'dev@localhost',
+  realm: ['employee'],
+  svc: { jagigo: ['user'], 'hi-yo': ['user'] },
+}
+
 type Theme = 'light' | 'dark'
 
 /** 처음 값은 index.html 인라인 스크립트가 <html data-theme> 에 넣어둔 것. */
@@ -78,6 +88,42 @@ function canSee(s: Service, me: Me): boolean {
   }
 }
 
+/** 시간대별 인사. 새벽(0~5시)은 늦게까지 일하는 사람에게 건네는 말로. */
+function greeting(hour: number): string {
+  if (hour < 5) return '늦은 시간까지 고생 많아요'
+  if (hour < 11) return '좋은 아침이에요'
+  if (hour < 14) return '점심 맛있게 드세요'
+  if (hour < 18) return '오늘도 힘내세요'
+  return '오늘 하루 수고 많았어요'
+}
+
+/**
+ * 즐겨찾기·최근 사용 — 브라우저(localStorage)에만 저장한다. 서버는 모른다.
+ * 공용 PC 에서 계정끼리 섞이지 않도록 키에 이메일을 붙인다.
+ */
+const RECENT_MAX = 4
+
+function readIds(key: string): string[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(key) ?? '[]')
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+function useStoredIds(key: string | null) {
+  const [ids, setIds] = useState<string[]>([])
+  useEffect(() => {
+    setIds(key ? readIds(key) : [])
+  }, [key])
+  const save = (next: string[]) => {
+    setIds(next)
+    if (key) try { localStorage.setItem(key, JSON.stringify(next)) } catch {}
+  }
+  return [ids, save] as const
+}
+
 function matches(s: Service, q: string) {
   const text = `${s.name} ${s.description} ${s.category}`.toLowerCase()
   return text.includes(q.trim().toLowerCase())
@@ -99,21 +145,36 @@ export default function App() {
         return r.json()
       })
       .then((data) => data && setMe(data))
-      .catch(() => setMe(null))
+      .catch(() => setMe(import.meta.env.DEV ? DEV_ME : null))
   }, [])
 
   const noDept = me !== null && !me.realm.includes('employee')
 
+  const userKey = me?.email || null
+  const [favorites, setFavorites] = useStoredIds(userKey && `hub.favorites:${userKey}`)
+  const [recent, setRecent] = useStoredIds(userKey && `hub.recent:${userKey}`)
+
+  const toggleFavorite = (id: string) =>
+    setFavorites(favorites.includes(id) ? favorites.filter((x) => x !== id) : [...favorites, id])
+  const markUsed = (id: string) =>
+    setRecent([id, ...recent.filter((x) => x !== id)].slice(0, RECENT_MAX))
+
+  const mine = useMemo(() => services.filter((s) => me === null || canSee(s, me)), [me])
+
+  // 즐겨찾기를 앞으로 — 그 안에서는 원래 순서를 지킨다 (sort 는 안정 정렬)
   const visible = useMemo(
     () =>
-      services.filter(
-        (s) =>
-          (me === null || canSee(s, me)) &&
-          (category === '전체' || s.category === category) &&
-          matches(s, query),
-      ),
-    [query, category, me],
+      mine
+        .filter((s) => (category === '전체' || s.category === category) && matches(s, query))
+        .sort((a, b) => Number(favorites.includes(b.id)) - Number(favorites.includes(a.id))),
+    [mine, query, category, favorites],
   )
+
+  // 권한이 빠졌거나 목록에서 지운 서비스는 최근 사용에서도 빠진다
+  const recentServices = recent
+    .map((id) => mine.find((s) => s.id === id))
+    .filter((s): s is Service => s !== undefined)
+  const showRecent = recentServices.length > 0 && query === '' && category === '전체'
 
   return (
     <div className="page">
@@ -201,8 +262,19 @@ export default function App() {
 
       <main className="main">
         <section className="hero">
-          <h1>사내 서비스를 한곳에서</h1>
-          <p>DVISION에서 운영 중인 서비스 {services.length}개</p>
+          {me ? (
+            <>
+              <h1>
+                {me.name}님, {greeting(new Date().getHours())} 👋
+              </h1>
+              <p>지금 쓸 수 있는 서비스 {mine.length}개</p>
+            </>
+          ) : (
+            <>
+              <h1>사내 서비스를 한곳에서</h1>
+              <p>DVISION에서 운영 중인 서비스 {services.length}개</p>
+            </>
+          )}
           <input
             className="search"
             type="search"
@@ -217,6 +289,26 @@ export default function App() {
           <p className="notice">
             아직 부서가 지정되지 않아 일부 서비스가 보이지 않습니다. 관리팀에 문의해주세요.
           </p>
+        )}
+
+        {showRecent && (
+          <section className="recent" aria-label="최근 사용">
+            <h2>최근 사용</h2>
+            <ul>
+              {recentServices.map((s) => (
+                <li key={s.id}>
+                  <a href={s.links[0].url} target="_blank" rel="noreferrer" onClick={() => markUsed(s.id)}>
+                    {s.logo ? (
+                      <img src={s.logo} alt="" width={24} height={24} />
+                    ) : (
+                      <span aria-hidden>{s.emoji}</span>
+                    )}
+                    {s.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
 
         <nav className="chips" aria-label="카테고리">
@@ -236,7 +328,13 @@ export default function App() {
         ) : (
           <ul className="grid">
             {visible.map((s) => (
-              <ServiceCard key={s.id} service={s} />
+              <ServiceCard
+                key={s.id}
+                service={s}
+                favorite={favorites.includes(s.id)}
+                onToggleFavorite={userKey ? () => toggleFavorite(s.id) : undefined}
+                onOpen={() => markUsed(s.id)}
+              />
             ))}
           </ul>
         )}
@@ -245,11 +343,47 @@ export default function App() {
   )
 }
 
-function ServiceCard({ service: s }: { service: Service }) {
+function ServiceCard({
+  service: s,
+  favorite,
+  onToggleFavorite,
+  onOpen,
+}: {
+  service: Service
+  favorite: boolean
+  /** 로그인 정보가 없으면 저장할 곳이 없어 별 버튼을 숨긴다 */
+  onToggleFavorite?: () => void
+  onOpen: () => void
+}) {
   const primary = s.links[0]
   return (
-    <li className="card">
-      <a className="card-main" href={primary.url} target="_blank" rel="noreferrer">
+    <li className={favorite ? 'card favorite' : 'card'}>
+      {onToggleFavorite && (
+        <button
+          type="button"
+          className="star"
+          onClick={onToggleFavorite}
+          aria-pressed={favorite}
+          aria-label={favorite ? `${s.name} 즐겨찾기 해제` : `${s.name} 즐겨찾기`}
+          title={favorite ? '즐겨찾기 해제' : '즐겨찾기'}
+        >
+          {/* lucide star */}
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill={favorite ? 'currentColor' : 'none'}
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" />
+          </svg>
+        </button>
+      )}
+      <a className="card-main" href={primary.url} target="_blank" rel="noreferrer" onClick={onOpen}>
         {s.logo ? (
           <img className="logo" src={s.logo} alt="" width={44} height={44} />
         ) : (
@@ -275,7 +409,7 @@ function ServiceCard({ service: s }: { service: Service }) {
         {s.links.length > 1 && (
           <div className="links">
             {s.links.map((l) => (
-              <a key={l.url} href={l.url} target="_blank" rel="noreferrer">
+              <a key={l.url} href={l.url} target="_blank" rel="noreferrer" onClick={onOpen}>
                 {l.label} ↗
               </a>
             ))}
