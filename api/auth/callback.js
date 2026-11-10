@@ -12,7 +12,7 @@
  * 입사자도 허브에는 들어와서 "부서가 지정되지 않았다"는 안내를 봐야 한다.
  * 빈 화면이나 403 은 본인에게 고장으로 보인다.
  */
-import { IDTOKEN_COOKIE, SESSION_COOKIE, SESSION_HOURS, buildCookie, readCookie, signSession, verifySession }
+import { IDTOKEN_COOKIE, SESSION_COOKIE, SESSION_HOURS, buildAccessCookie, buildCookie, readCookie, signSession, verifySession }
   from '../../lib/session.js';
 import { AUTH_COOKIE, configError, decodeJwt, discover, htmlError, safePath } from '../../lib/oidc.js';
 
@@ -136,6 +136,8 @@ export default async function handler(req) {
   headers.append('Set-Cookie', buildCookie(AUTH_COOKIE, '', 0));
   // 전체 로그아웃 때 id_token_hint 로 쓴다. 화면 스크립트는 읽지 못한다.
   headers.append('Set-Cookie', buildCookie(IDTOKEN_COOKIE, token.id_token, SESSION_HOURS * 3600));
+  // 다른 서비스 화면의 이동 버튼이 "쓸 수 있는 서비스"를 물을 때 쓴다 (lib/session.js)
+  headers.append('Set-Cookie', await buildAccessCookie(session, secret));
 
   return new Response(null, { status: 302, headers });
 }

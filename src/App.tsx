@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { services, type AuthMode, type Category, type Service } from './services'
+import { canSee } from './access'
 
 const CATEGORIES: ('전체' | Category)[] = ['전체', '업무','인사', '정보', '사내문화']
 
@@ -74,18 +75,6 @@ function useTheme() {
   }
 
   return [theme, toggle] as const
-}
-
-function canSee(s: Service, me: Me): boolean {
-  switch (s.access.type) {
-    case 'public':
-    case 'any':
-      return true
-    case 'employee':
-      return me.realm.includes('employee')
-    case 'client':
-      return (me.svc[s.access.client] ?? []).includes(s.access.role)
-  }
 }
 
 /** 시간대별 인사. 새벽(0~5시)은 늦게까지 일하는 사람에게 건네는 말로. */

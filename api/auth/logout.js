@@ -7,7 +7,7 @@
  *
  * id_token_hint 를 함께 보내면 Keycloak 이 확인 화면 없이 바로 끝낸다.
  */
-import { IDTOKEN_COOKIE, SESSION_COOKIE, buildCookie, readCookie } from '../../lib/session.js';
+import { IDTOKEN_COOKIE, SESSION_COOKIE, buildCookie, clearAccessCookie, readCookie } from '../../lib/session.js';
 import { configError, discover } from '../../lib/oidc.js';
 
 export const config = { runtime: 'edge' };
@@ -31,5 +31,6 @@ export default async function handler(req) {
   const headers = new Headers({ Location: end.toString(), 'cache-control': 'no-store' });
   headers.append('Set-Cookie', buildCookie(SESSION_COOKIE, '', 0));
   headers.append('Set-Cookie', buildCookie(IDTOKEN_COOKIE, '', 0));
+  headers.append('Set-Cookie', clearAccessCookie());
   return new Response(null, { status: 302, headers });
 }

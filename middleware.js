@@ -12,7 +12,8 @@ export const config = {
   // 인증 API 와 Vercel 내부 경로, 그리고 다른 서비스가 불러가는 파일은 제외하고 전부 검사한다.
   // switcher.js 와 로고는 띵동·하이요 등 다른 사이트 화면에서 불러간다. 그때는 허브 로그인
   // 쿠키가 따라오지 않아 여기서 막으면 버튼이 안 뜨고 로고가 깨진다. 둘 다 공개해도 되는 파일이다.
-  matcher: ['/((?!api/auth|_vercel|favicon\\.svg|switcher\\.js|logos/).*)'],
+  // api/switcher 는 그 버튼이 역할을 묻는 곳이다. 자체적으로 역할 쿠키와 출처(CORS)를 검사한다.
+  matcher: ['/((?!api/auth|api/switcher|_vercel|favicon\\.svg|switcher\\.js|logos/).*)'],
 };
 
 export default async function middleware(req) {

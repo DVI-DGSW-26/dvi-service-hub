@@ -13,10 +13,13 @@
  * - 이 파일이 깨지면 모든 서비스에 같이 퍼진다. 그래서 무슨 일이 있어도
  *   예외를 밖으로 던지지 않는다. 최악의 경우 버튼만 안 보이고 서비스는 멀쩡해야 한다.
  * - 서비스 화면의 CSS 와 섞이지 않게 Shadow DOM 안에 그린다.
- * - 다른 사이트에서는 허브 로그인 정보를 읽을 수 없어 권한별로 거르지 않는다.
- *   실제 접근 차단은 각 서비스가 한다 (services.ts 의 Access 설명과 같은 원칙).
+ * - 사람마다 쓸 수 있는 서비스가 다르다. 허브에 역할을 물어(/api/switcher/access)
+ *   허브 화면과 같은 규칙(access.ts)으로 거른다. 답을 못 받으면(허브에 아직 안 들어옴,
+ *   브라우저가 다른 사이트 쿠키를 막음) 전체를 보여준다 — 쓸 수 있는 서비스를 숨기는
+ *   것보다 낫다. 실제 접근 차단은 각 서비스가 한다.
  */
 import { services, type Service } from '../services'
+import { canSee, type Roles } from '../access'
 
 const GLOBAL_FLAG = '__dviSwitcherLoaded'
 
@@ -26,6 +29,30 @@ function hubOrigin(script: HTMLScriptElement | null): string {
     if (script?.src) return new URL(script.src).origin
   } catch { /* 아래 기본값 */ }
   return 'https://dvi-service-hub.vercel.app'
+}
+
+/** 허브에 이 사람의 역할을 묻는다. 모르면 null */
+async function fetchRoles(hub: string): Promise<Roles | null> {
+  try {
+    const res = await fetch(`${hub}/api/switcher/access`, { credentials: 'include' })
+    if (!res.ok) return null
+    const data = await res.json()
+    if (!data?.known || !Array.isArray(data.realm) || typeof data.svc !== 'object') return null
+    return { realm: data.realm, svc: data.svc ?? {} }
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 서비스 화면의 테마를 따른다. 허브·탈탈처럼 <html data-theme="dark|light"> 로
+ * 테마를 정하는 서비스가 있고, 그런 표시가 없으면 기기 설정을 따른다.
+ */
+function hostTheme(): 'dark' | 'light' | 'auto' {
+  const t = document.documentElement.dataset.theme
+  if (t === 'dark' || t === 'light') return t
+  if (document.documentElement.classList.contains('dark')) return 'dark'
+  return 'auto'
 }
 
 /** 지금 열려 있는 서비스 — 링크 주소의 호스트가 같은 것 */
@@ -44,8 +71,12 @@ const CSS = `
   font-family: 'Pretendard', system-ui, -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif;
   font-size: 14px; line-height: 1.4; color: var(--text);
 }
+.wrap.dark {
+  --bg: #181b22; --text: #eceef3; --muted: #9aa1ae; --border: #2a2f3a;
+  --accent: #6b8cff; --accent-soft: #1f2842; --shadow: 0 8px 30px rgba(0,0,0,.5);
+}
 @media (prefers-color-scheme: dark) {
-  .wrap {
+  .wrap.auto {
     --bg: #181b22; --text: #eceef3; --muted: #9aa1ae; --border: #2a2f3a;
     --accent: #6b8cff; --accent-soft: #1f2842; --shadow: 0 8px 30px rgba(0,0,0,.5);
   }
@@ -158,6 +189,20 @@ function itemHtml(s: Service, hub: string): string {
   return `<li>${row}${sub}</li>`
 }
 
+/**
+ * 목록 내용. roles 를 모르면(null) 전체를 보여준다.
+ * 지금 보고 있는 서비스는 걸러지지 않는다 — 이미 들어와 있다는 것이 쓸 수 있다는 뜻이다.
+ */
+function listHtml(hub: string, roles: Roles | null): string {
+  const visible = roles ? services.filter((s) => isCurrent(s) || canSee(s, roles)) : services
+  return (
+    `<li class="home"><a class="item" href="${esc(hub + '/')}">` +
+    `<img class="icon" src="${esc(hub + '/favicon.svg')}" alt="" width="32" height="32">` +
+    `<span class="name">포털 홈<small>전체 서비스 · 공지</small></span></a></li>` +
+    visible.map((s) => itemHtml(s, hub)).join('')
+  )
+}
+
 function mount(script: HTMLScriptElement | null) {
   const hub = hubOrigin(script)
   const side = script?.dataset.position === 'right' ? 'right' : 'left'
@@ -168,21 +213,28 @@ function mount(script: HTMLScriptElement | null) {
 
   root.innerHTML =
     `<style>${CSS}</style>` +
-    `<div class="wrap ${side}">` +
+    `<div class="wrap ${side} ${hostTheme()}">` +
     `<button class="fab" type="button" aria-haspopup="dialog" aria-expanded="false" ` +
     `aria-label="사내 서비스 이동" title="사내 서비스 이동">${GRID_ICON}</button>` +
     `<div class="backdrop"></div>` +
     `<div class="panel" role="dialog" aria-modal="true" aria-label="사내 서비스" inert>` +
     `<div class="head"><b><span>DVI</span> 사내 서비스</b>` +
     `<button class="close" type="button" aria-label="닫기">${X_ICON}</button></div>` +
-    `<ul>` +
-    `<li class="home"><a class="item" href="${esc(hub + '/')}">` +
-    `<img class="icon" src="${esc(hub + '/favicon.svg')}" alt="" width="32" height="32">` +
-    `<span class="name">포털 홈<small>전체 서비스 · 공지</small></span></a></li>` +
-    services.map((s) => itemHtml(s, hub)).join('') +
-    `</ul></div></div>`
+    `<ul>${listHtml(hub, null)}</ul></div></div>`
 
   const wrap = root.querySelector<HTMLElement>('.wrap')!
+  const list = root.querySelector<HTMLElement>('ul')!
+
+  // 역할을 받으면 목록을 이 사람 것으로 바꾼다. 보통 버튼을 누르기 전에 끝난다.
+  fetchRoles(hub).then((roles) => {
+    try { if (roles) list.innerHTML = listHtml(hub, roles) } catch { /* 전체 목록 그대로 */ }
+  })
+
+  // 서비스의 테마 버튼을 누르면 따라 바뀐다
+  new MutationObserver(() => {
+    wrap.classList.remove('dark', 'light', 'auto')
+    wrap.classList.add(hostTheme())
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] })
   const fab = root.querySelector<HTMLButtonElement>('.fab')!
   const panel = root.querySelector<HTMLElement>('.panel')!
 
