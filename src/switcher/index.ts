@@ -65,6 +65,8 @@ function isCurrent(s: Service): boolean {
 
 const CSS = `
 :host { all: initial; }
+/* 자기Go 계측기 카드처럼 인쇄하는 화면이 있다. 인쇄물에 버튼이 찍히지 않게 한다 */
+@media print { :host { display: none !important; } }
 * { box-sizing: border-box; }
 .wrap {
   --bg: #ffffff; --text: #16181d; --muted: #6b7280; --border: #e5e7ef;
@@ -206,8 +208,11 @@ function listHtml(hub: string, roles: Roles | null): string {
 
 function mount(script: HTMLScriptElement | null) {
   const hub = hubOrigin(script)
-  const side = script?.dataset.position === 'right' ? 'right' : 'left'
-  const offset = Number(script?.dataset.offset)
+  // 자리: 허브 services.ts 의 설정 → 스크립트 태그의 data-* 가 있으면 그것이 우선
+  const cfg = services.find(isCurrent)?.switcher ?? {}
+  const pos = script?.dataset.position ?? cfg.position
+  const side = pos === 'right' ? 'right' : 'left'
+  const offset = Number(script?.dataset.offset ?? cfg.offset)
   const bottom = Number.isFinite(offset) && offset >= 0 && offset <= 400 ? offset : 20
 
   const host = document.createElement('div')

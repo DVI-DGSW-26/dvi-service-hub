@@ -42,6 +42,13 @@ export interface Service {
   emoji: string
   /** 아직 개발 중인 서비스. 카드에 로그인 방식 대신 '개발 중'을 표시한다 */
   inDevelopment?: boolean
+  /**
+   * 이 서비스 화면에 붙는 "서비스 이동" 버튼(switcher.js)의 자리.
+   * 서비스의 버튼·탭바를 가리면 여기서 고친다 — 그 서비스 코드를 다시 고치지 않아도 된다.
+   *   position  왼쪽(기본) / 오른쪽 아래
+   *   offset    화면 아래에서 버튼까지 px (기본 20). 하단 탭바가 있으면 그 높이 + 20
+   */
+  switcher?: { position?: 'left' | 'right'; offset?: number }
 }
 
 export const services: Service[] = [
@@ -68,6 +75,7 @@ export const services: Service[] = [
     access: { type: 'employee' },
     logo: '/logos/dding-dong.png',
     emoji: '🔔',
+    switcher: { offset: 76 }, // 모바일 하단 탭바(56px) 위로
   },
   {
     id: 'taltal',
