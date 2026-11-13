@@ -8,11 +8,13 @@ import { Panel } from '../components/ui/Panel'
 import { LoadError, SkeletonList } from '../components/ui/Skeleton'
 import { useAsync } from '../hooks/useAsync'
 import { hrefOf } from '../hooks/useHashRoute'
-import { dotDate } from '../lib/format'
+import { useI18n } from '../i18n'
+import { formatDate } from '../lib/format'
 import { PageTitle } from '../components/ui/PageTitle'
 
 /** 사내정보: 왼쪽 분류 목록 + 오른쪽 문서 목록, 아래 사내 소식. #/info/<분류 id> 로 바로 연다. */
 export function InfoPage({ categoryId }: { categoryId?: string }) {
+  const { t, lang } = useI18n()
   const categories = useAsync(portalApi.infoCategories)
   const news = useAsync(portalApi.news)
   const [openNews, setOpenNews] = useState<number | null>(null)
@@ -21,10 +23,10 @@ export function InfoPage({ categoryId }: { categoryId?: string }) {
 
   return (
     <>
-      <PageTitle title="사내정보" description="규정, 매뉴얼, 복지 제도와 회사 소식을 확인하세요." />
+      <PageTitle title={t.info.title} description={t.info.description} />
 
       <div className="grid gap-5 md:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)]">
-        <nav aria-label="사내정보 분류" className="glass h-fit rounded-3xl p-2 md:sticky md:top-24">
+        <nav aria-label={t.info.categoryNav} className="glass h-fit rounded-3xl p-2 md:sticky md:top-24">
           {categories.loading ? (
             <SkeletonList rows={5} className="h-11" />
           ) : (
@@ -67,7 +69,7 @@ export function InfoPage({ categoryId }: { categoryId?: string }) {
                       <span className="min-w-0 flex-1 truncate font-medium group-hover:text-accent group-hover:underline">
                         {d.title}
                       </span>
-                      <span className="flex-none text-sm text-muted tabular-nums">{dotDate(d.updated)}</span>
+                      <span className="flex-none text-sm text-muted tabular-nums">{formatDate(d.updated, lang)}</span>
                       <ChevronRight className="size-4 flex-none text-muted" aria-hidden="true" />
                     </a>
                   </li>
@@ -78,7 +80,7 @@ export function InfoPage({ categoryId }: { categoryId?: string }) {
         </section>
       </div>
 
-      <Panel title="사내 주요 소식" icon={Newspaper} className="mt-5">
+      <Panel title={t.info.news} icon={Newspaper} className="mt-5">
         {news.loading ? (
           <SkeletonList rows={3} className="h-24" />
         ) : news.error ? (
@@ -98,7 +100,7 @@ export function InfoPage({ categoryId }: { categoryId?: string }) {
                   </span>
                   <span className="mt-3 block text-[17px] font-bold group-hover:text-accent">{n.title}</span>
                   <span className="mt-1 line-clamp-2 block text-[15px]/relaxed text-muted">{n.summary}</span>
-                  <span className="mt-1.5 block text-sm text-muted tabular-nums">{dotDate(n.date)}</span>
+                  <span className="mt-1.5 block text-sm text-muted tabular-nums">{formatDate(n.date, lang)}</span>
                 </button>
               </li>
             ))}

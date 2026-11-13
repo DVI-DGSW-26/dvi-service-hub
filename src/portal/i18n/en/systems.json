@@ -1,0 +1,41 @@
+{
+  "title": "Systems",
+  "description": "Find and open every DVISION service in one place.",
+  "descriptionCount": {
+    "one": "Find and open the {count} DVISION service in one place.",
+    "other": "Find and open all {count} DVISION services in one place."
+  },
+  "category": {
+    "전체": "All",
+    "업무": "Work",
+    "인사": "HR",
+    "정보": "Info",
+    "사내문화": "Culture"
+  },
+  "categoryGroup": "Category",
+  "view": {
+    "label": "View",
+    "card": "Cards",
+    "list": "List"
+  },
+  "count": {
+    "one": "{count} service",
+    "other": "{count} services"
+  },
+  "empty": {
+    "title": "No results",
+    "hint": "Try a different name or feature, or set the category to All."
+  },
+  "auth": {
+    "sso": "Company account",
+    "separate": "Separate sign-in",
+    "none": "No sign-in"
+  },
+  "inDevelopment": "In development",
+  "favorite": {
+    "add": "Add to favorites",
+    "remove": "Remove from favorites",
+    "addNamed": "Add {name} to favorites",
+    "removeNamed": "Remove {name} from favorites"
+  }
+}

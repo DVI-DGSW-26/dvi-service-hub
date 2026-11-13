@@ -7,6 +7,7 @@ import { TopBar } from './components/layout/TopBar'
 import { useFavorites } from './hooks/useFavorites'
 import { hrefOf, useHashRoute } from './hooks/useHashRoute'
 import { usePortalTheme } from './hooks/usePortalTheme'
+import { useI18n } from './i18n'
 import { canSee, sortByFavorite } from './lib/access'
 import { readPref, writePref } from './lib/theme'
 import { GuidePage } from './pages/GuidePage'
@@ -17,6 +18,7 @@ import { SystemsPage } from './pages/SystemsPage'
 import type { Me } from './types/portal'
 
 export default function PortalApp() {
+  const { t } = useI18n()
   const route = useHashRoute()
   const theme = usePortalTheme()
   // undefined: 아직 받는 중 (스켈레톤) · null: 로그인 정보 없음
@@ -57,7 +59,7 @@ export default function PortalApp() {
         onClick={() => document.getElementById('main')?.focus()}
         className="sr-only z-50 rounded-lg bg-accent-fill px-4 py-2 text-white focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
       >
-        본문으로 건너뛰기
+        {t.layout.skipToContent}
       </button>
 
       <Sidebar page={route.page} collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
@@ -65,7 +67,7 @@ export default function PortalApp() {
       {/* 사이드바(왼쪽 12px + 너비) 만큼 비우고 나머지 폭을 모두 쓴다 */}
       {/* 홈은 넓은 화면에서 화면 높이에 딱 맞춘다(fit) — 스크롤 없이 한눈에 */}
       <div
-        className={`flex min-h-dvh flex-col px-3 pt-3 pb-28 sm:px-4 lg:pr-4 lg:pb-4 ${collapsed ? 'lg:pl-[104px]' : 'lg:pl-[276px]'} ${home ? 'fit:h-dvh' : ''}`}
+        className={`flex min-h-dvh flex-col px-3 pt-3 pb-28 sm:px-4 lg:pr-4 lg:pb-4 lg:transition-[padding-left] lg:duration-300 lg:ease-[cubic-bezier(0.32,0.72,0,1)] ${collapsed ? 'lg:pl-[104px]' : 'lg:pl-[276px]'} ${home ? 'fit:h-dvh' : ''}`}
       >
         <TopBar me={me} meLoading={meLoading} page={route.page} query={query} onQueryChange={onQueryChange} theme={theme} />
 

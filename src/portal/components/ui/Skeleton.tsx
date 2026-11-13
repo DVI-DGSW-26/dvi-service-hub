@@ -1,3 +1,5 @@
+import { useI18n } from '../../i18n'
+
 /** 목록이 오기 전 자리를 잡아 두는 막대. 화면이 덜컹이지 않게 실제 높이와 맞춘다. */
 export function Skeleton({ className = '' }: { className?: string }) {
   return <div className={`animate-pulse rounded-xl bg-fg/[0.07] ${className}`} aria-hidden="true" />
@@ -9,8 +11,9 @@ export function SkeletonText({ className = '' }: { className?: string }) {
 }
 
 export function SkeletonList({ rows, className = 'h-12' }: { rows: number; className?: string }) {
+  const { t } = useI18n()
   return (
-    <div className="space-y-2.5" role="status" aria-label="불러오는 중">
+    <div className="space-y-2.5" role="status" aria-label={t.common.loading}>
       {Array.from({ length: rows }, (_, i) => (
         <Skeleton key={i} className={className} />
       ))}
@@ -19,5 +22,6 @@ export function SkeletonList({ rows, className = 'h-12' }: { rows: number; class
 }
 
 export function LoadError() {
-  return <p className="py-6 text-center text-sm text-muted">정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>
+  const { t } = useI18n()
+  return <p className="py-6 text-center text-sm text-muted">{t.common.loadError}</p>
 }

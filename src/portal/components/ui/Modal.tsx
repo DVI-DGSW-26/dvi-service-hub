@@ -1,5 +1,7 @@
 import { X } from 'lucide-react'
 import { useEffect, useRef, type ReactNode, type RefObject } from 'react'
+import { useI18n } from '../../i18n'
+import { motionOff } from '../../lib/theme'
 
 interface ModalProps {
   open: boolean
@@ -76,6 +78,7 @@ function useScrollTrap(ref: RefObject<HTMLDialogElement | null>, open: boolean) 
  * 브라우저가 맡는다. 닫을 때는 사라지는 애니메이션(portal.css 의 data-closing)이 끝난 뒤 닫는다.
  */
 export function Modal({ open, onClose, labelledBy, wide = false, className = '', children }: ModalProps) {
+  const { t } = useI18n()
   const ref = useRef<HTMLDialogElement>(null)
   useScrollTrap(ref, open)
 
@@ -92,10 +95,14 @@ export function Modal({ open, onClose, labelledBy, wide = false, className = '',
       if (!d.open) d.showModal()
     } else if (d.open) {
       d.dataset.closing = ''
-      const t = window.setTimeout(() => {
-        d.close()
-        delete d.dataset.closing
-      }, CLOSE_MS)
+      // 애니메이션을 껐으면 사라지는 효과를 기다리지 않는다
+      const t = window.setTimeout(
+        () => {
+          d.close()
+          delete d.dataset.closing
+        },
+        motionOff() ? 0 : CLOSE_MS,
+      )
       return () => window.clearTimeout(t)
     }
   }, [open])
@@ -121,7 +128,7 @@ export function Modal({ open, onClose, labelledBy, wide = false, className = '',
         <button
           type="button"
           onClick={onClose}
-          aria-label="닫기"
+          aria-label={t.common.close}
           className="absolute top-3 right-3 z-10 grid size-11 cursor-pointer place-items-center rounded-full bg-surface text-fg shadow-[0_2px_8px_oklch(0_0_0/0.15)] ring-1 ring-line transition-[background-color,scale] duration-150 hover:bg-raised active:scale-90"
         >
           <X className="size-5" aria-hidden="true" />

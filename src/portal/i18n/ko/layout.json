@@ -1,0 +1,36 @@
+{
+  "skipToContent": "본문으로 건너뛰기",
+  "brandTagline": "사내 통합 포털",
+  "mainNav": "주 메뉴",
+  "pages": {
+    "home": "포털 홈",
+    "systems": "업무시스템",
+    "info": "사내정보",
+    "guide": "이용안내",
+    "account": "설정"
+  },
+  "sidebar": {
+    "expand": "사이드바 펼치기",
+    "collapse": "사이드바 접기",
+    "expandShort": "펼치기",
+    "collapseShort": "접기"
+  },
+  "search": {
+    "label": "업무시스템 검색",
+    "placeholder": "업무시스템 이름이나 기능으로 검색"
+  },
+  "notifications": {
+    "title": "알림",
+    "unread": "알림 {count}건 안 읽음",
+    "loading": "알림 불러오는 중",
+    "empty": "새 알림이 없어요."
+  },
+  "user": {
+    "loading": "사용자 정보 불러오는 중",
+    "menuButton": "{name} 님 메뉴",
+    "name": "{name} 님",
+    "menu": "사용자 메뉴",
+    "account": "계정 설정",
+    "logout": "로그아웃"
+  }
+}

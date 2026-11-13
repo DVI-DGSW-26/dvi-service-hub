@@ -162,6 +162,7 @@
       box-shadow 0.35s ease !important;
   }
 
+  /* OS 의 '동작 줄이기' · 테마 메뉴의 애니메이션 끄기 — 움직임 없이 바로 바뀐다 */
   @media (prefers-reduced-motion: reduce) {
     *,
     ::before,
@@ -169,6 +170,13 @@
       transition-duration: 0.01ms !important;
       animation-duration: 0.01ms !important;
     }
+  }
+  :root[data-motion='off'] *,
+  :root[data-motion='off'] ::before,
+  :root[data-motion='off'] ::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
 

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { portalApi } from '../../api/portal'
 import { useAsync } from '../../hooks/useAsync'
 import { useNow } from '../../hooks/useNow'
+import { useI18n } from '../../i18n'
 import { nowMinutes } from '../../lib/format'
 import { Panel, SourceTag } from '../ui/Panel'
 import { LoadError, SkeletonList } from '../ui/Skeleton'
@@ -23,6 +24,7 @@ const preloadHistory = () => void portalApi.scheduleHistory()
 export function TodayPanel({ className = '' }: { className?: string }) {
   const { data, loading, error } = useAsync(portalApi.schedule)
   const [open, setOpen] = useState(false)
+  const { t, f } = useI18n()
   // 모달은 처음 열 때 붙이고(지난 일정도 그때 받는다), 닫는 애니메이션을 위해 그 뒤로는 붙여 둔다
   const [mounted, setMounted] = useState(false)
   const date = useNow()
@@ -37,9 +39,9 @@ export function TodayPanel({ className = '' }: { className?: string }) {
 
   return (
     <Panel
-      title="오늘의 일정"
+      title={t.schedule.title}
       icon={CalendarDays}
-      meta={<SourceTag>From 플로우</SourceTag>}
+      meta={<SourceTag>{t.schedule.source}</SourceTag>}
       toolbar={
         data && (
           <button
@@ -54,7 +56,7 @@ export function TodayPanel({ className = '' }: { className?: string }) {
             aria-haspopup="dialog"
             className="flex cursor-pointer items-center gap-0.5 rounded-lg px-2 py-1 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft"
           >
-            전체 {items.length}건
+            {f(t.schedule.viewAll, { count: items.length })}
             <ChevronRight className="size-4" aria-hidden="true" />
           </button>
         )
@@ -68,14 +70,14 @@ export function TodayPanel({ className = '' }: { className?: string }) {
       ) : items.length ? (
         <>
           <NowGuide items={items} now={now} date={date} compact className="mb-3 fit:mb-1.5 fit:py-2" />
-          <ol className="space-y-1.5 fit:space-y-0.5" aria-label={more ? `오늘 일정 ${items.length}건 중 ${shown.length}건` : undefined}>
+          <ol className="space-y-1.5 fit:space-y-0.5" aria-label={more ? f(t.schedule.listLabel, { count: items.length, shown: shown.length }) : undefined}>
             {shown.map((s) => (
               <ScheduleRow key={s.id} item={s} now={now} className="fit:py-1.5" />
             ))}
           </ol>
         </>
       ) : (
-        <p className="py-4 text-base text-muted">오늘 예정된 일정이 없습니다.</p>
+        <p className="py-4 text-base text-muted">{t.schedule.empty}</p>
       )}
       {/* 오늘 일정이 없어도 지난 일정 · 검색은 볼 수 있게 목록 밖에 둔다 */}
       {mounted && <TodayModal items={items} now={now} date={date} open={open} onClose={() => setOpen(false)} />}

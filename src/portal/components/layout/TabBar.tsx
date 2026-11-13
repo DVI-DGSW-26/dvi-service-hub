@@ -1,15 +1,17 @@
 import { hrefOf, type Page } from '../../hooks/useHashRoute'
+import { useI18n } from '../../i18n'
 import { NAV_ITEMS } from './navItems'
 
 /** 좁은 화면 하단에 떠 있는 유리 탭바 — 엄지로 닿는 곳에 주 메뉴를 둔다 */
 export function TabBar({ page }: { page: Page }) {
+  const { t } = useI18n()
   return (
     <nav
-      aria-label="주 메뉴"
+      aria-label={t.layout.mainNav}
       className="glass-chrome fixed inset-x-3 bottom-3 z-30 rounded-2xl pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
-      <ul className="grid grid-cols-3">
-        {NAV_ITEMS.map(({ page: p, label, icon: I }) => {
+      <ul className="grid grid-cols-4">
+        {NAV_ITEMS.map(({ page: p, icon: I }) => {
           const active = p === page
           return (
             <li key={p}>
@@ -21,7 +23,7 @@ export function TabBar({ page }: { page: Page }) {
                 }`}
               >
                 <I className="size-[22px]" strokeWidth={active ? 2.4 : 2} aria-hidden="true" />
-                {label}
+                {t.layout.pages[p]}
               </a>
             </li>
           )

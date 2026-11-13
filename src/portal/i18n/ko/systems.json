@@ -1,0 +1,41 @@
+{
+  "title": "업무시스템",
+  "description": "DVISION에서 운영 중인 서비스를 한곳에서 찾고 이동하세요.",
+  "descriptionCount": {
+    "one": "DVISION에서 운영 중인 서비스 {count}개를 한곳에서 찾고 이동하세요.",
+    "other": "DVISION에서 운영 중인 서비스 {count}개를 한곳에서 찾고 이동하세요."
+  },
+  "category": {
+    "전체": "전체",
+    "업무": "업무",
+    "인사": "인사",
+    "정보": "정보",
+    "사내문화": "사내문화"
+  },
+  "categoryGroup": "분류",
+  "view": {
+    "label": "보기 방식",
+    "card": "카드",
+    "list": "리스트"
+  },
+  "count": {
+    "one": "{count}개 서비스",
+    "other": "{count}개 서비스"
+  },
+  "empty": {
+    "title": "검색 결과가 없습니다.",
+    "hint": "다른 이름이나 기능으로 검색하거나 분류를 ‘전체’로 바꿔 보세요."
+  },
+  "auth": {
+    "sso": "회사 계정",
+    "separate": "개별 로그인",
+    "none": "로그인 없음"
+  },
+  "inDevelopment": "개발 중",
+  "favorite": {
+    "add": "즐겨찾기",
+    "remove": "즐겨찾기 해제",
+    "addNamed": "{name} 즐겨찾기",
+    "removeNamed": "{name} 즐겨찾기 해제"
+  }
+}

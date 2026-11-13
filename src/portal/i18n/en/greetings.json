@@ -1,0 +1,93 @@
+{
+  "name": "{name}",
+  "withName": "{line}, {name}",
+  "night": [
+    "Working late tonight",
+    "Don't push too hard, {name}",
+    "You did great today",
+    "Take a breather, {name}",
+    "It's getting late, {name}",
+    "Time to call it a day",
+    "Rest up for tomorrow",
+    "Stay warm tonight, {name}",
+    "Burning the midnight oil",
+    "Sweet dreams"
+  ],
+  "morning": [
+    "Good morning",
+    "What a fresh morning",
+    "Great to see you",
+    "Let's have a great day",
+    "Coffee time, {name}?",
+    "Have a wonderful day",
+    "Did you sleep well, {name}?",
+    "Rise and shine",
+    "Cheering you on today",
+    "Thanks for coming in, {name}",
+    "Nice to see you again",
+    "Let's make it a good one",
+    "Had breakfast yet, {name}?",
+    "No rush, ease into the day",
+    "Today's going to be great"
+  ],
+  "lunch": [
+    "Enjoy your lunch",
+    "Had lunch yet, {name}?",
+    "Time to refuel",
+    "Nice work this morning",
+    "Enjoy your break, {name}",
+    "Take a real break",
+    "Up for a short walk, {name}?",
+    "Have a tasty lunch",
+    "Recharge for the afternoon"
+  ],
+  "afternoon": [
+    "Good afternoon",
+    "Keep it up this afternoon",
+    "Time for a stretch, {name}",
+    "Tea break, {name}?",
+    "Hope it all goes smoothly",
+    "Halfway through the day",
+    "Stay hydrated, {name}",
+    "One step at a time",
+    "Roll your shoulders, {name}",
+    "A good time to focus",
+    "You're doing great, {name}",
+    "Give your eyes a rest",
+    "Snack time, {name}?",
+    "Lovely afternoon light",
+    "Ticking things off nicely",
+    "Rooting for you, {name}",
+    "You've got this",
+    "Have a smooth afternoon"
+  ],
+  "evening": [
+    "Good evening",
+    "Thanks for your hard work",
+    "Almost there, {name}",
+    "Get home safely",
+    "How was your day, {name}?",
+    "Great work today, {name}",
+    "Time to wrap things up",
+    "Have a relaxing evening",
+    "You nailed it today, {name}",
+    "Enjoy your dinner",
+    "Get some good rest, {name}",
+    "See you tomorrow",
+    "Don't stay too late"
+  ],
+  "byDay": {
+    "weekend": ["Thanks for coming in today", "Weekend hero, {name}"],
+    "mon": ["Let's kick off the week, {name}", "Happy Monday", "A brand-new week"],
+    "tue": ["Stay strong this Tuesday"],
+    "wed": ["Halfway through the week"],
+    "thu": ["Two days to the weekend"],
+    "fri": ["Happy Friday", "Great work this week, {name}", "Weekend's nearly here, {name}", "One last push, it's Friday"]
+  },
+  "plain": {
+    "night": "Thanks for working late",
+    "morning": "Good morning",
+    "afternoon": "Good afternoon",
+    "evening": "Good evening"
+  }
+}

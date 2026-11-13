@@ -1,0 +1,46 @@
+{
+  "hero": {
+    "lead": "오늘도 DVI Portal에서 필요한 업무와 정보를 빠르게 확인하세요.",
+    "greetingLoading": "인사말 불러오는 중",
+    "schedule": { "one": "오늘 일정 {count}건", "other": "오늘 일정 {count}건" },
+    "maintenance": { "one": "점검 · 안내 {count}건", "other": "점검 · 안내 {count}건" },
+    "favorites": { "one": "즐겨찾기 {count}개", "other": "즐겨찾기 {count}개" }
+  },
+  "notice": {
+    "label": "전사 공지",
+    "important": "중요",
+    "empty": "새 공지가 없습니다.",
+    "prev": "이전 공지",
+    "next": "다음 공지"
+  },
+  "maintenance": {
+    "title": "시스템 점검 및 안내",
+    "empty": "예정된 점검이 없습니다.",
+    "kind": { "안내": "안내", "점검": "점검", "장애": "장애" }
+  },
+  "news": {
+    "title": "사내 주요 소식",
+    "empty": "새 소식이 없습니다.",
+    "original": "원문 보기",
+    "prev": "이전 소식",
+    "next": "다음 소식",
+    "others": "다른 소식"
+  },
+  "noDepartment": "아직 부서가 지정되지 않아 일부 서비스가 보이지 않습니다. 관리팀에 문의해주세요.",
+  "quickLinks": {
+    "title": "빠른 바로가기"
+  },
+  "systems": {
+    "title": "업무시스템",
+    "total": { "one": "총 {count}개", "other": "총 {count}개" },
+    "filterLabel": "표시할 서비스",
+    "all": "전체",
+    "favorites": "즐겨찾기 {count}",
+    "loading": "업무시스템 불러오는 중",
+    "noFavorites": "아직 즐겨찾기한 서비스가 없습니다.",
+    "noFavoritesHint": "카드 오른쪽 위의 별을 눌러 추가하세요.",
+    "noAccess": "지금 계정으로 쓸 수 있는 서비스가 없습니다.",
+    "noAccessHint": "권한이 필요하면 {link}로 알려 주세요.",
+    "noAccessLink": "시스템 문의"
+  }
+}

@@ -7,6 +7,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 import { project, rubberband, settle, snap, spring, step } from '../lib/spring'
+import { motionOff } from '../lib/theme'
 
 interface Options {
   /** 지금 화면의 메뉴 순번. 메뉴에 없는 화면이면 -1 */
@@ -31,7 +32,7 @@ interface Drag {
 }
 
 const DRAG_START = 6
-const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches
+const reduceMotion = motionOff
 
 // 브라우저 기본 끌기 그림은 숨기고 방울 · 링크 칩으로 대신 보여준다
 const BLANK = new Image()

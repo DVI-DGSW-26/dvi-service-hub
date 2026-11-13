@@ -1,0 +1,46 @@
+{
+  "hero": {
+    "lead": "Everything you need for work, all in one place.",
+    "greetingLoading": "Loading greeting",
+    "schedule": { "one": "{count} event today", "other": "{count} events today" },
+    "maintenance": { "one": "{count} maintenance update", "other": "{count} maintenance updates" },
+    "favorites": { "one": "{count} favorite", "other": "{count} favorites" }
+  },
+  "notice": {
+    "label": "Company notice",
+    "important": "Important",
+    "empty": "No new notices.",
+    "prev": "Previous notice",
+    "next": "Next notice"
+  },
+  "maintenance": {
+    "title": "Maintenance & notices",
+    "empty": "No maintenance scheduled.",
+    "kind": { "안내": "Notice", "점검": "Maintenance", "장애": "Outage" }
+  },
+  "news": {
+    "title": "Company news",
+    "empty": "No news yet.",
+    "original": "Read full story",
+    "prev": "Previous story",
+    "next": "Next story",
+    "others": "More stories"
+  },
+  "noDepartment": "You haven't been assigned to a department yet, so some services are hidden. Please contact the admin team.",
+  "quickLinks": {
+    "title": "Quick links"
+  },
+  "systems": {
+    "title": "Systems",
+    "total": { "one": "{count} total", "other": "{count} total" },
+    "filterLabel": "Services to show",
+    "all": "All",
+    "favorites": "Favorites {count}",
+    "loading": "Loading systems",
+    "noFavorites": "No favorites yet.",
+    "noFavoritesHint": "Tap the star on any card to add one.",
+    "noAccess": "No services are available for this account.",
+    "noAccessHint": "Need access? Let us know via {link}.",
+    "noAccessLink": "System support"
+  }
+}

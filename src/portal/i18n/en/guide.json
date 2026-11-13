@@ -1,0 +1,30 @@
+{
+  "title": "Guide",
+  "description": "How to use DVI Portal, plus answers to common questions.",
+  "step": "STEP {n}",
+  "steps": {
+    "account": {
+      "title": "One company account",
+      "body": "Services marked “Company account” open right away, since you’re already signed in to the portal."
+    },
+    "search": {
+      "title": "Search and go",
+      "body": "Type a service name or feature in the search box at the top. Press / to jump straight to it."
+    },
+    "favorite": {
+      "title": "Star your favorites",
+      "body": "Tap the star on a card to add it to favorites. Favorites appear first in the list."
+    }
+  },
+  "faq": "Frequently asked questions",
+  "contact": {
+    "title": "IT support",
+    "body": "For account, access, or outage issues, reach out below. We reply in order during business hours.",
+    "owner": "Contact",
+    "ownerValue": "Admin team IT support",
+    "flow": "Flow",
+    "flowValue": "#IT-문의 project",
+    "hours": "Hours",
+    "hoursValue": "Weekdays, 9:00 AM – 6:00 PM"
+  }
+}

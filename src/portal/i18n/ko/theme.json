@@ -1,0 +1,23 @@
+{
+  "title": "테마 설정",
+  "mode": "화면 모드",
+  "modes": {
+    "light": "라이트",
+    "dark": "다크",
+    "system": "시스템"
+  },
+  "language": "언어",
+  "accent": "강조 색",
+  "accents": {
+    "blue": "블루",
+    "indigo": "인디고",
+    "violet": "바이올렛",
+    "pink": "핑크",
+    "orange": "오렌지",
+    "green": "그린",
+    "teal": "틸"
+  },
+  "glass": { "label": "유리 효과", "hint": "끄면 불투명한 면으로 보여요" },
+  "motion": { "label": "애니메이션", "hint": "끄면 움직임 없이 바로 바뀌어요" },
+  "savedLocally": "설정은 이 브라우저에 저장됩니다."
+}

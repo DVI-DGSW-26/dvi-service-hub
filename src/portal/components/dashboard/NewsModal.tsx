@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
 import { useId, useRef } from 'react'
-import { dotDate } from '../../lib/format'
+import { useI18n } from '../../i18n'
+import { formatDate } from '../../lib/format'
 import type { NewsItem } from '../../types/portal'
 import { Modal } from '../ui/Modal'
 import { NewsThumb } from './NewsPanel'
@@ -18,6 +19,7 @@ interface NewsModalProps {
  */
 export function NewsModal({ news, index, onIndexChange }: NewsModalProps) {
   const titleId = useId()
+  const { t, lang } = useI18n()
   // 닫히는 애니메이션 동안에도 내용이 남아 있도록 마지막으로 본 소식을 기억해 그린다
   const last = useRef(0)
   if (index !== null) last.current = index
@@ -34,7 +36,7 @@ export function NewsModal({ news, index, onIndexChange }: NewsModalProps) {
           <NewsThumb item={item} className="aspect-[16/8] w-full lg:aspect-auto lg:h-full" />
 
           <div className="p-6 sm:p-8 lg:overflow-y-auto lg:overscroll-contain lg:p-10 lg:pt-14">
-            <p className="text-[15px] font-semibold text-accent tabular-nums">{dotDate(item.date)}</p>
+            <p className="text-[15px] font-semibold text-accent tabular-nums">{formatDate(item.date, lang)}</p>
             <h2 id={titleId} className="mt-2 text-[clamp(22px,2.4vw,28px)]/[1.3] font-bold tracking-[-0.025em] text-balance">
               {item.title}
             </h2>
@@ -47,19 +49,19 @@ export function NewsModal({ news, index, onIndexChange }: NewsModalProps) {
                 rel="noreferrer"
                 className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-accent-fill px-5 text-[15px] font-semibold text-white transition-[filter,scale] duration-150 hover:brightness-110 active:scale-[0.97]"
               >
-                원문 보기
+                {t.home.news.original}
                 <ExternalLink className="size-4" aria-hidden="true" />
-                <span className="sr-only">(새 탭에서 열림)</span>
+                <span className="sr-only">{t.common.newTab}</span>
               </a>
               {news.length > 1 && (
                 <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => step(-1)} aria-label="이전 소식" className={nav}>
+                  <button type="button" onClick={() => step(-1)} aria-label={t.home.news.prev} className={nav}>
                     <ChevronLeft className="size-5" aria-hidden="true" />
                   </button>
                   <span className="w-12 text-center text-[15px] font-medium text-muted tabular-nums">
                     {shown + 1} / {news.length}
                   </span>
-                  <button type="button" onClick={() => step(1)} aria-label="다음 소식" className={nav}>
+                  <button type="button" onClick={() => step(1)} aria-label={t.home.news.next} className={nav}>
                     <ChevronRight className="size-5" aria-hidden="true" />
                   </button>
                 </div>
@@ -67,8 +69,8 @@ export function NewsModal({ news, index, onIndexChange }: NewsModalProps) {
             </div>
 
             {news.length > 1 && (
-              <section aria-label="다른 소식" className="mt-8 border-t border-line pt-6">
-                <h3 className="mb-3 text-base font-bold">다른 소식</h3>
+              <section aria-label={t.home.news.others} className="mt-8 border-t border-line pt-6">
+                <h3 className="mb-3 text-base font-bold">{t.home.news.others}</h3>
                 <ul className="space-y-2">
                   {news.map((n, i) =>
                     i === shown ? null : (
@@ -81,7 +83,7 @@ export function NewsModal({ news, index, onIndexChange }: NewsModalProps) {
                           <NewsThumb item={n} className="aspect-[16/10] w-24 flex-none rounded-xl" />
                           <span className="min-w-0">
                             <span className="block truncate text-base font-semibold">{n.title}</span>
-                            <span className="mt-1 block text-sm text-muted tabular-nums">{dotDate(n.date)}</span>
+                            <span className="mt-1 block text-sm text-muted tabular-nums">{formatDate(n.date, lang)}</span>
                           </span>
                         </button>
                       </li>

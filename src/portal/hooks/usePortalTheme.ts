@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ACCENTS, KEYS, applyAccent, applyGlass, readPref, resolveMode, writePref, type ThemeMode } from '../lib/theme'
+import { ACCENTS, KEYS, applyAccent, applyGlass, applyMotion, readPref, resolveMode, writePref, type ThemeMode } from '../lib/theme'
 
 /** 밝기가 확 뒤집히지 않게 바꾸는 순간에만 색 전환을 켠다 (portal.css 의 .theme-switching) */
 function easeThemeSwitch() {
@@ -15,6 +15,7 @@ export function usePortalTheme() {
   })
   const [accent, setAccentState] = useState(() => readPref(KEYS.accent) ?? ACCENTS[0].id)
   const [glass, setGlassState] = useState(() => readPref(KEYS.glass) !== 'off')
+  const [motion, setMotionState] = useState(() => readPref(KEYS.motion) !== 'off')
 
   // '시스템'이면 OS 설정이 바뀔 때 따라간다
   useEffect(() => {
@@ -51,7 +52,13 @@ export function usePortalTheme() {
     setGlassState(on)
   }
 
-  return { mode, setMode, accent, setAccent, glass, setGlass }
+  const setMotion = (on: boolean) => {
+    applyMotion(on)
+    writePref(KEYS.motion, on ? null : 'off')
+    setMotionState(on)
+  }
+
+  return { mode, setMode, accent, setAccent, glass, setGlass, motion, setMotion }
 }
 
 export type PortalTheme = ReturnType<typeof usePortalTheme>

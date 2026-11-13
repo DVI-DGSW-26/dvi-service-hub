@@ -3,6 +3,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import PortalApp from './PortalApp'
+import { I18nProvider } from './i18n'
 import { applySavedPrefs } from './lib/theme'
 import './portal.css'
 
@@ -10,6 +11,8 @@ applySavedPrefs()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <PortalApp />
+    <I18nProvider>
+      <PortalApp />
+    </I18nProvider>
   </StrictMode>,
 )

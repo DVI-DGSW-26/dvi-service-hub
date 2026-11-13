@@ -8,6 +8,7 @@ import { ServiceCardSkeleton, ServiceRowSkeleton } from '../components/services/
 import { PageTitle } from '../components/ui/PageTitle'
 import { Segmented } from '../components/ui/Segmented'
 import type { Category, Service } from '../../services'
+import { useI18n } from '../i18n'
 import { hasNoDepartment, matchesQuery } from '../lib/access'
 import { readPref, writePref } from '../lib/theme'
 import type { Me } from '../types/portal'
@@ -31,6 +32,7 @@ interface SystemsPageProps {
 }
 
 export function SystemsPage({ me, loading = false, services, query, onQueryChange, favorites, onToggleFavorite }: SystemsPageProps) {
+  const { t, f } = useI18n()
   const [category, setCategory] = useState<(typeof CATEGORIES)[number]>('전체')
   // 마지막으로 고른 보기 방식을 기억한다
   const [view, setView] = useState<View>(() => (readPref(VIEW_KEY) === 'list' ? 'list' : 'card'))
@@ -42,7 +44,7 @@ export function SystemsPage({ me, loading = false, services, query, onQueryChang
 
   return (
     <>
-      <PageTitle title="업무시스템" description={loading ? 'DVISION에서 운영 중인 서비스를 한곳에서 찾고 이동하세요.' : `DVISION에서 운영 중인 서비스 ${services.length}개를 한곳에서 찾고 이동하세요.`} />
+      <PageTitle title={t.systems.title} description={loading ? t.systems.description : f(t.systems.descriptionCount, { count: services.length })} />
 
       {/* 넓은 화면에서는 상단 바의 검색칸을 쓴다 */}
       <SearchBox value={query} onChange={onQueryChange} className="mb-4 md:hidden" />
@@ -50,7 +52,7 @@ export function SystemsPage({ me, loading = false, services, query, onQueryChang
       {hasNoDepartment(me) && <NoDepartmentNotice className="mb-4" />}
 
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2" role="group" aria-label="분류">
+        <div className="flex flex-wrap gap-2" role="group" aria-label={t.systems.categoryGroup}>
           {CATEGORIES.map((c) => (
             <button
               key={c}
@@ -63,23 +65,23 @@ export function SystemsPage({ me, loading = false, services, query, onQueryChang
                   : 'glass text-fg hover:text-accent'
               }`}
             >
-              {c}
+              {t.systems.category[c]}
             </button>
           ))}
         </div>
         <Segmented<View>
-          label="보기 방식"
+          label={t.systems.view.label}
           value={view}
           onChange={changeView}
           options={[
-            { value: 'card', label: '카드', icon: LayoutGrid },
-            { value: 'list', label: '리스트', icon: List },
+            { value: 'card', label: t.systems.view.card, icon: LayoutGrid },
+            { value: 'list', label: t.systems.view.list, icon: List },
           ]}
         />
       </div>
 
       <p className="sr-only" aria-live="polite">
-        {loading ? '불러오는 중' : `${visible.length}개 서비스`}
+        {loading ? t.common.loading : f(t.systems.count, { count: visible.length })}
       </p>
 
       {loading ? (
@@ -98,8 +100,8 @@ export function SystemsPage({ me, loading = false, services, query, onQueryChang
         )
       ) : visible.length === 0 ? (
         <div className="glass rounded-3xl py-16 text-center">
-          <p className="font-semibold">검색 결과가 없습니다.</p>
-          <p className="mt-1 text-sm text-muted">다른 이름이나 기능으로 검색하거나 분류를 ‘전체’로 바꿔 보세요.</p>
+          <p className="font-semibold">{t.systems.empty.title}</p>
+          <p className="mt-1 text-sm text-muted">{t.systems.empty.hint}</p>
         </div>
       ) : view === 'list' ? (
         <ul className="glass divide-y divide-line overflow-hidden rounded-3xl">

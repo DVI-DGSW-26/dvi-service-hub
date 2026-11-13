@@ -1,0 +1,13 @@
+{
+  "loading": "Loading",
+  "loadError": "Couldn't load this. Please try again in a moment.",
+  "close": "Close",
+  "newTab": "(opens in a new tab)",
+  "more": "More",
+  "viewAll": "View all",
+  "duration": {
+    "h": "{h}h",
+    "m": "{m}m",
+    "hm": "{h}h {m}m"
+  }
+}

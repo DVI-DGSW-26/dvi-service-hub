@@ -1,6 +1,7 @@
 import { Zap } from 'lucide-react'
 import { portalApi } from '../../api/portal'
 import { useAsync } from '../../hooks/useAsync'
+import { useI18n } from '../../i18n'
 import { Icon } from '../ui/Icon'
 import { Panel } from '../ui/Panel'
 import { LoadError, Skeleton } from '../ui/Skeleton'
@@ -9,9 +10,10 @@ const isExternal = (url: string) => /^https?:/.test(url)
 
 export function QuickLinksPanel({ className = '' }: { className?: string }) {
   const { data, loading, error } = useAsync(portalApi.quickLinks)
+  const { t } = useI18n()
 
   return (
-    <Panel title="빠른 바로가기" icon={Zap} className={className}>
+    <Panel title={t.home.quickLinks.title} icon={Zap} className={className}>
       {error ? (
         <LoadError />
       ) : (

@@ -1,11 +1,14 @@
 import { ArrowUpRight, Star } from 'lucide-react'
 import type { AuthMode, Service } from '../../../services'
+import { useI18n } from '../../i18n'
 import { Badge, type BadgeTone } from '../ui/Badge'
 
-export const AUTH: Record<AuthMode, { label: string; tone: BadgeTone }> = {
-  sso: { label: '회사 계정', tone: 'ok' },
-  separate: { label: '개별 로그인', tone: 'warn' },
-  none: { label: '로그인 없음', tone: 'accent' },
+const AUTH_TONE: Record<AuthMode, BadgeTone> = { sso: 'ok', separate: 'warn', none: 'accent' }
+
+/** 개발 중이면 그 표시, 아니면 로그인 방식 — 카드 · 줄이 같이 쓴다 */
+export function ServiceBadge({ service: s }: { service: Service }) {
+  const { t } = useI18n()
+  return s.inDevelopment ? <Badge tone="neutral">{t.systems.inDevelopment}</Badge> : <Badge tone={AUTH_TONE[s.auth]}>{t.systems.auth[s.auth]}</Badge>
 }
 
 const LOGO_SIZE = { sm: 'size-7 rounded-lg p-0.5 text-sm', md: 'size-11 rounded-xl p-1 text-[22px]', lg: 'size-12 rounded-xl p-1 text-[22px]' }
@@ -41,6 +44,7 @@ interface ServiceCardProps {
  * 누르는 순간 살짝 눌리고(active), 올리면 떠오른다(hover).
  */
 export function ServiceCard({ service: s, favorite, onToggleFavorite, variant = 'compact' }: ServiceCardProps) {
+  const { t, f } = useI18n()
   const primary = s.links[0]
   const detailed = variant === 'detailed'
 
@@ -62,25 +66,25 @@ export function ServiceCard({ service: s, favorite, onToggleFavorite, variant = 
                 className="outline-none after:absolute after:inset-0 after:rounded-2xl after:content-['']"
               >
                 {s.name}
-                <span className="sr-only"> (새 탭에서 열림)</span>
+                <span className="sr-only"> {t.common.newTab}</span>
               </a>
             </h3>
             {detailed ? (
-              <span className="flex-none rounded-md bg-subtle px-1.5 py-px text-xs text-muted ring-1 ring-line">{s.category}</span>
+              <span className="flex-none rounded-md bg-subtle px-1.5 py-px text-xs text-muted ring-1 ring-line">{t.systems.category[s.category]}</span>
             ) : (
-              s.inDevelopment && <Badge tone="neutral">개발 중</Badge>
+              s.inDevelopment && <Badge tone="neutral">{t.systems.inDevelopment}</Badge>
             )}
           </div>
           <p className={`mt-1 text-sm/normal text-muted ${detailed ? '' : 'line-clamp-2 fit:line-clamp-1 tall:line-clamp-2'}`}>{s.description}</p>
-          {detailed && <p className="mt-1.5 text-xs text-muted/80">{new URL(primary.url).host}</p>}
+          {detailed && <p className="mt-1.5 text-xs text-muted">{new URL(primary.url).host}</p>}
         </div>
         <div className="relative z-10 -mt-1.5 -mr-2 flex flex-none flex-col items-center">
           <button
             type="button"
             onClick={() => onToggleFavorite(s.id)}
             aria-pressed={favorite}
-            aria-label={favorite ? `${s.name} 즐겨찾기 해제` : `${s.name} 즐겨찾기`}
-            title={favorite ? '즐겨찾기 해제' : '즐겨찾기'}
+            aria-label={favorite ? f(t.systems.favorite.removeNamed, { name: s.name }) : f(t.systems.favorite.addNamed, { name: s.name })}
+            title={favorite ? t.systems.favorite.remove : t.systems.favorite.add}
             className="grid size-9 cursor-pointer place-items-center rounded-xl text-muted transition-[background-color,color,scale] duration-150 hover:bg-subtle hover:text-amber active:scale-90"
           >
             <Star className={`size-[18px] ${favorite ? 'fill-amber text-amber' : ''}`} aria-hidden="true" />
@@ -95,13 +99,13 @@ export function ServiceCard({ service: s, favorite, onToggleFavorite, variant = 
       {/* 높은 화면의 홈 카드 — 늘어난 아래쪽에 로그인 방식을 붙인다 */}
       {!detailed && (
         <div className="mt-auto hidden px-4 pb-4 tall:block">
-          {s.inDevelopment ? <Badge tone="neutral">개발 중</Badge> : <Badge tone={AUTH[s.auth].tone}>{AUTH[s.auth].label}</Badge>}
+          <ServiceBadge service={s} />
         </div>
       )}
 
       {detailed && (
         <div className="mt-auto flex items-center justify-between gap-2 border-t border-line px-4 py-3 text-[13px]">
-          {s.inDevelopment ? <Badge tone="neutral">개발 중</Badge> : <Badge tone={AUTH[s.auth].tone}>{AUTH[s.auth].label}</Badge>}
+          <ServiceBadge service={s} />
           {s.links.length > 1 && (
             <div className="relative z-10 flex gap-3">
               {s.links.map((l) => (

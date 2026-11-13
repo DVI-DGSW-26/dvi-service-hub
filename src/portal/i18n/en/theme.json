@@ -1,0 +1,23 @@
+{
+  "title": "Theme",
+  "mode": "Appearance",
+  "modes": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": "Language",
+  "accent": "Accent color",
+  "accents": {
+    "blue": "Blue",
+    "indigo": "Indigo",
+    "violet": "Violet",
+    "pink": "Pink",
+    "orange": "Orange",
+    "green": "Green",
+    "teal": "Teal"
+  },
+  "glass": { "label": "Glass effect", "hint": "Turn off for solid surfaces" },
+  "motion": { "label": "Animations", "hint": "Turn off to change things instantly" },
+  "savedLocally": "Settings are saved in this browser."
+}

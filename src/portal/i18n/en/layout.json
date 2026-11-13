@@ -1,0 +1,36 @@
+{
+  "skipToContent": "Skip to content",
+  "brandTagline": "Company portal",
+  "mainNav": "Main menu",
+  "pages": {
+    "home": "Home",
+    "systems": "Systems",
+    "info": "Company info",
+    "guide": "Guide",
+    "account": "Settings"
+  },
+  "sidebar": {
+    "expand": "Expand sidebar",
+    "collapse": "Collapse sidebar",
+    "expandShort": "Expand",
+    "collapseShort": "Collapse"
+  },
+  "search": {
+    "label": "Search systems",
+    "placeholder": "Search systems by name or feature"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "unread": "Notifications, {count} unread",
+    "loading": "Loading notifications",
+    "empty": "No new notifications."
+  },
+  "user": {
+    "loading": "Loading your profile",
+    "menuButton": "Menu for {name}",
+    "name": "{name}",
+    "menu": "Account menu",
+    "account": "Account settings",
+    "logout": "Sign out"
+  }
+}

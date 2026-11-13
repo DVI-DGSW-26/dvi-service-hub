@@ -1,7 +1,7 @@
 import { ArrowUpRight, Star } from 'lucide-react'
 import type { Service } from '../../../services'
-import { Badge } from '../ui/Badge'
-import { AUTH, ServiceLogo } from './ServiceCard'
+import { useI18n } from '../../i18n'
+import { ServiceBadge, ServiceLogo } from './ServiceCard'
 
 interface ServiceRowProps {
   service: Service
@@ -15,6 +15,7 @@ interface ServiceRowProps {
  * 좁은 화면에서는 설명을 이름 아래로 내리고 주소 · 로그인 방식은 뺀다.
  */
 export function ServiceRow({ service: s, favorite, onToggleFavorite }: ServiceRowProps) {
+  const { t, f } = useI18n()
   const primary = s.links[0]
 
   return (
@@ -31,17 +32,17 @@ export function ServiceRow({ service: s, favorite, onToggleFavorite }: ServiceRo
               className="outline-none after:absolute after:inset-0 after:content-[''] focus-visible:underline"
             >
               {s.name}
-              <span className="sr-only"> (새 탭에서 열림)</span>
+              <span className="sr-only"> {t.common.newTab}</span>
             </a>
           </h3>
-          <span className="flex-none rounded-md bg-subtle px-1.5 py-px text-xs text-muted ring-1 ring-line">{s.category}</span>
+          <span className="flex-none rounded-md bg-subtle px-1.5 py-px text-xs text-muted ring-1 ring-line">{t.systems.category[s.category]}</span>
         </div>
         <p className="mt-0.5 truncate text-sm text-muted md:hidden">{s.description}</p>
       </div>
 
       <div className="hidden min-w-0 flex-1 md:block">
         <p className="truncate text-sm">{s.description}</p>
-        <p className="mt-0.5 truncate text-xs text-muted/80">{new URL(primary.url).host}</p>
+        <p className="mt-0.5 truncate text-xs text-muted">{new URL(primary.url).host}</p>
       </div>
 
       <div className="hidden flex-none items-center gap-3 text-[13px] lg:flex">
@@ -52,7 +53,7 @@ export function ServiceRow({ service: s, favorite, onToggleFavorite }: ServiceRo
             </a>
           ))}
         <span className="w-[88px] text-right">
-          {s.inDevelopment ? <Badge tone="neutral">개발 중</Badge> : <Badge tone={AUTH[s.auth].tone}>{AUTH[s.auth].label}</Badge>}
+          <ServiceBadge service={s} />
         </span>
       </div>
 
@@ -61,8 +62,8 @@ export function ServiceRow({ service: s, favorite, onToggleFavorite }: ServiceRo
           type="button"
           onClick={() => onToggleFavorite(s.id)}
           aria-pressed={favorite}
-          aria-label={favorite ? `${s.name} 즐겨찾기 해제` : `${s.name} 즐겨찾기`}
-          title={favorite ? '즐겨찾기 해제' : '즐겨찾기'}
+          aria-label={favorite ? f(t.systems.favorite.removeNamed, { name: s.name }) : f(t.systems.favorite.addNamed, { name: s.name })}
+          title={favorite ? t.systems.favorite.remove : t.systems.favorite.add}
           className="grid size-10 cursor-pointer place-items-center rounded-xl text-muted transition-[background-color,color,scale] duration-150 hover:bg-raised hover:text-amber active:scale-90"
         >
           <Star className={`size-[18px] ${favorite ? 'fill-amber text-amber' : ''}`} aria-hidden="true" />

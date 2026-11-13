@@ -1,0 +1,82 @@
+{
+  "title": "설정",
+  "description": "회사 계정 · 로그인 수단을 확인하고, 화면 모드 · 애니메이션 같은 화면 설정을 바꾸세요.",
+  "contactLink": "시스템 문의",
+  "profile": {
+    "loading": "내 정보 불러오는 중",
+    "greeting": "{name} 님",
+    "noDepartment": "부서 미지정",
+    "defaultDepartment": "직원",
+    "signedIn": "회사 계정 로그인 중",
+    "name": "이름",
+    "email": "회사 이메일",
+    "department": "부서",
+    "unassigned": "미지정",
+    "note": "이름 · 이메일 · 부서는 관리팀에서 관리해요. 바꿔야 하면 {link}로 알려 주세요."
+  },
+  "signIn": {
+    "title": "로그인 수단",
+    "manage": "통합 로그인에서 관리",
+    "summary": {
+      "text": "로그인 수단 3가지 중 {n}를 쓰고 있어요",
+      "n": "{count}가지"
+    },
+    "level": {
+      "good": "보안 좋음",
+      "fair": "보통",
+      "weak": "보강 필요"
+    },
+    "actionLabel": "{method} {action}"
+  },
+  "password": {
+    "title": "비밀번호",
+    "changed": {
+      "one": "마지막 변경 {date} ({count}일 전)",
+      "other": "마지막 변경 {date} ({count}일 전)"
+    },
+    "stale": "바꾼 지 오래됐어요",
+    "change": "변경"
+  },
+  "otp": {
+    "title": "OTP 인증 앱",
+    "inUse": "사용 중",
+    "notRegistered": "미등록",
+    "defaultLabel": "인증 앱",
+    "added": "{date} 등록",
+    "pitch": "등록하면 비밀번호가 새어도 계정을 지킬 수 있어요",
+    "manage": "관리",
+    "register": "등록"
+  },
+  "passkey": {
+    "title": "패스키 (지문 · 얼굴)",
+    "count": {
+      "one": "{count}개 등록",
+      "other": "{count}개 등록"
+    },
+    "none": "없음",
+    "inUse": "비밀번호 없이 지문이나 얼굴로 로그인해요",
+    "pitch": "등록하면 비밀번호 없이 로그인할 수 있어요",
+    "add": "추가",
+    "detail": "{added} 등록 · 마지막 사용 {lastUsed}"
+  },
+  "devices": {
+    "title": "로그인한 기기",
+    "count": {
+      "one": "{count}대",
+      "other": "{count}대"
+    },
+    "current": "이 기기",
+    "note": "모르는 기기가 있으면 바로 비밀번호를 바꾸고 {link}로 알려 주세요."
+  },
+  "display": "화면 설정",
+  "services": {
+    "title": "쓸 수 있는 서비스",
+    "count": "{count}개",
+    "hint": "회사 계정의 권한에 따라 보이는 서비스예요."
+  },
+  "logout": {
+    "title": "로그아웃",
+    "body": "포털과 회사 계정을 쓰는 모든 사내 서비스에서 함께 로그아웃돼요.",
+    "action": "로그아웃"
+  }
+}

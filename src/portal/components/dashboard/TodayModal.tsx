@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { portalApi } from '../../api/portal'
 import { useAsync } from '../../hooks/useAsync'
+import { useI18n } from '../../i18n'
 import { longToday, shortDate, toMinutes } from '../../lib/format'
 import type { ScheduleItem } from '../../types/portal'
 import { SearchBox } from '../layout/SearchBox'
@@ -24,10 +25,10 @@ const parse = (iso: string) => {
   return new Date(y, m - 1, d)
 }
 const matches = (s: ScheduleItem, q: string) => `${s.title} ${s.place ?? ''}`.toLowerCase().includes(q)
-const halves = (items: ScheduleItem[]) =>
+const halves = (items: ScheduleItem[], labels: { morning: string; afternoon: string }) =>
   [
-    { label: '오전', items: items.filter((s) => toMinutes(s.start) < 12 * 60) },
-    { label: '오후', items: items.filter((s) => toMinutes(s.start) >= 12 * 60) },
+    { label: labels.morning, items: items.filter((s) => toMinutes(s.start) < 12 * 60) },
+    { label: labels.afternoon, items: items.filter((s) => toMinutes(s.start) >= 12 * 60) },
   ].filter((g) => g.items.length)
 
 /**
@@ -36,6 +37,7 @@ const halves = (items: ScheduleItem[]) =>
  */
 export function TodayModal({ items, now, date, open, onClose }: TodayModalProps) {
   const titleId = useId()
+  const { t, f, rich, lang } = useI18n()
   const listRef = useRef<HTMLDivElement>(null)
   const history = useAsync(portalApi.scheduleHistory)
   const [day, setDay] = useState(0)
@@ -48,7 +50,8 @@ export function TodayModal({ items, now, date, open, onClose }: TodayModalProps)
   const results = q ? days.map((d) => ({ ...d, items: d.items.filter((s) => matches(s, q)) })).filter((d) => d.items.length) : []
   const found = results.reduce((n, d) => n + d.items.length, 0)
   const dayNow = (i: number) => (i === 0 ? now : END_OF_DAY)
-  const dayLabel = (i: number, iso: string) => (i === 0 ? '오늘' : i === 1 ? '어제' : shortDate(iso))
+  const dayLabel = (i: number, iso: string) => (i === 0 ? t.schedule.today : i === 1 ? t.schedule.yesterday : shortDate(iso, lang))
+  const count = (n: number) => f(t.schedule.count, { count: n })
   const left = items.filter((s) => statusOf(s, now) !== 'done').length
 
   // 열 때마다 오늘 · 빈 검색으로
@@ -68,45 +71,46 @@ export function TodayModal({ items, now, date, open, onClose }: TodayModalProps)
     return () => cancelAnimationFrame(id)
   }, [open, day, q, isToday])
 
-  const heading = q ? '일정 검색' : isToday ? '오늘의 일정' : `${dayLabel(day, selected.date)} 일정`
+  const heading = q
+    ? t.schedule.searchTitle
+    : isToday
+      ? t.schedule.title
+      : day === 1
+        ? t.schedule.yesterdayTitle
+        : f(t.schedule.dateTitle, { date: shortDate(selected.date, lang) })
+  const bold = (text: string) => <strong className="font-bold text-fg">{text}</strong>
 
   return (
     <Modal open={open} onClose={onClose} labelledBy={titleId} wide className="lg:h-[min(800px,calc(100dvh-32px))]">
       <div className="flex flex-none flex-wrap items-end justify-between gap-4 border-b border-line p-6 pr-16 sm:p-8 sm:pr-20">
         <div className="min-w-0">
-          <p className="text-[15px] font-semibold text-accent">{longToday(isToday || q ? date : parse(selected.date))}</p>
+          <p className="text-[15px] font-semibold text-accent">{longToday(isToday || q ? date : parse(selected.date), lang)}</p>
           <div className="mt-2 flex flex-wrap items-center gap-2.5">
             <h2 id={titleId} className="text-[clamp(22px,2.4vw,28px)]/[1.3] font-bold tracking-[-0.025em]">
               {heading}
             </h2>
-            <SourceTag>From 플로우</SourceTag>
+            <SourceTag>{t.schedule.source}</SourceTag>
           </div>
           <p className="mt-1.5 text-base text-muted" aria-live="polite">
-            {q ? (
-              <>
-                최근 2주에서 <strong className="font-bold text-fg">{found}건</strong> 찾았어요
-              </>
-            ) : isToday ? (
-              <>
-                총 {items.length}건 · 남은 일정 <strong className="font-bold text-fg">{left}건</strong>
-              </>
-            ) : (
-              <>총 {selected.items.length}건</>
-            )}
+            {q
+              ? rich(t.schedule.found, { found: bold(count(found)) })
+              : isToday
+                ? rich(t.schedule.todaySummary, { count: items.length, left: bold(f(t.schedule.left, { count: left })) }, items.length)
+                : f(t.schedule.total, { count: selected.items.length })}
           </p>
         </div>
         <SearchBox
           value={query}
           onChange={setQuery}
-          label="일정 검색"
-          placeholder="일정 이름이나 장소로 검색"
+          label={t.schedule.searchTitle}
+          placeholder={t.schedule.searchPlaceholder}
           className="w-full sm:w-80"
         />
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         {/* 날짜 고르기 — 좁은 화면에서는 가로로 넘긴다 */}
-        <nav aria-label="날짜" className="flex-none border-b border-line lg:w-60 lg:border-r lg:border-b-0">
+        <nav aria-label={t.schedule.dates} className="flex-none border-b border-line lg:w-60 lg:border-r lg:border-b-0">
           <ul className="flex gap-1.5 overflow-x-auto p-3 lg:h-full lg:flex-col lg:overflow-y-auto lg:overscroll-contain">
             {days.map((d, i) => {
               const active = !q && i === day
@@ -126,11 +130,11 @@ export function TodayModal({ items, now, date, open, onClose }: TodayModalProps)
                     <span className="min-w-0">
                       <span className="block text-[15px] font-bold whitespace-nowrap">{dayLabel(i, d.date)}</span>
                       {i < 2 && d.date && (
-                        <span className={`block text-[13px] whitespace-nowrap ${active ? 'text-white/80' : 'text-muted'}`}>{shortDate(d.date)}</span>
+                        <span className={`block text-[13px] whitespace-nowrap ${active ? 'text-white/80' : 'text-muted'}`}>{shortDate(d.date, lang)}</span>
                       )}
                     </span>
                     <span className={`text-sm font-semibold whitespace-nowrap tabular-nums ${active ? 'text-white/90' : 'text-muted'}`}>
-                      {d.items.length ? `${d.items.length}건` : '없음'}
+                      {d.items.length ? count(d.items.length) : t.schedule.none}
                     </span>
                   </button>
                 </li>
@@ -154,7 +158,7 @@ export function TodayModal({ items, now, date, open, onClose }: TodayModalProps)
                 results.map((d) => {
                   const i = days.findIndex((x) => x.date === d.date)
                   return (
-                    <DaySection key={d.date} label={`${dayLabel(i, d.date)}${i < 2 ? ` · ${shortDate(d.date)}` : ''} · ${d.items.length}건`}>
+                    <DaySection key={d.date} label={[dayLabel(i, d.date), ...(i < 2 ? [shortDate(d.date, lang)] : []), count(d.items.length)].join(' · ')}>
                       {d.items.map((s) => (
                         <ScheduleRow key={s.id} item={s} now={dayNow(i)} withPlace />
                       ))}
@@ -163,23 +167,23 @@ export function TodayModal({ items, now, date, open, onClose }: TodayModalProps)
                 })
               ) : (
                 <div className="py-16 text-center">
-                  <p className="text-base font-semibold">‘{query.trim()}’에 맞는 일정이 없어요</p>
-                  <p className="mt-1 text-[15px] text-muted">다른 낱말로 찾아보거나 왼쪽에서 날짜를 골라 보세요.</p>
+                  <p className="text-base font-semibold">{f(t.schedule.noResults, { query: query.trim() })}</p>
+                  <p className="mt-1 text-[15px] text-muted">{t.schedule.noResultsHint}</p>
                 </div>
               )
             ) : (
               <>
                 {isToday && <NowGuide items={items} now={now} date={date} className="mb-4" />}
                 {selected.items.length ? (
-                  halves(selected.items).map((g) => (
-                    <DaySection key={g.label} label={`${g.label} · ${g.items.length}건`}>
+                  halves(selected.items, t.schedule).map((g) => (
+                    <DaySection key={g.label} label={`${g.label} · ${count(g.items.length)}`}>
                       {g.items.map((s) => (
                         <ScheduleRow key={s.id} item={s} now={dayNow(day)} withPlace />
                       ))}
                     </DaySection>
                   ))
                 ) : (
-                  <p className="py-16 text-center text-base text-muted">이날은 일정이 없었어요.</p>
+                  <p className="py-16 text-center text-base text-muted">{t.schedule.emptyDay}</p>
                 )}
               </>
             )}

@@ -1,0 +1,82 @@
+{
+  "title": "Settings",
+  "description": "Review your company account and sign-in methods, and adjust display settings like appearance and animation.",
+  "contactLink": "IT support",
+  "profile": {
+    "loading": "Loading your profile",
+    "greeting": "{name}",
+    "noDepartment": "No department",
+    "defaultDepartment": "Employee",
+    "signedIn": "Signed in with company account",
+    "name": "Name",
+    "email": "Work email",
+    "department": "Department",
+    "unassigned": "Not assigned",
+    "note": "Your name, email, and department are managed by the admin team. To change them, contact {link}."
+  },
+  "signIn": {
+    "title": "Sign-in methods",
+    "manage": "Manage in SSO",
+    "summary": {
+      "text": "You’re using {n} sign-in methods",
+      "n": "{count} of 3"
+    },
+    "level": {
+      "good": "Strong",
+      "fair": "Fair",
+      "weak": "Needs attention"
+    },
+    "actionLabel": "{method}: {action}"
+  },
+  "password": {
+    "title": "Password",
+    "changed": {
+      "one": "Last changed {date} ({count} day ago)",
+      "other": "Last changed {date} ({count} days ago)"
+    },
+    "stale": "Not changed in a while",
+    "change": "Change"
+  },
+  "otp": {
+    "title": "Authenticator app (OTP)",
+    "inUse": "On",
+    "notRegistered": "Not set up",
+    "defaultLabel": "Authenticator app",
+    "added": "Added {date}",
+    "pitch": "Keeps your account safe even if your password leaks",
+    "manage": "Manage",
+    "register": "Set up"
+  },
+  "passkey": {
+    "title": "Passkeys (fingerprint · face)",
+    "count": {
+      "one": "{count} added",
+      "other": "{count} added"
+    },
+    "none": "None",
+    "inUse": "Sign in with your fingerprint or face, no password needed",
+    "pitch": "Add one to sign in without a password",
+    "add": "Add",
+    "detail": "Added {added} · Last used {lastUsed}"
+  },
+  "devices": {
+    "title": "Signed-in devices",
+    "count": {
+      "one": "{count} device",
+      "other": "{count} devices"
+    },
+    "current": "This device",
+    "note": "If you see a device you don’t recognize, change your password right away and let {link} know."
+  },
+  "display": "Display",
+  "services": {
+    "title": "Your services",
+    "count": "{count}",
+    "hint": "Services shown here depend on your company account’s permissions."
+  },
+  "logout": {
+    "title": "Sign out",
+    "body": "Signs you out of the portal and every company service that uses your company account.",
+    "action": "Sign out"
+  }
+}

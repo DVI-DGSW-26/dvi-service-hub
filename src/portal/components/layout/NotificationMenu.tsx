@@ -3,10 +3,12 @@ import { useEffect, useState } from 'react'
 import { portalApi } from '../../api/portal'
 import { useAsync } from '../../hooks/useAsync'
 import { usePopover } from '../../hooks/usePopover'
+import { useI18n } from '../../i18n'
 import { ICON_BUTTON, PopoverPanel } from '../ui/Popover'
 import { Skeleton } from '../ui/Skeleton'
 
 export function NotificationMenu() {
+  const { t, f } = useI18n()
   const { data, loading } = useAsync(portalApi.notifications)
   const { open, toggle, ref } = usePopover()
   const [seen, setSeen] = useState(false)
@@ -23,23 +25,23 @@ export function NotificationMenu() {
         type="button"
         onClick={toggle}
         aria-expanded={open}
-        aria-label={unread ? `알림 ${unread}건 안 읽음` : '알림'}
-        title="알림"
+        aria-label={unread ? f(t.layout.notifications.unread, { count: unread }) : t.layout.notifications.title}
+        title={t.layout.notifications.title}
         className={ICON_BUTTON}
       >
         <Bell className="size-5" aria-hidden="true" />
         {unread > 0 && (
-          <span className="absolute top-2 right-2 grid min-w-4 place-items-center rounded-full bg-danger px-1 text-[10px] font-bold text-white" aria-hidden="true">
+          <span className="absolute top-2 right-2 grid min-w-4 place-items-center rounded-full bg-danger-fill px-1 text-[10px] font-bold text-white" aria-hidden="true">
             {unread}
           </span>
         )}
       </button>
 
       {open && (
-        <PopoverPanel label="알림" className="w-[min(340px,calc(100vw-24px))]">
-          <p className="border-b border-line px-4 py-3 text-sm font-bold">알림</p>
+        <PopoverPanel label={t.layout.notifications.title} className="w-[min(340px,calc(100vw-24px))]">
+          <p className="border-b border-line px-4 py-3 text-sm font-bold">{t.layout.notifications.title}</p>
           {loading ? (
-            <div className="space-y-1 p-1.5" role="status" aria-label="알림 불러오는 중">
+            <div className="space-y-1 p-1.5" role="status" aria-label={t.layout.notifications.loading}>
               {Array.from({ length: 3 }, (_, i) => (
                 <div key={i} className="flex gap-3 px-3 py-2.5">
                   <Skeleton className="mt-1.5 size-2 flex-none rounded-full" />
@@ -52,7 +54,7 @@ export function NotificationMenu() {
             </div>
           ) : (
             <ul className="max-h-80 overflow-y-auto p-1.5">
-              {data?.length === 0 && <li className="px-3 py-6 text-center text-sm text-muted">새 알림이 없어요.</li>}
+              {data?.length === 0 && <li className="px-3 py-6 text-center text-sm text-muted">{t.layout.notifications.empty}</li>}
               {(data ?? []).map((n) => (
                 <li key={n.id}>
                   <a href={n.url} target="_blank" rel="noreferrer" className="flex gap-3 rounded-xl px-3 py-2.5 hover:bg-subtle">
