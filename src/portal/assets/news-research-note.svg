@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e3f6f3"/>
+      <stop offset="1" stop-color="#d6e6ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="200" fill="url(#bg)"/>
+  <!-- 그림자 -->
+  <ellipse cx="160" cy="176" rx="104" ry="10" fill="#2b3a55" opacity=".12"/>
+  <!-- 펼친 노트 -->
+  <path d="M60 46 Q110 36 158 52 L158 168 Q110 152 60 162 Z" fill="#ffffff"/>
+  <path d="M260 46 Q210 36 162 52 L162 168 Q210 152 260 162 Z" fill="#f7f9ff"/>
+  <rect x="157" y="50" width="6" height="120" rx="3" fill="#c3d2f5"/>
+  <g stroke="#c9d6f2" stroke-width="2.5" stroke-linecap="round">
+    <path d="M76 72 Q110 66 144 76"/><path d="M76 90 Q110 84 144 94"/><path d="M76 108 Q110 102 144 112"/><path d="M76 126 Q110 120 132 128"/>
+    <path d="M178 76 Q212 66 244 72"/><path d="M178 94 Q212 84 244 90"/>
+  </g>
+  <!-- 그래프 메모 -->
+  <path d="M182 136 L198 120 L212 128 L238 104" fill="none" stroke="#2f5bff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="238" cy="104" r="4" fill="#2f5bff"/>
+  <!-- 펜 -->
+  <g transform="rotate(-38 232 52)">
+    <rect x="196" y="46" width="78" height="12" rx="6" fill="#33518f"/>
+    <rect x="258" y="46" width="16" height="12" rx="4" fill="#f5a623"/>
+    <path d="M196 46 L182 52 L196 58 Z" fill="#2b3a55"/>
+  </g>
+  <!-- 반짝임 -->
+  <path d="M74 28 L78 38 L88 42 L78 46 L74 56 L70 46 L60 42 L70 38 Z" fill="#f5a623"/>
+  <path d="M280 120 L282 126 L288 128 L282 130 L280 136 L278 130 L272 128 L278 126 Z" fill="#14b8c4"/>
+</svg>

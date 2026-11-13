@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e8efff"/>
+      <stop offset="1" stop-color="#c9d8fb"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#eef3ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="200" fill="url(#bg)"/>
+  <!-- 무대 조명 -->
+  <path d="M60 0 L110 120 L10 120 Z" fill="#fff" opacity=".35"/>
+  <path d="M260 0 L310 120 L210 120 Z" fill="#fff" opacity=".35"/>
+  <!-- 스크린 -->
+  <rect x="88" y="22" width="144" height="86" rx="6" fill="#33518f"/>
+  <rect x="93" y="27" width="134" height="76" rx="3" fill="url(#screen)"/>
+  <rect x="106" y="74" width="14" height="20" rx="2" fill="#7da2f5"/>
+  <rect x="126" y="62" width="14" height="32" rx="2" fill="#4f7cf0"/>
+  <rect x="146" y="52" width="14" height="42" rx="2" fill="#2f5bff"/>
+  <rect x="166" y="66" width="14" height="28" rx="2" fill="#7da2f5"/>
+  <path d="M104 60 L132 50 L152 40 L176 46 L212 34" fill="none" stroke="#f5a623" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="212" cy="34" r="4" fill="#f5a623"/>
+  <rect x="188" y="74" width="30" height="5" rx="2.5" fill="#c3d2f5"/>
+  <rect x="188" y="84" width="22" height="5" rx="2.5" fill="#c3d2f5"/>
+  <!-- 발표자 -->
+  <rect x="246" y="96" width="34" height="40" rx="4" fill="#33518f"/>
+  <circle cx="263" cy="78" r="9" fill="#2b3a55"/>
+  <path d="M249 100 a14 12 0 0 1 28 0 Z" fill="#4f7cf0"/>
+  <!-- 청중 -->
+  <rect y="130" width="320" height="70" fill="#9fb8ec"/>
+  <g fill="#2b3a55">
+    <circle cx="30" cy="150" r="9"/><circle cx="72" cy="148" r="9"/><circle cx="114" cy="150" r="9"/>
+    <circle cx="156" cy="148" r="9"/><circle cx="198" cy="150" r="9"/><circle cx="240" cy="148" r="9"/><circle cx="282" cy="150" r="9"/>
+  </g>
+  <g fill="#3f5f9e">
+    <path d="M14 176 a16 14 0 0 1 32 0 Z"/><path d="M56 174 a16 14 0 0 1 32 0 Z"/><path d="M98 176 a16 14 0 0 1 32 0 Z"/>
+    <path d="M140 174 a16 14 0 0 1 32 0 Z"/><path d="M182 176 a16 14 0 0 1 32 0 Z"/><path d="M224 174 a16 14 0 0 1 32 0 Z"/><path d="M266 176 a16 14 0 0 1 32 0 Z"/>
+  </g>
+  <g fill="#1f2c45">
+    <circle cx="50" cy="178" r="10"/><circle cx="96" cy="180" r="10"/><circle cx="142" cy="178" r="10"/>
+    <circle cx="188" cy="180" r="10"/><circle cx="234" cy="178" r="10"/><circle cx="280" cy="180" r="10"/>
+  </g>
+  <g fill="#2b4478">
+    <path d="M32 204 a18 15 0 0 1 36 0 Z"/><path d="M78 206 a18 15 0 0 1 36 0 Z"/><path d="M124 204 a18 15 0 0 1 36 0 Z"/>
+    <path d="M170 206 a18 15 0 0 1 36 0 Z"/><path d="M216 204 a18 15 0 0 1 36 0 Z"/><path d="M262 206 a18 15 0 0 1 36 0 Z"/>
+  </g>
+</svg>
