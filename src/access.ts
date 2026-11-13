@@ -4,7 +4,7 @@
  *
  * 숨기는 것은 안내이고 차단이 아니다. 실제 차단은 각 서비스가 한다 (services.ts).
  */
-import { services, type Service } from './services'
+import type { Service } from './services'
 
 /** 토큰에서 꺼낸 역할 (api/auth/callback.js 의 collectRoles) */
 export interface Roles {
@@ -25,7 +25,7 @@ export function canSee(s: Service, r: Roles): boolean {
 }
 
 /** 서비스들이 돌고 있는 주소(origin) 목록. 허브가 역할을 알려줘도 되는 곳이다. */
-export function serviceOrigins(): Set<string> {
+export function serviceOrigins(services: Service[]): Set<string> {
   const out = new Set<string>()
   for (const s of services) {
     for (const l of s.links) {
