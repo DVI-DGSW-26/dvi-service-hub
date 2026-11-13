@@ -1,0 +1,316 @@
+/* dev:mock 전용 대시보드 스타일. 클래스는 src/portal 에서만 찾는다. */
+@import 'tailwindcss' source('.');
+
+/* dark: 는 시스템 설정이 아니라 <html data-theme> 를 따른다 */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+/* 홈을 스크롤 없이 한 화면에 담을 만큼 넓고 높은 화면 */
+@custom-variant fit (@media (min-width: 1880px) and (min-height: 900px));
+/* 그중에서도 넉넉히 높은 화면 — 2줄 카드를 크게 */
+@custom-variant tall (@media (min-width: 1880px) and (min-height: 1200px));
+
+/*
+ * 강조색은 색상각(--accent-h)으로 정한다 — 테마 메뉴에서 바꾸면 버튼 · 아이콘 · 히어로가 따라 바뀐다.
+ * 배경 · 글자 · 유리는 채도를 거의 빼 단조롭게 둔다 (유리에 색이 비치지 않고 흰빛만 돌게).
+ * 기본값은 아래 :root, 실행 중에는 lib/theme.ts 가 <html style> 에 덮어쓴다.
+ */
+@theme {
+  --font-sans: 'Pretendard Variable', 'Pretendard', system-ui, -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif;
+
+  --text-xs--line-height: normal;
+  --text-sm--line-height: normal;
+  --text-base--line-height: normal;
+  --text-lg--line-height: normal;
+
+  --color-bg: oklch(0.968 0.004 var(--accent-h));
+  --color-fg: oklch(0.23 0.01 var(--accent-h));
+  --color-muted: oklch(0.5 0.012 var(--accent-h));
+  --color-line: oklch(0.3 0.01 var(--accent-h) / 0.1);
+  /* 유리 위 안쪽 항목(카드 · 입력칸) */
+  --color-subtle: oklch(0.3 0.01 var(--accent-h) / 0.04);
+  /* 선택된 칸 · 떠 있는 항목 */
+  --color-raised: oklch(1 0 0 / 0.9);
+  --color-surface: oklch(1 0 0 / 0.75);
+
+  /* 글자용 강조색 / 흰 글자를 얹는 채움용 강조색 */
+  --color-accent: oklch(0.54 var(--accent-c) var(--accent-h));
+  --color-accent-fill: oklch(0.58 var(--accent-c) var(--accent-h));
+  --color-accent-soft: oklch(0.58 var(--accent-c) var(--accent-h) / 0.12);
+
+  --color-ok: oklch(0.55 0.14 155);
+  --color-ok-soft: oklch(0.6 0.14 155 / 0.14);
+  --color-warn: oklch(0.56 0.13 65);
+  --color-warn-soft: oklch(0.75 0.14 75 / 0.18);
+  --color-danger: oklch(0.58 0.21 25);
+  --color-danger-soft: oklch(0.62 0.2 25 / 0.14);
+
+  --color-violet: oklch(0.62 0.2 295);
+  --color-amber: oklch(0.78 0.16 75);
+  --color-teal: oklch(0.72 0.12 200);
+
+  --animate-materialize: materialize 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-greet: greet 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* 인사 문구가 바뀔 때 — 아래에서 살짝 떠오르며 맺힌다 */
+  @keyframes greet {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+      filter: blur(6px);
+    }
+  }
+
+  @keyframes materialize {
+    from {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.96);
+      filter: blur(6px);
+    }
+  }
+}
+
+@layer base {
+  :root {
+    --accent-h: 262;
+    --accent-c: 0.2;
+
+    /* 유리 재질 */
+    --glass-bg: oklch(1 0 0 / 0.72);
+    --glass-bg-chrome: oklch(1 0 0 / 0.7);
+    --glass-bg-strong: oklch(1 0 0 / 0.86);
+    --glass-solid: oklch(1 0 0);
+    --glass-blur: 22px;
+    --glass-border: oklch(0.3 0.01 var(--accent-h) / 0.08);
+    --glass-highlight: oklch(1 0 0 / 0.9);
+    --glass-sheen: 0.55;
+    --glass-rim: 0.9;
+    --glass-shadow: 0 1px 2px oklch(0 0 0 / 0.04), 0 10px 30px -14px oklch(0 0 0 / 0.14);
+
+    color-scheme: light;
+    line-height: normal;
+  }
+
+  :root[data-theme='dark'] {
+    --color-bg: oklch(0.16 0.008 var(--accent-h));
+    --color-fg: oklch(0.97 0.003 var(--accent-h));
+    --color-muted: oklch(0.76 0.01 var(--accent-h));
+    --color-line: oklch(1 0 0 / 0.09);
+    --color-subtle: oklch(1 0 0 / 0.05);
+    --color-raised: oklch(1 0 0 / 0.12);
+    --color-surface: oklch(0.24 0.008 var(--accent-h) / 0.8);
+    --color-accent: oklch(0.76 calc(var(--accent-c) * 0.85) var(--accent-h));
+    --color-accent-fill: oklch(0.6 var(--accent-c) var(--accent-h));
+    --color-accent-soft: oklch(0.7 var(--accent-c) var(--accent-h) / 0.18);
+    --color-ok: oklch(0.78 0.14 155);
+    --color-ok-soft: oklch(0.7 0.14 155 / 0.16);
+    --color-warn: oklch(0.83 0.13 75);
+    --color-warn-soft: oklch(0.8 0.14 75 / 0.16);
+    --color-danger: oklch(0.72 0.18 25);
+    --color-danger-soft: oklch(0.65 0.2 25 / 0.2);
+
+    --glass-bg: oklch(1 0 0 / 0.055);
+    --glass-bg-chrome: oklch(0.21 0.008 var(--accent-h) / 0.7);
+    --glass-bg-strong: oklch(0.23 0.008 var(--accent-h) / 0.92);
+    --glass-solid: oklch(0.21 0.008 var(--accent-h));
+    --glass-border: oklch(1 0 0 / 0.1);
+    --glass-highlight: oklch(1 0 0 / 0.16);
+    --glass-sheen: 0.09;
+    --glass-rim: 0.32;
+    --glass-shadow: 0 16px 44px -18px oklch(0 0 0 / 0.65);
+
+    color-scheme: dark;
+  }
+
+  /* 유리 효과 끄기(테마 메뉴) · OS 의 '투명도 줄이기' — 불투명한 면으로 바꾼다 */
+  :root[data-glass='off'] {
+    --glass-bg: var(--glass-solid);
+    --glass-bg-chrome: var(--glass-solid);
+    --glass-bg-strong: var(--glass-solid);
+    --glass-blur: 0px;
+    --glass-sheen: 0;
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    :root {
+      --glass-bg: var(--glass-solid);
+      --glass-bg-chrome: var(--glass-solid);
+      --glass-bg-strong: var(--glass-solid);
+      --glass-blur: 0px;
+      --glass-sheen: 0;
+    }
+  }
+
+  body {
+    @apply bg-bg text-fg antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* 밝기가 갑자기 뒤집히지 않게 테마를 바꾸는 순간에만 색을 부드럽게 넘긴다 */
+  html.theme-switching *,
+  html.theme-switching *::before,
+  html.theme-switching *::after {
+    transition:
+      background-color 0.35s ease,
+      border-color 0.35s ease,
+      color 0.35s ease,
+      box-shadow 0.35s ease !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /*
+   * 리퀴드 글래스: 반투명 면 + 뒤 배경 흐림 + 위쪽 하이라이트(빛이 닿는 모서리)
+   * ::before 는 비스듬한 광택, ::after 는 가장자리를 따라 밝아지는 테두리(림)다.
+   *
+   * 흐림(backdrop-filter)은 요소가 아니라 ::before 에 건다. 요소 자체에 걸면 그 요소가 '배경 경계'가 되어
+   * 안에 든 유리(상단 바 속 메뉴 등)가 뒤 페이지 대신 바깥 유리만 흐리게 되고, 페이지가 비쳐 보인다.
+   */
+  .glass,
+  .glass-chrome,
+  .glass-strong {
+    position: relative;
+    isolation: isolate;
+    border: 1px solid var(--glass-border);
+    box-shadow:
+      inset 0 1px 0 0 var(--glass-highlight),
+      var(--glass-shadow);
+  }
+  .glass {
+    background: var(--glass-bg);
+  }
+  .glass-chrome {
+    background: var(--glass-bg-chrome);
+    --glass-blur: 30px;
+  }
+  .glass-strong {
+    background: var(--glass-bg-strong);
+    --glass-blur: 36px;
+  }
+  :root[data-glass='off'] :is(.glass-chrome, .glass-strong) {
+    --glass-blur: 0px;
+  }
+
+  .glass::before,
+  .glass-chrome::before,
+  .glass-strong::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(140deg, oklch(1 0 0 / var(--glass-sheen)) 0%, transparent 38%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(170%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(170%);
+  }
+  .glass::after,
+  .glass-chrome::after,
+  .glass-strong::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    background: linear-gradient(
+      160deg,
+      oklch(1 0 0 / var(--glass-rim)) 0%,
+      transparent 32%,
+      transparent 68%,
+      oklch(1 0 0 / calc(var(--glass-rim) * 0.45)) 100%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+  }
+
+  /* 인사 카드: 옅은 하늘색에서 흰색으로 — 오른쪽 건물 그림이 배경에 녹아든다 */
+  .hero {
+    background: linear-gradient(90deg, oklch(0.94 0.035 var(--accent-h)) 0%, oklch(0.975 0.014 var(--accent-h)) 45%, oklch(0.99 0.006 var(--accent-h)) 100%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+  :root[data-theme='dark'] .hero {
+    background: linear-gradient(90deg, oklch(0.27 0.05 var(--accent-h)) 0%, oklch(0.22 0.025 var(--accent-h)) 50%, oklch(0.2 0.012 var(--accent-h)) 100%);
+  }
+  /* 히어로 위 칩 · 공지 줄 — 흰 유리 */
+  .hero-glass {
+    background: oklch(1 0 0 / 0.62);
+    border: 1px solid oklch(1 0 0 / 0.8);
+    box-shadow:
+      inset 0 1px 0 oklch(1 0 0 / 0.9),
+      0 4px 14px -8px oklch(0 0 0 / 0.15);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+  }
+  :root[data-theme='dark'] .hero-glass {
+    background: oklch(1 0 0 / 0.08);
+    border-color: oklch(1 0 0 / 0.12);
+    box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.14);
+  }
+}
+
+/*
+ * 모달(<dialog>). 브라우저가 맨 위 층에 띄우고 초점 가두기 · Esc 를 처리한다.
+ * 열릴 때는 유리가 맺히듯(흐림+크기) 나타나고, 닫힐 때는 같은 길로 더 빠르게 사라진다.
+ */
+@layer components {
+  .modal {
+    margin: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    max-width: none;
+    max-height: none;
+    overflow: visible;
+  }
+  .modal[open] {
+    animation: materialize 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .modal[data-closing] {
+    animation: dematerialize 170ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
+  .modal::backdrop {
+    background: oklch(0.15 0.01 var(--accent-h) / 0.42);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    animation: backdrop-in 260ms ease;
+  }
+  .modal[data-closing]::backdrop {
+    animation: backdrop-out 170ms ease forwards;
+  }
+}
+
+@keyframes dematerialize {
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.96);
+    filter: blur(6px);
+  }
+}
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes backdrop-out {
+  to {
+    opacity: 0;
+  }
+}
