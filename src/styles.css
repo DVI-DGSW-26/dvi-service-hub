@@ -1,5 +1,7 @@
 /* 클래스는 src/ 에서만 찾는다 — .agents · .claude 의 스킬 문서까지 훑으면 쓰지 않는 CSS 가 섞인다. */
 @import 'tailwindcss' source('.');
+/* src/portal 은 dev:mock 전용 화면이라 자체 CSS(portal.css)를 쓴다 — 여기서는 훑지 않는다. */
+@source not './portal';
 
 /* 색은 토큰으로만 쓴다 (bg-surface, text-muted, border-line …).
    밝은 값을 여기 두고, 어두운 테마는 아래 base 에서 같은 변수를 덮어쓴다. */
