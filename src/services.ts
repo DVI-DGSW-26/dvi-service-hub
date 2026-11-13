@@ -1,6 +1,11 @@
-// 서비스 목록. 새 서비스는 이 배열에 항목을 추가하면 된다.
+// 서비스의 모양과, 서버가 응답하지 않을 때 쓰는 내장 목록.
+//
+// 목록의 원본은 허브 서버(service-hub-server)의 DB 다. 화면과 서비스 이동 버튼은
+// 서버에서 목록을 받아 쓰고, 서비스 추가·수정은 허브의 "서비스 관리" 화면에서 한다.
+// 이 파일의 bundledServices 는 서버가 죽었을 때도 입구가 비지 않게 하는 예비본이다.
 
-export type Category = '업무' | '인사' | '정보' | '사내문화'
+/** 서버에서 관리하므로 정해진 값이 아니다. 화면은 목록에 나온 것으로 탭을 만든다. */
+export type Category = string
 
 /** 로그인 방식. SSO 전환이 끝난 서비스는 'sso'로 바꾼다. */
 export type AuthMode = 'sso' | 'separate' | 'none'
@@ -51,7 +56,57 @@ export interface Service {
   switcher?: { position?: 'left' | 'right'; offset?: number }
 }
 
-export const services: Service[] = [
+/**
+ * 서버 응답을 Service[] 로 확인한다. 모양이 어긋난 항목은 버린다 —
+ * 화면과 이동 버튼이 links[0] 을 바로 읽기 때문에, 잘못된 항목 하나가 전체를 깨뜨리면 안 된다.
+ * 쓸 수 있는 항목이 하나도 없으면 null (호출부가 내장 목록으로 돌아간다).
+ */
+export function parseServices(data: unknown): Service[] | null {
+  if (!Array.isArray(data)) return null
+  const out = data.filter(isService)
+  return out.length > 0 ? out : null
+}
+
+function isService(x: unknown): x is Service {
+  if (typeof x !== 'object' || x === null) return false
+  const s = x as Record<string, unknown>
+  const access = s.access as Record<string, unknown> | null | undefined
+  return (
+    typeof s.id === 'string' &&
+    typeof s.name === 'string' &&
+    typeof s.description === 'string' &&
+    typeof s.category === 'string' &&
+    typeof s.emoji === 'string' &&
+    Array.isArray(s.links) &&
+    s.links.length > 0 &&
+    s.links.every(isLink) &&
+    typeof access === 'object' &&
+    access !== null &&
+    (access.type === 'public' ||
+      access.type === 'any' ||
+      access.type === 'employee' ||
+      (access.type === 'client' && typeof access.client === 'string' && typeof access.role === 'string')) &&
+    (s.auth === 'sso' || s.auth === 'separate' || s.auth === 'none')
+  )
+}
+
+function isLink(x: unknown): x is ServiceLink {
+  if (typeof x !== 'object' || x === null) return false
+  const l = x as Record<string, unknown>
+  if (typeof l.label !== 'string' || typeof l.url !== 'string') return false
+  try {
+    const protocol = new URL(l.url).protocol
+    return protocol === 'https:' || protocol === 'http:'
+  } catch {
+    return false
+  }
+}
+
+/**
+ * 서버가 응답하지 않을 때만 쓰는 예비 목록 (2026-11-13 서버로 옮긴 시점의 내용).
+ * 서버 목록을 크게 바꿨다면 여기도 맞춰 두면 좋지만, 어긋나도 평소 화면에는 영향이 없다.
+ */
+export const bundledServices: Service[] = [
   // 회사 홈페이지는 목록에 두지 않는다 — 대외 공개 사이트라 로그인이 필요한
   // 사내 서비스 허브의 대상이 아니다 (2026-09-28 결정).
   {

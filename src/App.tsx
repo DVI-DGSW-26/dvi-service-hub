@@ -1,8 +1,22 @@
-import { useEffect, useMemo, useState } from 'react'
-import { services, type AuthMode, type Category, type Service } from './services'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { bundledServices, type AuthMode, type Service } from './services'
 import { canSee } from './access'
+import { fetchServices } from './api'
+import { usePreferences } from './usePreferences'
 
-const CATEGORIES: ('전체' | Category)[] = ['전체', '업무','인사', '정보', '사내문화']
+// 관리 화면은 몇 사람만 쓴다. 모두가 받는 첫 화면 묶음에 넣지 않는다.
+const Admin = lazy(() => import('./Admin'))
+
+const ALL = '전체'
+/** 탭 순서. 서버 목록에 새 분류가 생기면 이 뒤에, 처음 나온 순서대로 붙는다. */
+const CATEGORY_ORDER = ['업무', '인사', '정보', '사내문화']
+
+function categoriesOf(list: Service[]): string[] {
+  const present = new Set(list.map((s) => s.category))
+  const known = CATEGORY_ORDER.filter((c) => present.has(c))
+  const added = [...present].filter((c) => !CATEGORY_ORDER.includes(c))
+  return [ALL, ...known, ...added]
+}
 
 const AUTH_LABEL: Record<AuthMode, string> = {
   sso: '회사 계정',
@@ -87,30 +101,19 @@ function greeting(hour: number): string {
 }
 
 /**
- * 즐겨찾기·최근 사용 — 브라우저(localStorage)에만 저장한다. 서버는 모른다.
- * 공용 PC 에서 계정끼리 섞이지 않도록 키에 이메일을 붙인다.
+ * 서비스 목록은 허브 서버에서 받는다. 서버가 응답하지 않으면 화면에 들어 있는
+ * 예비 목록으로 그린다 — 직원이 처음 들어오는 곳이라 비어 있으면 안 된다.
+ * 받는 동안(null)에는 카드를 그리지 않는다. 예비 목록을 먼저 그렸다가 바꾸면 화면이 튄다.
  */
-const RECENT_MAX = 4
-
-function readIds(key: string): string[] {
-  try {
-    const v = JSON.parse(localStorage.getItem(key) ?? '[]')
-    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []
-  } catch {
-    return []
-  }
-}
-
-function useStoredIds(key: string | null) {
-  const [ids, setIds] = useState<string[]>([])
-  useEffect(() => {
-    setIds(key ? readIds(key) : [])
-  }, [key])
-  const save = (next: string[]) => {
-    setIds(next)
-    if (key) try { localStorage.setItem(key, JSON.stringify(next)) } catch {}
-  }
-  return [ids, save] as const
+function useServices() {
+  const [services, setServices] = useState<Service[] | null>(null)
+  const reload = useCallback(() => {
+    fetchServices()
+      .then(setServices)
+      .catch(() => setServices((current) => current ?? bundledServices))
+  }, [])
+  useEffect(reload, [reload])
+  return [services, reload] as const
 }
 
 function matches(s: Service, q: string) {
@@ -120,9 +123,11 @@ function matches(s: Service, q: string) {
 
 export default function App() {
   const [query, setQuery] = useState('')
-  const [category, setCategory] = useState<(typeof CATEGORIES)[number]>('전체')
+  const [category, setCategory] = useState(ALL)
   const [me, setMe] = useState<Me | null>(null)
   const [theme, toggleTheme] = useTheme()
+  const [services, reloadServices] = useServices()
+  const [managing, setManaging] = useState(false)
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -140,30 +145,30 @@ export default function App() {
   const noDept = me !== null && !me.realm.includes('employee')
 
   const userKey = me?.email || null
-  const [favorites, setFavorites] = useStoredIds(userKey && `hub.favorites:${userKey}`)
-  const [recent, setRecent] = useStoredIds(userKey && `hub.recent:${userKey}`)
+  const { favorites, recent, admin, toggleFavorite, markUsed } = usePreferences(userKey)
 
-  const toggleFavorite = (id: string) =>
-    setFavorites(favorites.includes(id) ? favorites.filter((x) => x !== id) : [...favorites, id])
-  const markUsed = (id: string) =>
-    setRecent([id, ...recent.filter((x) => x !== id)].slice(0, RECENT_MAX))
-
-  const mine = useMemo(() => services.filter((s) => me === null || canSee(s, me)), [me])
+  const mine = useMemo(
+    () => (services ?? []).filter((s) => me === null || canSee(s, me)),
+    [services, me],
+  )
+  const categories = useMemo(() => categoriesOf(mine), [mine])
+  // 고른 분류의 서비스가 목록에서 다 빠지면 탭도 사라진다. 전체로 돌려놓는다.
+  const activeCategory = categories.includes(category) ? category : ALL
 
   // 즐겨찾기를 앞으로 — 그 안에서는 원래 순서를 지킨다 (sort 는 안정 정렬)
   const visible = useMemo(
     () =>
       mine
-        .filter((s) => (category === '전체' || s.category === category) && matches(s, query))
+        .filter((s) => (activeCategory === ALL || s.category === activeCategory) && matches(s, query))
         .sort((a, b) => Number(favorites.includes(b.id)) - Number(favorites.includes(a.id))),
-    [mine, query, category, favorites],
+    [mine, query, activeCategory, favorites],
   )
 
   // 권한이 빠졌거나 목록에서 지운 서비스는 최근 사용에서도 빠진다
   const recentServices = recent
     .map((id) => mine.find((s) => s.id === id))
     .filter((s): s is Service => s !== undefined)
-  const showRecent = recentServices.length > 0 && query === '' && category === '전체'
+  const showRecent = recentServices.length > 0 && query === '' && activeCategory === ALL
 
   return (
     <div className="page">
@@ -212,6 +217,16 @@ export default function App() {
                 )}
               </svg>
             </button>
+            {admin && (
+              <button
+                type="button"
+                className={managing ? 'manage-toggle active' : 'manage-toggle'}
+                onClick={() => setManaging(!managing)}
+                aria-pressed={managing}
+              >
+                {managing ? '관리 닫기' : '서비스 관리'}
+              </button>
+            )}
             {me && (
               <div className="account">
                 <span className="account-name">{me.name}</span>
@@ -249,6 +264,13 @@ export default function App() {
         </div>
       </header>
 
+      {managing && admin ? (
+        <main className="main">
+          <Suspense fallback={<p className="empty">불러오는 중…</p>}>
+            <Admin onChanged={reloadServices} />
+          </Suspense>
+        </main>
+      ) : (
       <main className="main">
         <section className="hero">
           {me ? (
@@ -256,12 +278,12 @@ export default function App() {
               <h1>
                 {me.name}님, {greeting(new Date().getHours())} 👋
               </h1>
-              <p>지금 쓸 수 있는 서비스 {mine.length}개</p>
+              <p>{services ? `지금 쓸 수 있는 서비스 ${mine.length}개` : '서비스 목록을 불러오는 중…'}</p>
             </>
           ) : (
             <>
               <h1>사내 서비스를 한곳에서</h1>
-              <p>DVISION에서 운영 중인 서비스 {services.length}개</p>
+              <p>{services ? `DVISION에서 운영 중인 서비스 ${services.length}개` : '서비스 목록을 불러오는 중…'}</p>
             </>
           )}
           <input
@@ -301,10 +323,10 @@ export default function App() {
         )}
 
         <nav className="chips" aria-label="카테고리">
-          {CATEGORIES.map((c) => (
+          {categories.map((c) => (
             <button
               key={c}
-              className={c === category ? 'chip active' : 'chip'}
+              className={c === activeCategory ? 'chip active' : 'chip'}
               onClick={() => setCategory(c)}
             >
               {c}
@@ -312,7 +334,7 @@ export default function App() {
           ))}
         </nav>
 
-        {visible.length === 0 ? (
+        {services === null ? null : visible.length === 0 ? (
           <p className="empty">검색 결과가 없습니다.</p>
         ) : (
           <ul className="grid">
@@ -328,6 +350,7 @@ export default function App() {
           </ul>
         )}
       </main>
+      )}
     </div>
   )
 }

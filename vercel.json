@@ -1,5 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/hub/:path*",
+      "destination": "https://api.dvi-ind.com/hub/:path*"
+    },
+    {
+      "source": "/api/switcher/services",
+      "destination": "https://api.dvi-ind.com/hub/services"
+    }
+  ],
   "headers": [
     {
       "source": "/switcher.js",

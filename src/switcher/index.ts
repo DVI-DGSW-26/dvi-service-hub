@@ -9,8 +9,10 @@
  * data-offset="76" 처럼 그 높이만큼 버튼을 올린다 (px, 기본 20).
  *
  * 원칙
- * - 서비스 목록은 허브의 services.ts 를 빌드할 때 이 파일에 넣는다.
- *   허브 목록을 고치고 배포하면 모든 서비스의 메뉴가 같이 바뀐다.
+ * - 서비스 목록은 허브 서버에서 받는다 (/api/switcher/services). 허브의 "서비스 관리"
+ *   화면에서 목록을 고치면 배포 없이 모든 서비스의 메뉴가 같이 바뀐다.
+ *   이 파일에는 빌드할 때의 예비 목록(services.ts)이 들어 있어, 서버가 응답하지 않아도
+ *   버튼과 메뉴는 그대로 나온다.
  * - 이 파일이 깨지면 모든 서비스에 같이 퍼진다. 그래서 무슨 일이 있어도
  *   예외를 밖으로 던지지 않는다. 최악의 경우 버튼만 안 보이고 서비스는 멀쩡해야 한다.
  * - 서비스 화면의 CSS 와 섞이지 않게 Shadow DOM 안에 그린다.
@@ -19,7 +21,7 @@
  *   브라우저가 다른 사이트 쿠키를 막음) 전체를 보여준다 — 쓸 수 있는 서비스를 숨기는
  *   것보다 낫다. 실제 접근 차단은 각 서비스가 한다.
  */
-import { services, type Service } from '../services'
+import { bundledServices, parseServices, type Service } from '../services'
 import { canSee, type Roles } from '../access'
 
 const GLOBAL_FLAG = '__dviSwitcherLoaded'
@@ -40,6 +42,17 @@ async function fetchRoles(hub: string): Promise<Roles | null> {
     const data = await res.json()
     if (!data?.known || !Array.isArray(data.realm) || typeof data.svc !== 'object') return null
     return { realm: data.realm, svc: data.svc ?? {} }
+  } catch {
+    return null
+  }
+}
+
+/** 허브 서버의 지금 목록. 못 받으면 null — 파일에 들어 있는 예비 목록을 그대로 쓴다 */
+async function fetchServices(hub: string): Promise<Service[] | null> {
+  try {
+    const res = await fetch(`${hub}/api/switcher/services`)
+    if (!res.ok) return null
+    return parseServices((await res.json())?.data)
   } catch {
     return null
   }
@@ -167,9 +180,17 @@ function esc(s: string): string {
   return s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)
 }
 
+/** 로고는 허브에 들어 있는 파일(/logos/...)이거나 https 주소다. 그 밖의 값은 쓰지 않는다 */
+function logoUrl(logo: string, hub: string): string | null {
+  if (logo.startsWith('https://')) return logo
+  if (logo.startsWith('/') && !logo.startsWith('//')) return hub + logo
+  return null
+}
+
 function iconHtml(s: Service, hub: string): string {
-  return s.logo
-    ? `<img class="icon" src="${esc(hub + s.logo)}" alt="" width="32" height="32" loading="lazy">`
+  const src = s.logo ? logoUrl(s.logo, hub) : null
+  return src
+    ? `<img class="icon" src="${esc(src)}" alt="" width="32" height="32" loading="lazy">`
     : `<span class="icon" aria-hidden="true">${esc(s.emoji)}</span>`
 }
 
@@ -196,7 +217,7 @@ function itemHtml(s: Service, hub: string): string {
  * 목록 내용. roles 를 모르면(null) 전체를 보여준다.
  * 지금 보고 있는 서비스는 걸러지지 않는다 — 이미 들어와 있다는 것이 쓸 수 있다는 뜻이다.
  */
-function listHtml(hub: string, roles: Roles | null): string {
+function listHtml(hub: string, services: Service[], roles: Roles | null): string {
   const visible = roles ? services.filter((s) => isCurrent(s) || canSee(s, roles)) : services
   return (
     `<li class="home"><a class="item" href="${esc(hub + '/')}">` +
@@ -206,14 +227,21 @@ function listHtml(hub: string, roles: Roles | null): string {
   )
 }
 
-function mount(script: HTMLScriptElement | null) {
-  const hub = hubOrigin(script)
-  // 자리: 허브 services.ts 의 설정 → 스크립트 태그의 data-* 가 있으면 그것이 우선
+/** 버튼 자리: 허브 목록에 적힌 설정 → 스크립트 태그의 data-* 가 있으면 그것이 우선 */
+function placement(script: HTMLScriptElement | null, services: Service[]) {
   const cfg = services.find(isCurrent)?.switcher ?? {}
   const pos = script?.dataset.position ?? cfg.position
-  const side = pos === 'right' ? 'right' : 'left'
+  const side: 'left' | 'right' = pos === 'right' ? 'right' : 'left'
   const offset = Number(script?.dataset.offset ?? cfg.offset)
   const bottom = Number.isFinite(offset) && offset >= 0 && offset <= 400 ? offset : 20
+  return { side, bottom }
+}
+
+function mount(script: HTMLScriptElement | null) {
+  const hub = hubOrigin(script)
+  let services = bundledServices
+  let roles: Roles | null = null
+  const { side, bottom } = placement(script, services)
 
   const host = document.createElement('div')
   host.setAttribute('data-dvi-switcher', '')
@@ -228,14 +256,31 @@ function mount(script: HTMLScriptElement | null) {
     `<div class="panel" role="dialog" aria-modal="true" aria-label="사내 서비스" inert>` +
     `<div class="head"><b><span>DVI</span> 사내 서비스</b>` +
     `<button class="close" type="button" aria-label="닫기">${X_ICON}</button></div>` +
-    `<ul>${listHtml(hub, null)}</ul></div></div>`
+    `<ul>${listHtml(hub, services, null)}</ul></div></div>`
 
   const wrap = root.querySelector<HTMLElement>('.wrap')!
   const list = root.querySelector<HTMLElement>('ul')!
 
-  // 역할을 받으면 목록을 이 사람 것으로 바꾼다. 보통 버튼을 누르기 전에 끝난다.
-  fetchRoles(hub).then((roles) => {
-    try { if (roles) list.innerHTML = listHtml(hub, roles) } catch { /* 전체 목록 그대로 */ }
+  // 서버 목록과 역할은 따로 도착한다. 어느 쪽이든 받는 대로 다시 그린다 — 보통 버튼을
+  // 누르기 전에 끝난다. 둘 다 못 받으면 예비 목록 전체가 그대로 남는다.
+  const redraw = () => {
+    try { list.innerHTML = listHtml(hub, services, roles) } catch { /* 먼저 그린 목록 그대로 */ }
+  }
+  fetchServices(hub).then((fresh) => {
+    if (!fresh) return
+    services = fresh
+    redraw()
+    try {
+      const next = placement(script, services)
+      wrap.classList.remove('left', 'right')
+      wrap.classList.add(next.side)
+      fab.style.bottom = `${next.bottom}px`
+    } catch { /* 처음 자리 그대로 */ }
+  })
+  fetchRoles(hub).then((r) => {
+    if (!r) return
+    roles = r
+    redraw()
   })
 
   // 서비스의 테마 버튼을 누르면 따라 바뀐다
