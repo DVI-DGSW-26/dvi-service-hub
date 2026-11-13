@@ -33,6 +33,9 @@ export const portalApi = {
   accountSecurity: () => serve('accountSecurity', accountSecurity),
 }
 
+/** dev:mock · preview 배포 — 로그인 서버 없이 목업 사용자로 연다 (vite.config.ts 의 mockPortal 이 켠다) */
+export const MOCK_AUTH = import.meta.env.VITE_MOCK_AUTH === 'true'
+
 // 다른 목업처럼 조금 늦게 돌려줘 로딩 화면(스켈레톤)을 확인할 수 있게 한다
 const devMe = () => (import.meta.env.DEV ? serve('me', mockMe) : Promise.resolve(null))
 
@@ -43,6 +46,7 @@ const devMe = () => (import.meta.env.DEV ? serve('me', mockMe) : Promise.resolve
  * 로컬 개발(vite)에는 Edge 함수가 없어 index.html 이 돌아온다. 그때만 목업 사용자를 쓴다.
  */
 export async function fetchMe(): Promise<Me | null> {
+  if (MOCK_AUTH) return serve('me', mockMe)
   try {
     const r = await fetch('/api/auth/me')
     if (r.status === 401) {

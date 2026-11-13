@@ -26,8 +26,10 @@ pnpm build      # dist/ 생성
 `mockPortal` 플러그인이 진입점을 `src/portal/main.tsx` 로 바꿔 끼운다. `pnpm dev` · 운영(production) 빌드는
 기존 화면(`src/App.tsx`) 그대로이고 `src/portal` 코드는 번들에 들어가지 않는다.
 
-preview 에서는 로그인 정보만 실제 값이고 공지 · 일정 · 소식 등은 목업이다. 로컬에서 preview 빌드를 확인하려면
-`VERCEL_ENV=preview pnpm build && pnpm preview`.
+두 경우 모두 로그인 서버(OIDC) 없이 목업 사용자로 연다 — preview 는 `middleware.ts` 도 로그인을 건너뛰고, 화면은
+`/api/auth/me` 를 부르지 않는다. 그래서 Vercel 에 OIDC 환경변수가 없어도 된다. preview 주소를 아무나 열지 못하게
+하는 일은 Vercel 의 Deployment Protection(Vercel Authentication)이 맡으니 꺼 두지 않는다.
+로컬에서 preview 빌드를 확인하려면 `VERCEL_ENV=preview pnpm build && pnpm preview`.
 
 ```
 src/portal/

@@ -7,6 +7,9 @@
  *
  *  referrer 파라미터는 콘솔 상단에 "돌아가기" 링크를 만든다(Keycloak 내장).
  *  referrer_uri 는 service-hub client 의 redirect 목록으로 검증된다. */
+/** 전체 로그아웃(SSO 세션까지). 목업 사용자로 연 화면(dev:mock · preview)에는 끊을 세션이 없어 홈으로 */
+export const LOGOUT_URL = import.meta.env.VITE_MOCK_AUTH === 'true' ? '#/' : '/api/auth/logout'
+
 export const ACCOUNT_URL =
   'https://api.dvi-ind.com/dauth/realms/dvi/account/account-security/signing-in' +
   '?referrer=service-hub&referrer_uri=' +

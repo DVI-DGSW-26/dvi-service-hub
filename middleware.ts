@@ -14,6 +14,10 @@ export const config = {
 };
 
 export default async function middleware(req: Request): Promise<Response> {
+  // preview 배포는 목업 대시보드 미리보기라 로그인 서버(OIDC) 없이 연다 (vite.config.ts 의 mockPortal).
+  // 바깥 공개를 막는 일은 Vercel 의 Deployment Protection 이 맡는다. production 은 그대로 막는다.
+  if (process.env.VERCEL_ENV === 'preview') return next();
+
   const session = await verifySession(readCookie(req, SESSION_COOKIE), process.env.SESSION_SECRET);
   if (session) return next();
 

@@ -5,6 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 /**
  * pnpm dev:mock (vite --mode mock) 과 Vercel preview 배포에서만 새 대시보드(src/portal)를 띄운다.
  * index.html 의 진입 스크립트를 바꿔 끼우고 Pretendard 웹폰트를 붙인다.
+ * 로그인 서버(OIDC) 없이 목업 사용자로 열도록 VITE_MOCK_AUTH 도 켠다 — preview 는 middleware.ts 도 로그인을 건너뛴다.
  * dev · 운영(production) 빌드는 이 플러그인이 꺼져 있어 기존 화면(src/App.tsx) 그대로다.
  */
 function mockPortal(): Plugin {
@@ -12,6 +13,7 @@ function mockPortal(): Plugin {
     '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />'
   return {
     name: 'mock-portal',
+    config: () => ({ define: { 'import.meta.env.VITE_MOCK_AUTH': JSON.stringify('true') } }),
     // 'pre': 빌드에서는 vite 가 진입 스크립트를 먼저 묶어 버리므로 그 전에 바꿔 끼운다
     transformIndexHtml: {
       order: 'pre',

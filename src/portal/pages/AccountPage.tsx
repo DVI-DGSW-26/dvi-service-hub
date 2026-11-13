@@ -24,7 +24,7 @@ import { LoadError, Skeleton, SkeletonText } from '../components/ui/Skeleton'
 import { useAsync } from '../hooks/useAsync'
 import { hrefOf } from '../hooks/useHashRoute'
 import type { PortalTheme } from '../hooks/usePortalTheme'
-import { ACCOUNT_URL } from '../lib/account'
+import { ACCOUNT_URL, LOGOUT_URL } from '../lib/account'
 import { hasNoDepartment } from '../lib/access'
 import { dotDate } from '../lib/format'
 import type { AccountSecurity, Me } from '../types/portal'
@@ -175,7 +175,7 @@ export function AccountPage({ me, loading, services, theme }: AccountPageProps) 
             <p className="mt-1.5 text-sm/relaxed text-muted">포털과 회사 계정을 쓰는 모든 사내 서비스에서 함께 로그아웃돼요.</p>
             {/* SSO 세션까지 끊는다 */}
             <a
-              href="/api/auth/logout"
+              href={LOGOUT_URL}
               className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-danger-soft text-[15px] font-semibold text-danger transition-[background-color,scale] duration-150 hover:bg-danger hover:text-white active:scale-[0.98]"
             >
               <LogOut className="size-[18px]" aria-hidden="true" />

@@ -1,5 +1,6 @@
 import { ChevronDown, LogOut, Settings } from 'lucide-react'
 import { hrefOf } from '../../hooks/useHashRoute'
+import { LOGOUT_URL } from '../../lib/account'
 import { usePopover } from '../../hooks/usePopover'
 import type { Me } from '../../types/portal'
 import { PopoverPanel } from '../ui/Popover'
@@ -44,7 +45,7 @@ export function UserMenu({ me }: { me: Me }) {
             계정 설정
           </a>
           {/* SSO 세션까지 끊는다 — 다른 사내 서비스도 함께 로그아웃된다. */}
-          <a href="/api/auth/logout" className={`${ITEM} font-semibold text-danger`}>
+          <a href={LOGOUT_URL} className={`${ITEM} font-semibold text-danger`}>
             <LogOut className="size-4" aria-hidden="true" />
             로그아웃
           </a>
