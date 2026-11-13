@@ -3,6 +3,7 @@ import { bundledServices, type AuthMode, type Service } from './services'
 import { canSee } from './access'
 import { fetchServices } from './api'
 import { usePreferences } from './usePreferences'
+import FlowPosts from './FlowPosts'
 
 // 관리 화면은 몇 사람만 쓴다. 모두가 받는 첫 화면 묶음에 넣지 않는다.
 const Admin = lazy(() => import('./Admin'))
@@ -349,6 +350,9 @@ export default function App() {
             ))}
           </ul>
         )}
+
+        {/* 로그인 정보가 온 뒤에 그린다. 글은 그 사람의 플로우 계정 기준이다 */}
+        {me && <FlowPosts />}
       </main>
       )}
     </div>

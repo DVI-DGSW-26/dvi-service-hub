@@ -238,3 +238,43 @@ a { color: inherit; text-decoration: none; }
   .admin-actions { width: 100%; justify-content: flex-end; }
   .link-row { grid-template-columns: 1fr; }
 }
+
+/* ---- 플로우 "대외업무 공유방" 최근 글 ---- */
+.flow { margin-top: 40px; }
+.flow-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.flow-head h2 { font-size: 17px; margin: 0; display: flex; align-items: center; gap: 8px; }
+.flow-open { color: var(--accent); font-size: 13px; font-weight: 600; white-space: nowrap; }
+.flow-open:hover { text-decoration: underline; }
+.flow-list {
+  list-style: none; margin: 0; padding: 0;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+}
+.flow-list li + li { border-top: 1px solid var(--border); }
+.flow-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
+.flow-item:hover { background: var(--accent-soft); }
+.flow-type {
+  flex: none; width: 36px; text-align: center; font-size: 12px; color: var(--muted);
+  border: 1px solid var(--border); border-radius: 6px; padding: 1px 0;
+}
+.flow-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.flow-title, .flow-snippet { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.flow-title { font-size: 14px; }
+.flow-item.unread .flow-title { font-weight: 700; }
+.flow-dot {
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); margin-right: 6px; vertical-align: middle;
+}
+.flow-snippet { font-size: 13px; color: var(--muted); }
+.flow-meta { flex: none; display: flex; flex-direction: column; align-items: flex-end; font-size: 12px; color: var(--muted); }
+.flow-more { display: block; margin: 10px auto 0; }
+.flow .empty { padding: 24px 0; }
+
+@media (max-width: 640px) {
+  .flow-item { flex-wrap: wrap; }
+  .flow-meta { flex-direction: row; gap: 8px; width: 100%; padding-left: 48px; }
+}
+
+/* 좁은 화면에서 관리자는 헤더에 버튼이 하나 더 있어 넘친다. 이름은 아래 인사말에도 나오므로 헤더에서는 뺀다 */
+@media (max-width: 480px) {
+  .header-actions:has(.manage-toggle) .account-name { display: none; }
+}
