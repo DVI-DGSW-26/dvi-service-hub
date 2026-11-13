@@ -13,6 +13,8 @@ export class ApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    /** 서버가 붙인 오류 코드 (예: FLOW_FORBIDDEN). 서버에 닿지 못했으면 없다 */
+    readonly code?: string,
   ) {
     super(message)
   }
@@ -24,9 +26,11 @@ async function call<T>(path: string, init?: { method: string; body?: unknown }):
     headers: init?.body !== undefined ? { 'content-type': 'application/json' } : undefined,
     body: init?.body !== undefined ? JSON.stringify(init.body) : undefined,
   })
-  let json: { data?: T; message?: string } | null = null
+  let json: { data?: T; message?: string; code?: string } | null = null
   try { json = await res.json() } catch { /* 본문이 JSON 이 아니면 상태코드만 쓴다 */ }
-  if (!res.ok) throw new ApiError(res.status, json?.message || `요청을 처리하지 못했습니다. (${res.status})`)
+  if (!res.ok) {
+    throw new ApiError(res.status, json?.message || `요청을 처리하지 못했습니다. (${res.status})`, json?.code)
+  }
   return json?.data as T
 }
 
@@ -70,3 +74,34 @@ export const updateService = (serviceId: string, input: ServiceInput) =>
   call<AdminService>(`/admin/services/${id(serviceId)}`, { method: 'PUT', body: input })
 export const deleteService = (serviceId: string) => call<void>(`/admin/services/${id(serviceId)}`, { method: 'DELETE' })
 export const reorderServices = (ids: string[]) => call<void>('/admin/services/reorder', { method: 'POST', body: { ids } })
+
+/** 플로우 "대외업무 공유방"의 글 한 건. 로그인한 본인의 플로우 계정 기준이다 */
+export interface FlowPost {
+  id: string
+  /** post 글 · task 업무 · schedule 일정 · todo 할일 */
+  type: 'post' | 'task' | 'schedule' | 'todo' | 'other'
+  title: string
+  content: string
+  author: string
+  /** 한국 시각, 예: 2026-05-09T09:30 */
+  registeredAt?: string
+  commentCount: number
+  /** 본인이 읽었는지. 플로우가 알려주지 않은 글에는 없다 */
+  read?: boolean
+}
+
+export interface FlowPostPage {
+  projectTitle?: string
+  posts: FlowPost[]
+  hasNext: boolean
+  nextCursor?: number
+}
+
+export const fetchFlowPosts = (cursor: number, pageSize: number) =>
+  call<FlowPostPage>(`/flow/posts?cursor=${cursor}&pageSize=${pageSize}`)
+
+/**
+ * 그 방을 본인 계정으로 플로우에서 여는 주소. 서버가 플로우의 본인용 로그인 링크로 넘겨 보낸다(302).
+ * fetch 로 부르지 않고 링크의 href 로 쓴다 — 브라우저가 따라가야 플로우가 열린다.
+ */
+export const FLOW_OPEN_URL = `${HUB_API}/flow/open`
