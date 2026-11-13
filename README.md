@@ -20,11 +20,14 @@ pnpm build      # dist/ 생성
 - 서버: Vercel Edge 함수 `api/auth/*.ts`, 미들웨어 `middleware.ts`, 공용 `lib/*.ts`
 - tsconfig 는 `tsconfig.app.json`(src) · `tsconfig.api.json`(서버) · `tsconfig.node.json`(vite 설정)로 나뉜다.
 
-## 새 대시보드 (dev:mock 전용)
+## 새 대시보드 (dev:mock · Vercel preview 전용)
 
-`pnpm dev:mock`(`vite --mode mock`) 에서만 `vite.config.ts` 의 `mockPortal` 플러그인이 진입점을
-`src/portal/main.tsx` 로 바꿔 끼운다. `pnpm dev` · 운영 빌드는 기존 화면(`src/App.tsx`) 그대로이고
-`src/portal` 코드는 번들에 들어가지 않는다.
+`pnpm dev:mock`(`vite --mode mock`) 과 Vercel preview 배포(`VERCEL_ENV=preview`)에서만 `vite.config.ts` 의
+`mockPortal` 플러그인이 진입점을 `src/portal/main.tsx` 로 바꿔 끼운다. `pnpm dev` · 운영(production) 빌드는
+기존 화면(`src/App.tsx`) 그대로이고 `src/portal` 코드는 번들에 들어가지 않는다.
+
+preview 에서는 로그인 정보만 실제 값이고 공지 · 일정 · 소식 등은 목업이다. 로컬에서 preview 빌드를 확인하려면
+`VERCEL_ENV=preview pnpm build && pnpm preview`.
 
 ```
 src/portal/
