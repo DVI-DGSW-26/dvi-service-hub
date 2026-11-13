@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e4eeff"/>
+      <stop offset="1" stop-color="#f6f9ff"/>
+    </linearGradient>
+    <linearGradient id="desk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#eaf0fa"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="320" fill="url(#wall)"/>
+
+  <!-- 창문과 바깥 풍경 -->
+  <rect x="36" y="36" width="130" height="120" rx="8" fill="#d6e5ff"/>
+  <circle cx="138" cy="62" r="11" fill="#fff6dc"/>
+  <g fill="#bcd2fa">
+    <rect x="44" y="98" width="18" height="54"/><rect x="66" y="80" width="22" height="72"/>
+    <rect x="92" y="106" width="16" height="46"/><rect x="112" y="74" width="24" height="78"/>
+    <rect x="140" y="100" width="20" height="52"/>
+  </g>
+  <rect x="36" y="36" width="130" height="120" rx="8" fill="none" stroke="#ffffff" stroke-width="6"/>
+  <path d="M101 36 V156 M36 96 H166" stroke="#ffffff" stroke-width="4"/>
+
+  <!-- 선반 -->
+  <rect x="250" y="70" width="112" height="6" rx="3" fill="#ffffff"/>
+  <rect x="262" y="40" width="10" height="30" rx="2" fill="#5b7fe0"/>
+  <rect x="274" y="46" width="8" height="24" rx="2" fill="#f5a623"/>
+  <rect x="284" y="36" width="10" height="34" rx="2" fill="#14b8c4"/>
+  <rect x="298" y="44" width="9" height="26" rx="2" fill="#c9d6f2" transform="rotate(14 302 70)"/>
+  <rect x="320" y="44" width="30" height="26" rx="3" fill="#ffffff" stroke="#c9d6f2" stroke-width="2"/>
+  <path d="M326 64 L334 54 L340 60 L344 56 L346 64 Z" fill="#9db5ff"/>
+
+  <!-- 책상 -->
+  <rect x="0" y="230" width="400" height="90" fill="url(#desk)"/>
+  <rect x="0" y="226" width="400" height="6" fill="#ffffff"/>
+  <rect x="0" y="232" width="400" height="3" fill="#d9e3f5"/>
+
+  <!-- 모니터 -->
+  <ellipse cx="200" cy="232" rx="46" ry="4" fill="#2b3a55" opacity=".08"/>
+  <rect x="192" y="200" width="16" height="28" fill="#c3cfe6"/>
+  <rect x="168" y="224" width="64" height="6" rx="3" fill="#b3c1dc"/>
+  <rect x="120" y="104" width="160" height="100" rx="10" fill="#2b3a55"/>
+  <rect x="128" y="112" width="144" height="84" rx="5" fill="#f4f7ff"/>
+  <path d="M133 112 H156 V196 H133 A5 5 0 0 1 128 191 V117 A5 5 0 0 1 133 112 Z" fill="#dfe8ff"/>
+  <g fill="#9db5ff"><rect x="135" y="122" width="14" height="4" rx="2"/><rect x="135" y="132" width="14" height="4" rx="2"/><rect x="135" y="142" width="14" height="4" rx="2"/></g>
+  <rect x="164" y="120" width="56" height="6" rx="3" fill="#2f5bff"/>
+  <rect x="164" y="132" width="48" height="24" rx="4" fill="#ffffff" stroke="#dbe4f7"/>
+  <rect x="216" y="132" width="48" height="24" rx="4" fill="#ffffff" stroke="#dbe4f7"/>
+  <g fill="#9db5ff"><rect x="170" y="146" width="6" height="6" rx="1"/><rect x="179" y="142" width="6" height="10" rx="1"/><rect x="188" y="138" width="6" height="14" rx="1"/></g>
+  <circle cx="240" cy="144" r="7" fill="none" stroke="#14b8c4" stroke-width="3"/>
+  <polyline points="168,186 184,174 198,180 214,166 230,171 262,154" fill="none" stroke="#2f5bff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- 키보드 · 마우스 -->
+  <rect x="148" y="246" width="104" height="13" rx="4" fill="#ffffff" stroke="#d3ddef" stroke-width="1.5"/>
+  <path d="M156 252.5 H244" stroke="#e3e9f5" stroke-width="3" stroke-dasharray="5 3"/>
+  <ellipse cx="274" cy="252" rx="8" ry="10" fill="#ffffff" stroke="#d3ddef" stroke-width="1.5"/>
+
+  <!-- 머그컵 -->
+  <rect x="78" y="198" width="28" height="32" rx="5" fill="#2f5bff"/>
+  <path d="M106 206 q13 0 13 10 q0 10 -13 10" fill="none" stroke="#2f5bff" stroke-width="4"/>
+  <path d="M86 190 q-4 -6 0 -12 M96 190 q-4 -6 0 -12" fill="none" stroke="#c9d6f2" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- 노트 -->
+  <rect x="24" y="252" width="72" height="46" rx="4" fill="#ffffff" stroke="#d3ddef" stroke-width="1.5"/>
+  <path d="M34 264 H84 M34 274 H84 M34 284 H66" stroke="#dbe4f7" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- 화분 -->
+  <ellipse cx="336" cy="174" rx="8" ry="26" fill="#3fb59a"/>
+  <ellipse cx="324" cy="184" rx="9" ry="22" fill="#2f9d84" transform="rotate(-28 324 184)"/>
+  <ellipse cx="348" cy="182" rx="9" ry="23" fill="#2f9d84" transform="rotate(26 348 182)"/>
+  <path d="M318 198 H354 L348 230 H324 Z" fill="#f0a37a"/>
+  <rect x="316" y="196" width="40" height="7" rx="3" fill="#e8956b"/>
+
+  <!-- 반짝임 -->
+  <path d="M214 56 L217 64 L225 67 L217 70 L214 78 L211 70 L203 67 L211 64 Z" fill="#f5a623"/>
+  <path d="M376 112 L378 118 L384 120 L378 122 L376 128 L374 122 L368 120 L374 118 Z" fill="#14b8c4"/>
+</svg>
