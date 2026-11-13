@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { services } from '../services'
 import { fetchMe } from './api/portal'
+import { GooFilter } from './components/layout/LiquidParts'
 import { Sidebar } from './components/layout/Sidebar'
 import { TabBar } from './components/layout/TabBar'
 import { TopBar } from './components/layout/TopBar'
@@ -95,6 +96,7 @@ export default function PortalApp() {
       </div>
 
       <TabBar page={route.page} />
+      <GooFilter />
     </>
   )
 }
