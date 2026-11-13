@@ -9,6 +9,14 @@ const AUTH_LABEL: Record<AuthMode, string> = {
   none: '로그인 없음',
 }
 
+/** 카드 하단 로그인 방식 배지 색. 'dev' 는 개발 중 표시. */
+const BADGE_CLASS: Record<AuthMode | 'dev', string> = {
+  sso: 'bg-ok-soft text-ok',
+  separate: 'bg-warn-soft text-warn',
+  none: 'bg-accent-soft text-accent',
+  dev: 'bg-line text-muted',
+}
+
 /** 비밀번호·OTP·패스키(지문) 관리 화면. 주소를 외우게 하지 않고 여기서 닿게
  *  한다 — 직원에게 알려주는 주소는 허브 하나라는 원칙(employee-rollout.md).
  *  로그인 도메인과 같아서 SSO 쿠키로 다시 로그인 없이 열린다.
@@ -32,6 +40,12 @@ interface Me {
   realm: string[]
   svc: Record<string, string[]>
 }
+
+/** 헤더의 아이콘 버튼(테마 전환 · 계정 설정) */
+const ICON_BUTTON =
+  'flex size-8 items-center justify-center rounded-lg text-muted hover:bg-accent-soft hover:text-accent'
+
+const BADGE = 'rounded-md px-2 py-0.5 text-xs'
 
 type Theme = 'light' | 'dark'
 
@@ -116,20 +130,20 @@ export default function App() {
   )
 
   return (
-    <div className="page">
-      <header className="header">
-        <div className="header-inner">
-          <div className="brand">
+    <div>
+      <header className="sticky top-0 z-1 border-b border-line bg-bg/85 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-hub items-center justify-between gap-3 px-4">
+          <div className="flex items-center gap-2.5 py-3.5 font-bold">
             <img src="/favicon.svg" alt="" width={32} height={32} />
-            <span className="brand-name">
-              <b>DVI</b> Portal
+            <span className="text-lg font-medium tracking-[-0.01em]">
+              <b className="font-extrabold text-accent">DVI</b> Portal
             </span>
           </div>
-          <div className="header-actions">
+          <div className="flex items-center gap-3">
             {/* lucide sun / moon — 지금 테마가 아니라 누르면 바뀔 테마를 보여준다. */}
             <button
               type="button"
-              className="theme-toggle"
+              className={`${ICON_BUTTON} cursor-pointer`}
               onClick={toggleTheme}
               title={theme === 'dark' ? '밝은 테마로' : '어두운 테마로'}
               aria-label={theme === 'dark' ? '밝은 테마로' : '어두운 테마로'}
@@ -163,14 +177,14 @@ export default function App() {
               </svg>
             </button>
             {me && (
-              <div className="account">
-                <span className="account-name">{me.name}</span>
+              <div className="flex items-center gap-3 text-sm">
+                <span className="text-muted">{me.name}</span>
                 {/* 같은 탭에서 열어 뒤로 가기로 허브에 돌아오게 하고,
                     referrer 파라미터로 콘솔 안에도 돌아가기 링크를 만든다.
                     글자 대신 톱니 아이콘 — 이름 옆이라 뜻이 통하고, 글자를
                     못 보는 환경을 위해 aria-label 과 title 을 남긴다. */}
                 <a
-                  className="account-link"
+                  className={ICON_BUTTON}
                   href={ACCOUNT_URL}
                   title="계정 설정"
                   aria-label="계정 설정"
@@ -192,19 +206,24 @@ export default function App() {
                 </a>
                 {/* SSO 세션까지 끊는다 — 다른 사내 서비스도 함께 로그아웃된다.
                     표기는 짧게 "로그아웃" (2026-09-29). */}
-                <a className="logout" href="/api/auth/logout">로그아웃</a>
+                <a
+                  className="font-semibold whitespace-nowrap text-accent hover:underline"
+                  href="/api/auth/logout"
+                >
+                  로그아웃
+                </a>
               </div>
             )}
           </div>
         </div>
       </header>
 
-      <main className="main">
-        <section className="hero">
-          <h1>사내 서비스를 한곳에서</h1>
-          <p>DVISION에서 운영 중인 서비스 {services.length}개</p>
+      <main className="mx-auto max-w-hub px-4 pt-8 pb-16">
+        <section>
+          <h1 className="mb-1.5 text-[clamp(24px,4vw,32px)] font-bold">사내 서비스를 한곳에서</h1>
+          <p className="mb-5 text-muted">DVISION에서 운영 중인 서비스 {services.length}개</p>
           <input
-            className="search"
+            className="w-full rounded-xl border border-line bg-surface px-4 py-3.5 text-base text-fg outline-none focus:border-accent focus:ring-3 focus:ring-accent-soft"
             type="search"
             placeholder="서비스 이름이나 기능으로 검색"
             value={query}
@@ -214,16 +233,20 @@ export default function App() {
         </section>
 
         {noDept && (
-          <p className="notice">
+          <p className="mb-5 rounded-[10px] border border-l-3 border-line border-l-accent bg-surface px-4 py-3">
             아직 부서가 지정되지 않아 일부 서비스가 보이지 않습니다. 관리팀에 문의해주세요.
           </p>
         )}
 
-        <nav className="chips" aria-label="카테고리">
+        <nav className="mt-5 mb-6 flex flex-wrap gap-2" aria-label="카테고리">
           {CATEGORIES.map((c) => (
             <button
               key={c}
-              className={c === category ? 'chip active' : 'chip'}
+              className={`cursor-pointer rounded-full border px-3.5 py-[7px] text-sm/5 ${
+                c === category
+                  ? 'border-accent bg-accent text-white'
+                  : 'border-line bg-surface text-fg'
+              }`}
               onClick={() => setCategory(c)}
             >
               {c}
@@ -232,9 +255,9 @@ export default function App() {
         </nav>
 
         {visible.length === 0 ? (
-          <p className="empty">검색 결과가 없습니다.</p>
+          <p className="my-4 py-12 text-center text-muted">검색 결과가 없습니다.</p>
         ) : (
-          <ul className="grid">
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(300px,100%),1fr))] gap-4">
             {visible.map((s) => (
               <ServiceCard key={s.id} service={s} />
             ))}
@@ -248,34 +271,49 @@ export default function App() {
 function ServiceCard({ service: s }: { service: Service }) {
   const primary = s.links[0]
   return (
-    <li className="card">
-      <a className="card-main" href={primary.url} target="_blank" rel="noreferrer">
+    <li className="flex flex-col rounded-2xl border border-line bg-surface transition-[border-color,translate] duration-150 hover:-translate-y-0.5 hover:border-accent">
+      <a className="flex flex-1 gap-3.5 px-5 pt-5 pb-3" href={primary.url} target="_blank" rel="noreferrer">
         {s.logo ? (
-          <img className="logo" src={s.logo} alt="" width={44} height={44} />
+          <img
+            className="size-11 flex-none rounded-xl bg-white object-contain"
+            src={s.logo}
+            alt=""
+            width={44}
+            height={44}
+          />
         ) : (
-          <span className="emoji" aria-hidden>
+          <span
+            className="grid size-11 flex-none place-items-center rounded-xl bg-accent-soft text-[22px]"
+            aria-hidden
+          >
             {s.emoji}
           </span>
         )}
         <div>
-          <div className="card-title">
-            <h2>{s.name}</h2>
-            <span className="tag">{s.category}</span>
+          <div className="flex items-center gap-2">
+            <h2 className="text-[17px] font-bold">{s.name}</h2>
+            <span className="rounded-md border border-line px-1.5 py-px text-xs text-muted">{s.category}</span>
           </div>
-          <p>{s.description}</p>
-          <span className="host">{new URL(primary.url).host}</span>
+          <p className="mt-1.5 mb-2 text-sm/normal text-muted">{s.description}</p>
+          <span className="text-xs text-muted opacity-80">{new URL(primary.url).host}</span>
         </div>
       </a>
-      <div className="card-foot">
+      <div className="flex items-center justify-between gap-2 px-5 pt-2.5 pb-4 text-[13px]">
         {s.inDevelopment ? (
-          <span className="auth auth-dev">개발 중</span>
+          <span className={`${BADGE} ${BADGE_CLASS.dev}`}>개발 중</span>
         ) : (
-          <span className={`auth auth-${s.auth}`}>{AUTH_LABEL[s.auth]}</span>
+          <span className={`${BADGE} ${BADGE_CLASS[s.auth]}`}>{AUTH_LABEL[s.auth]}</span>
         )}
         {s.links.length > 1 && (
-          <div className="links">
+          <div className="flex gap-3">
             {s.links.map((l) => (
-              <a key={l.url} href={l.url} target="_blank" rel="noreferrer">
+              <a
+                key={l.url}
+                className="font-semibold text-accent"
+                href={l.url}
+                target="_blank"
+                rel="noreferrer"
+              >
                 {l.label} ↗
               </a>
             ))}

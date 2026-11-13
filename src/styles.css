@@ -1,136 +1,57 @@
-:root {
-  --bg: #f6f7fb;
-  --surface: #ffffff;
-  --text: #16181d;
-  --muted: #6b7280;
-  --border: #e5e7ef;
-  --accent: #2f5bff;
-  --accent-soft: #eaf0ff;
-  --ok: #0f9d58;
-  --ok-soft: #e6f6ee;
-  --warn: #b26b00;
-  --warn-soft: #fff4e0;
-  color-scheme: light;
-  font-family: 'Pretendard', system-ui, -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif;
+/* 클래스는 src/ 에서만 찾는다 — .agents · .claude 의 스킬 문서까지 훑으면 쓰지 않는 CSS 가 섞인다. */
+@import 'tailwindcss' source('.');
+
+/* 색은 토큰으로만 쓴다 (bg-surface, text-muted, border-line …).
+   밝은 값을 여기 두고, 어두운 테마는 아래 base 에서 같은 변수를 덮어쓴다. */
+@theme {
+  --font-sans: 'Pretendard', system-ui, -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif;
+  --container-hub: 1080px;
+
+  /* 줄 높이는 브라우저 기본(normal)을 따른다 — Tailwind 이전 화면과 같게.
+     text-xs·sm·base·lg 는 줄 높이를 함께 정하므로 그것도 normal 로 둔다.
+     넓게 써야 하는 곳만 text-sm/normal(1.5)처럼 따로 준다. */
+  --text-xs--line-height: normal;
+  --text-sm--line-height: normal;
+  --text-base--line-height: normal;
+  --text-lg--line-height: normal;
+
+  --color-bg: #f6f7fb;
+  --color-surface: #ffffff;
+  --color-fg: #16181d;
+  --color-muted: #6b7280;
+  --color-line: #e5e7ef;
+  --color-accent: #2f5bff;
+  --color-accent-soft: #eaf0ff;
+  --color-ok: #0f9d58;
+  --color-ok-soft: #e6f6ee;
+  --color-warn: #b26b00;
+  --color-warn-soft: #fff4e0;
 }
 
-/* data-theme 은 index.html 의 인라인 스크립트가 첫 렌더 전에 정한다
-   (저장된 선택 → 없으면 시스템 설정). 헤더 버튼으로 바꾼다. */
-:root[data-theme='dark'] {
-  --bg: #0f1115;
-  --surface: #181b22;
-  --text: #eceef3;
-  --muted: #9aa1ae;
-  --border: #2a2f3a;
-  --accent: #6b8cff;
-  --accent-soft: #1f2842;
-  --ok: #4cc38a;
-  --ok-soft: #173326;
-  --warn: #f0b458;
-  --warn-soft: #3a2c14;
-  color-scheme: dark;
-}
+@layer base {
+  :root {
+    color-scheme: light;
+    line-height: normal;
+  }
 
-* { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--text); }
-a { color: inherit; text-decoration: none; }
+  /* data-theme 은 index.html 의 인라인 스크립트가 첫 렌더 전에 정한다
+     (저장된 선택 → 없으면 시스템 설정). 헤더 버튼으로 바꾼다. */
+  :root[data-theme='dark'] {
+    --color-bg: #0f1115;
+    --color-surface: #181b22;
+    --color-fg: #eceef3;
+    --color-muted: #9aa1ae;
+    --color-line: #2a2f3a;
+    --color-accent: #6b8cff;
+    --color-accent-soft: #1f2842;
+    --color-ok: #4cc38a;
+    --color-ok-soft: #173326;
+    --color-warn: #f0b458;
+    --color-warn-soft: #3a2c14;
+    color-scheme: dark;
+  }
 
-.header {
-  position: sticky; top: 0; z-index: 1;
-  background: color-mix(in srgb, var(--bg) 85%, transparent);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border);
-}
-.brand {
-  max-width: 1080px; margin: 0 auto; padding: 14px 16px;
-  display: flex; align-items: center; gap: 10px; font-weight: 700;
-}
-
-.brand-name { font-size: 18px; font-weight: 500; letter-spacing: -0.01em; }
-.brand-name b { color: var(--accent); font-weight: 800; }
-
-.main { max-width: 1080px; margin: 0 auto; padding: 32px 16px 64px; }
-
-.hero h1 { font-size: clamp(24px, 4vw, 32px); margin: 0 0 6px; }
-.hero p { color: var(--muted); margin: 0 0 20px; }
-.search {
-  width: 100%; padding: 14px 16px; font-size: 16px;
-  border: 1px solid var(--border); border-radius: 12px;
-  background: var(--surface); color: var(--text); outline: none;
-}
-.search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-
-.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 24px; }
-.chip {
-  padding: 7px 14px; border-radius: 999px; font-size: 14px; cursor: pointer;
-  border: 1px solid var(--border); background: var(--surface); color: var(--text);
-}
-.chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-
-.grid {
-  list-style: none; margin: 0; padding: 0;
-  display: grid; gap: 16px;
-  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
-}
-.card {
-  display: flex; flex-direction: column;
-  background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
-  transition: border-color .15s, transform .15s;
-}
-.card:hover { border-color: var(--accent); transform: translateY(-2px); }
-.card-main { display: flex; gap: 14px; padding: 20px 20px 12px; flex: 1; }
-.emoji {
-  flex: none; width: 44px; height: 44px; border-radius: 12px;
-  display: grid; place-items: center; font-size: 22px; background: var(--accent-soft);
-}
-.logo {
-  flex: none; width: 44px; height: 44px; border-radius: 12px;
-  object-fit: contain; background: #fff;
-}
-.card-title { display: flex; align-items: center; gap: 8px; }
-.card-title h2 { font-size: 17px; margin: 0; }
-.tag { font-size: 12px; color: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; }
-.card-main p { margin: 6px 0 8px; color: var(--muted); font-size: 14px; line-height: 1.5; }
-.host { font-size: 12px; color: var(--muted); opacity: .8; }
-
-.card-foot {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: 10px 20px 16px; font-size: 13px;
-}
-.auth { padding: 2px 8px; border-radius: 6px; font-size: 12px; }
-.auth-sso { background: var(--ok-soft); color: var(--ok); }
-.auth-separate { background: var(--warn-soft); color: var(--warn); }
-.auth-none { background: var(--accent-soft); color: var(--accent); }
-.auth-dev { background: var(--border); color: var(--muted); }
-.links { display: flex; gap: 12px; }
-.links a { color: var(--accent); font-weight: 600; }
-
-.empty { color: var(--muted); text-align: center; padding: 48px 0; }
-
-/* ---- 로그인 계정 표시 (헤더 오른쪽) ---- */
-.header-inner {
-  max-width: 1080px; margin: 0 auto; padding: 0 16px;
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-}
-.header-inner .brand { max-width: none; margin: 0; padding: 14px 0; }
-.header-actions { display: flex; align-items: center; gap: 12px; }
-.account { display: flex; align-items: center; gap: 12px; font-size: 14px; }
-.account-name { color: var(--muted); }
-.account-link,
-.theme-toggle {
-  display: flex; align-items: center; justify-content: center;
-  width: 32px; height: 32px; border-radius: 8px;
-  color: var(--muted);
-}
-.theme-toggle { border: 0; padding: 0; background: none; cursor: pointer; }
-.account-link:hover,
-.theme-toggle:hover { color: var(--accent); background: var(--accent-soft); }
-.logout { color: var(--accent); text-decoration: none; font-weight: 600; white-space: nowrap; }
-.logout:hover { text-decoration: underline; }
-
-/* 부서 미지정 안내 — 빈 화면은 본인에게 고장으로 보인다 */
-.notice {
-  background: var(--surface); border: 1px solid var(--border);
-  border-left: 3px solid var(--accent); border-radius: 10px;
-  padding: 12px 16px; margin: 0 0 20px; color: var(--text);
+  body {
+    @apply bg-bg text-fg;
+  }
 }

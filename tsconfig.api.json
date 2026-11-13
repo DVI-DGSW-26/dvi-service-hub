@@ -1,0 +1,20 @@
+// Vercel Edge 에서 도는 서버 코드 (api/, lib/, middleware.ts)
+// Edge 런타임은 Web API(fetch · Request · crypto.subtle)와 process.env 를 준다.
+// 그 전역 타입을 @types/node 에서 빌려 쓴다 — Node 전용 모듈은 import 하지 않는다.
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.api.tsbuildinfo",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["api", "lib", "middleware.ts"]
+}
