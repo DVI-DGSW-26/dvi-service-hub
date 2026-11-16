@@ -56,7 +56,7 @@ export function HomePage({ me, meLoading, services, allServices, favorites, onTo
       <NoticeBar me={me} className="order-3 xl:hidden" />
       <MaintenancePanel me={me} className="order-6 xl:order-none xl:col-span-4 fit:min-h-0 fit:overflow-hidden" />
       <NewsPanel className="order-8 xl:order-none xl:col-span-4 fit:min-h-0" />
-      <CalendarPanel me={me} className="order-7 xl:order-none xl:col-span-4 fit:min-h-0" />
+      <CalendarPanel className="order-7 xl:order-none xl:col-span-4 fit:min-h-0" />
     </div>
   )
 }

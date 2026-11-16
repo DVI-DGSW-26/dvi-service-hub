@@ -1,4 +1,3 @@
-import { Cake, PartyPopper } from 'lucide-react'
 import { useI18n } from '../../i18n'
 import { eventsOn, inMonth, monthWeeks, toIso, weekdayNames, type Month } from '../../lib/calendar'
 import { longToday } from '../../lib/format'
@@ -7,19 +6,22 @@ import type { CalendarEvent } from '../../types/portal'
 /** 모달 칸에 이름으로 보여줄 개수 — 나머지는 '+n' */
 const CHIPS = 3
 
-/** 행사는 강조색, 생일은 호박색 — 칸 · 점 · 목록이 같은 색을 쓴다 */
-export const DOT = { event: 'bg-accent-fill', birthday: 'bg-amber' } as const
-
-export function KindIcon({ kind, className = '' }: { kind: CalendarEvent['kind']; className?: string }) {
-  const C = kind === 'birthday' ? Cake : PartyPopper
-  return <C className={`${kind === 'birthday' ? 'text-warn' : 'text-accent'} ${className}`} aria-hidden="true" />
+/**
+ * 일정 색 점 — 플로우 일정 색(color), 없으면 강조색. 칸 · 점 · 목록이 같은 색을 쓴다.
+ * 플로우는 분류 이름을 주지 않아 색으로만 구분한다 (명세 4.1).
+ */
+export function EventDot({ event, className = 'size-2' }: { event: CalendarEvent; className?: string }) {
+  return (
+    <span
+      className={`flex-none rounded-full ${event.color ? '' : 'bg-accent-fill'} ${className}`}
+      style={event.color ? { backgroundColor: event.color } : undefined}
+      aria-hidden="true"
+    />
+  )
 }
 
-/** 칸 · 목록에 보여줄 이름 — 생일은 '○○ 님 생일' */
-export function useEventLabel() {
-  const { t, f } = useI18n()
-  return (e: CalendarEvent) => (e.kind === 'birthday' ? f(t.calendar.birthday, { name: e.title }) : e.title)
-}
+/** 칸 안 이름표 바탕 — 일정 색을 옅게 */
+const chipStyle = (e: CalendarEvent) => (e.color ? { backgroundColor: `color-mix(in oklab, ${e.color} 18%, transparent)` } : undefined)
 
 /** 요일 머리줄. 모달에서는 넘겨지는 달 밖에 따로 둔다 */
 export function WeekdayRow({ className = '' }: { className?: string }) {
@@ -53,7 +55,6 @@ interface MonthGridProps {
  */
 export function MonthGrid({ month, events, today, variant, selected, onSelect, className = '' }: MonthGridProps) {
   const { t, f, lang } = useI18n()
-  const label = useEventLabel()
   const full = variant === 'full'
   const weeks = monthWeeks(month, full)
 
@@ -83,7 +84,7 @@ export function MonthGrid({ month, events, today, variant, selected, onSelect, c
         const dots = items.length > 0 && (
           <span className={`flex justify-center gap-0.5 ${full ? 'sm:hidden' : ''}`} aria-hidden="true">
             {items.slice(0, 3).map((e) => (
-              <span key={e.id} className={`size-1.5 rounded-full ${DOT[e.kind]}`} />
+              <EventDot key={e.id} event={e} className="size-1.5" />
             ))}
           </span>
         )
@@ -95,7 +96,7 @@ export function MonthGrid({ month, events, today, variant, selected, onSelect, c
               type="button"
               onClick={() => onSelect(iso)}
               aria-label={name}
-              title={items.map(label).join('\n') || undefined}
+              title={items.map((e) => e.title).join('\n') || undefined}
               className={`flex min-h-0 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-xl py-0.5 transition-colors hover:bg-subtle ${own ? '' : 'opacity-35'}`}
             >
               {number}
@@ -121,10 +122,11 @@ export function MonthGrid({ month, events, today, variant, selected, onSelect, c
               {items.slice(0, CHIPS).map((e) => (
                 <span
                   key={e.id}
-                  className={`flex min-w-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[13px] font-semibold ${e.kind === 'birthday' ? 'bg-amber/20' : 'bg-accent-soft text-accent'}`}
+                  className={`flex min-w-0 items-center gap-1.5 rounded-md px-1.5 py-0.5 text-[13px] font-semibold ${e.color ? '' : 'bg-accent-soft text-accent'}`}
+                  style={chipStyle(e)}
                 >
-                  <KindIcon kind={e.kind} className="size-3.5 flex-none" />
-                  <span className="truncate">{label(e)}</span>
+                  <EventDot event={e} />
+                  <span className="truncate">{e.title}</span>
                 </span>
               ))}
               {items.length > CHIPS && (

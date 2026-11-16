@@ -1,15 +1,16 @@
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useEffect, useId, useLayoutEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import { flushSync } from 'react-dom'
-import { useMonthEvents } from '../../hooks/useMonthEvents'
 import { useI18n } from '../../i18n'
 import { addMonths, eventsOn, fromIso, inMonth, monthKey, monthOf, monthTitle, type Month } from '../../lib/calendar'
 import { longToday, shortDate } from '../../lib/format'
 import { project, settle, snap, spring, step } from '../../lib/spring'
 import { motionOff } from '../../lib/theme'
+import { calendarQueries } from '../../queries/dashboard'
 import type { CalendarEvent } from '../../types/portal'
 import { Modal } from '../ui/Modal'
-import { KindIcon, MonthGrid, WeekdayRow, useEventLabel } from './MonthGrid'
+import { EventDot, MonthGrid, WeekdayRow } from './MonthGrid'
 
 interface CalendarModalProps {
   open: boolean
@@ -17,8 +18,6 @@ interface CalendarModalProps {
   start: string
   today: string
   onClose: () => void
-  /** 있으면 머리말에 '일정 추가' — 고른 날짜로 작성 창을 연다 */
-  onCompose?: (date: string) => void
 }
 
 type Dir = -1 | 1
@@ -200,16 +199,16 @@ function useMonthSwipe(onCommit: (dir: Dir) => void, keyboard: boolean) {
 }
 
 /**
- * 회사 캘린더 크게 보기. 달력 칸마다 행사 · 생일 이름을 보여주고, 좌우로 밀거나 ← → 키 · 버튼으로 달을 넘긴다.
+ * 회사 캘린더 크게 보기. 달력 칸마다 일정 이름을 보여주고, 좌우로 밀거나 ← → 키 · 버튼으로 달을 넘긴다.
  * 오른쪽(좁은 화면은 아래)에는 고른 날짜와 그달 전체 목록 — 칸에 다 못 담은 이름도 여기서 본다.
  */
-export function CalendarModal({ open, start, today, onClose, onCompose }: CalendarModalProps) {
+export function CalendarModal({ open, start, today, onClose }: CalendarModalProps) {
   const titleId = useId()
   const { t, f, lang, locale } = useI18n()
-  const label = useEventLabel()
   const [month, setMonth] = useState(() => monthOf(fromIso(start)))
   const [selected, setSelected] = useState(start)
-  const { data } = useMonthEvents(monthKey(month))
+  // 세 장(앞 · 이번 · 다음 달)이 각자 받은 것과 같은 캐시다
+  const { data } = useQuery(calendarQueries.month(monthKey(month)))
   const events = data ?? []
   const dayItems = eventsOn(events, selected)
 
@@ -241,10 +240,7 @@ export function CalendarModal({ open, start, today, onClose, onCompose }: Calend
     setSelected(today)
   }
 
-  const counts = [
-    f(t.calendar.eventCount, { count: events.filter((e) => e.kind === 'event').length }),
-    f(t.calendar.birthdayCount, { count: events.filter((e) => e.kind === 'birthday').length }),
-  ].join(' · ')
+  const counts = f(t.calendar.eventCount, { count: events.length })
   const arrow =
     'grid size-11 cursor-pointer place-items-center rounded-xl text-fg ring-1 ring-line transition-[background-color,scale] duration-150 hover:bg-subtle active:scale-90'
 
@@ -262,17 +258,6 @@ export function CalendarModal({ open, start, today, onClose, onCompose }: Calend
             <p className="mt-1 text-base text-muted">{counts}</p>
           </div>
           <div className="flex items-center gap-2">
-            {onCompose && (
-              <button
-                type="button"
-                onClick={() => onCompose(selected)}
-                aria-haspopup="dialog"
-                className="flex h-11 cursor-pointer items-center gap-1.5 rounded-xl bg-accent-fill px-4 text-[15px] font-semibold text-white transition-[filter,scale] duration-150 hover:brightness-110 active:scale-95"
-              >
-                <Plus className="size-[18px]" aria-hidden="true" />
-                {t.compose.calendar.open}
-              </button>
-            )}
             {/* 오늘이 있는 달로 가서 오늘을 고른다 */}
             <button
               type="button"
@@ -320,7 +305,7 @@ export function CalendarModal({ open, start, today, onClose, onCompose }: Calend
             {dayItems.length ? (
               <ul className="mt-3 space-y-2">
                 {dayItems.map((e) => (
-                  <EventRow key={e.id} event={e} label={label(e)} />
+                  <EventRow key={e.id} event={e} />
                 ))}
               </ul>
             ) : (
@@ -338,8 +323,8 @@ export function CalendarModal({ open, start, today, onClose, onCompose }: Calend
                       className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-subtle"
                     >
                       <span className="w-[4.5rem] flex-none text-[13px] text-muted tabular-nums">{shortDate(e.date, lang)}</span>
-                      <KindIcon kind={e.kind} className="size-4 flex-none" />
-                      <span className="min-w-0 truncate text-[15px]">{label(e)}</span>
+                      <EventDot event={e} className="size-2.5" />
+                      <span className="min-w-0 truncate text-[15px]">{e.title}</span>
                     </button>
                   </li>
                 ))}
@@ -356,7 +341,7 @@ export function CalendarModal({ open, start, today, onClose, onCompose }: Calend
 
 /** 넘기는 세 장 중 한 장 — 달마다 따로 불러와서, 옆 달도 미리 받아 둔다 */
 function MonthPane({ month, today, selected, onSelect, inert }: { month: Month; today: string; selected: string; onSelect: (iso: string) => void; inert: boolean }) {
-  const { data } = useMonthEvents(monthKey(month))
+  const { data } = useQuery(calendarQueries.month(monthKey(month)))
   return (
     <div className="h-full w-full flex-none" inert={inert}>
       <MonthGrid month={month} events={data ?? []} today={today} variant="full" selected={selected} onSelect={onSelect} className="h-full" />
@@ -364,21 +349,18 @@ function MonthPane({ month, today, selected, onSelect, inert }: { month: Month; 
   )
 }
 
-/** 고른 날짜의 행사 · 생일 한 줄 */
-function EventRow({ event: e, label }: { event: CalendarEvent; label: string }) {
+/** 고른 날짜의 일정 한 줄 — 여러 날 일정이면 기간을 함께 */
+function EventRow({ event: e }: { event: CalendarEvent }) {
   const { t, f, lang } = useI18n()
-  const sub =
-    e.kind === 'birthday'
-      ? e.department
-      : [e.end && e.end !== e.date ? f(t.calendar.period, { start: shortDate(e.date, lang), end: shortDate(e.end, lang) }) : '', e.place].filter(Boolean).join(' · ')
+  const period = e.end && e.end !== e.date ? f(t.calendar.period, { start: shortDate(e.date, lang), end: shortDate(e.end, lang) }) : t.calendar.oneDay
   return (
     <li className="flex items-start gap-3 rounded-2xl bg-subtle p-3 ring-1 ring-line">
-      <span className={`grid size-9 flex-none place-items-center rounded-xl ${e.kind === 'birthday' ? 'bg-amber/20' : 'bg-accent-soft'}`}>
-        <KindIcon kind={e.kind} className="size-[18px]" />
+      <span className="grid size-9 flex-none place-items-center rounded-xl bg-raised ring-1 ring-line">
+        <EventDot event={e} className="size-3" />
       </span>
       <span className="min-w-0">
-        <span className="block text-[15px] font-bold">{label}</span>
-        <span className="mt-0.5 block text-[13px] text-muted">{sub ? `${t.calendar.kind[e.kind]} · ${sub}` : t.calendar.kind[e.kind]}</span>
+        <span className="block text-[15px] font-bold">{e.title}</span>
+        <span className="mt-0.5 block text-[13px] text-muted">{period}</span>
       </span>
     </li>
   )
