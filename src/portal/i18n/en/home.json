@@ -11,15 +11,22 @@
     "important": "Important",
     "empty": "No new notices.",
     "prev": "Previous notice",
-    "next": "Next notice"
+    "next": "Next notice",
+    "original": "View original",
+    "more": "Tap to read in full"
   },
   "maintenance": {
     "title": "Maintenance & notices",
     "empty": "No maintenance scheduled.",
+    "open": "Open system",
+    "more": { "one": "{count} more", "other": "{count} more" },
+    "prev": "Previous update",
+    "next": "Next update",
     "kind": { "안내": "Notice", "점검": "Maintenance", "장애": "Outage" }
   },
   "news": {
     "title": "Company news",
+    "viewAll": { "one": "All {count}", "other": "All {count}" },
     "empty": "No news yet.",
     "original": "Read full story",
     "prev": "Previous story",
@@ -34,13 +41,16 @@
     "title": "Systems",
     "total": { "one": "{count} total", "other": "{count} total" },
     "filterLabel": "Services to show",
+    "mine": "My access",
     "all": "All",
     "favorites": "Favorites {count}",
+    "locked": "No access",
+    "lockedHint": "You may not be able to sign in without access",
     "loading": "Loading systems",
     "noFavorites": "No favorites yet.",
     "noFavoritesHint": "Tap the star on any card to add one.",
     "noAccess": "No services are available for this account.",
-    "noAccessHint": "Need access? Let us know via {link}.",
-    "noAccessLink": "System support"
+    "mobileAll": { "one": "See all {count} system", "other": "See all {count} systems" },
+    "noAccessHint": "Need access? Let the IT team know."
   }
 }
