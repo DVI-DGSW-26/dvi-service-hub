@@ -260,6 +260,17 @@
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(170%);
     backdrop-filter: blur(var(--glass-blur)) saturate(170%);
   }
+  /*
+   * 사이드바가 없는 화면(lg 미만)에서는 패널(.glass)의 뒤 흐림을 끈다. 패널 뒤는 단색 바탕이라 흐릴 것이 없고,
+   * 휴대폰에서 흐림 면이 열 장씩 겹치면 스크롤이 끊긴다. 내용 위에 떠 있는 상단바 · 탭바 · 모달만 재질을 남긴다.
+   */
+  @media (max-width: 1023.98px) {
+    .glass::before {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+
   .glass::after,
   .glass-chrome::after,
   .glass-strong::after {
@@ -332,7 +343,14 @@
   .modal[data-closing] {
     animation: dematerialize 170ms cubic-bezier(0.4, 0, 1, 1) forwards;
   }
+  /* 시트를 끌어 내린 정도 (0~1) — 뒤의 어두운 막이 그만큼 옅어진다. 등록해 둬야 놓을 때 부드럽게 돌아간다 */
+  @property --sheet-drag {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+  }
   .modal::backdrop {
+    opacity: calc(1 - var(--sheet-drag, 0));
     background: oklch(0.15 0.01 var(--accent-h) / 0.42);
     -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
@@ -340,6 +358,43 @@
   }
   .modal[data-closing]::backdrop {
     animation: backdrop-out 170ms ease forwards;
+  }
+
+  /* 휴대폰 — 화면 아래에 붙은 시트. 아래에서 올라오고 같은 길로 내려간다 */
+  @media (max-width: 639.98px) {
+    .modal {
+      margin: auto 0 0;
+      width: 100%;
+    }
+    .modal[open] {
+      animation: sheet-in 380ms cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    .modal[data-closing] {
+      animation: sheet-out 170ms cubic-bezier(0.4, 0, 1, 1) forwards;
+    }
+    /* 손잡이로 끌어 내려 닫는 중 — 시트는 손 속도로 이미 내려가고 있다 (Modal.tsx) */
+    .modal[data-closing][data-dragged] {
+      animation: none;
+    }
+  }
+}
+
+/* 전사 공지가 바뀔 때 — 새 글이 살짝 떠오르며 나타난다 */
+@keyframes notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes sheet-out {
+  to {
+    transform: translateY(100%);
   }
 }
 

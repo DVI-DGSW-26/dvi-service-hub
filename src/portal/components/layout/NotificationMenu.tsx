@@ -53,11 +53,11 @@ export function NotificationMenu() {
               ))}
             </div>
           ) : (
-            <ul className="max-h-80 overflow-y-auto p-1.5">
+            <ul className="max-h-80 overflow-y-auto overscroll-contain p-1.5 max-sm:max-h-[min(420px,calc(100dvh-200px))]">
               {data?.length === 0 && <li className="px-3 py-6 text-center text-sm text-muted">{t.layout.notifications.empty}</li>}
               {(data ?? []).map((n) => (
                 <li key={n.id}>
-                  <a href={n.url} target="_blank" rel="noreferrer" className="flex gap-3 rounded-xl px-3 py-2.5 hover:bg-subtle">
+                  <a href={n.url} target="_blank" rel="noreferrer" className="flex gap-3 rounded-xl px-3 py-2.5 hover:bg-subtle max-sm:py-3">
                     <span className={`mt-1.5 size-2 flex-none rounded-full ${n.read ? 'bg-fg/20' : 'bg-accent-fill'}`} aria-hidden="true" />
                     <span className="min-w-0">
                       <span className="block text-sm/normal">{n.title}</span>

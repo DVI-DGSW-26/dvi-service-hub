@@ -39,11 +39,11 @@ export function TabBar({ page }: { page: Page }) {
                   <a
                     href={hrefOf(p)}
                     aria-current={p === page ? 'page' : undefined}
-                    className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-xs font-semibold transition-[color,scale] duration-150 ${
+                    className={`flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-2xl text-[11px] font-semibold transition-[color,scale] duration-150 ${
                       dragging ? 'cursor-grabbing' : 'active:scale-95'
                     } ${on ? 'text-white' : 'text-muted'}`}
                   >
-                    <I className="size-[22px]" strokeWidth={on ? 2.4 : 2} aria-hidden="true" />
+                    <I className="size-5" strokeWidth={on ? 2.4 : 2} aria-hidden="true" />
                     {t.layout.pages[p]}
                   </a>
                 </li>

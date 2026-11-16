@@ -111,7 +111,7 @@ export function TodayModal({ items, now, date, open, onClose }: TodayModalProps)
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         {/* 날짜 고르기 — 좁은 화면에서는 가로로 넘긴다 */}
         <nav aria-label={t.schedule.dates} className="flex-none border-b border-line lg:w-60 lg:border-r lg:border-b-0">
-          <ul className="flex gap-1.5 overflow-x-auto p-3 lg:h-full lg:flex-col lg:overflow-y-auto lg:overscroll-contain">
+          <ul className="flex gap-1.5 overflow-x-auto p-3 [scrollbar-width:none] lg:h-full lg:[scrollbar-width:auto] lg:flex-col lg:overflow-y-auto lg:overscroll-contain">
             {days.map((d, i) => {
               const active = !q && i === day
               return (

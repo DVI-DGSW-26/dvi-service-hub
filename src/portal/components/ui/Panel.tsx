@@ -20,8 +20,9 @@ export function Panel({ title, icon: IconC, meta, description, toolbar, action, 
   const headingId = useId()
   return (
     <section aria-labelledby={headingId} className={`glass flex flex-col rounded-3xl p-5 sm:p-6 fit:p-5 ${className}`}>
-      <div className="mb-4 flex flex-wrap fit:mb-3 items-start justify-between gap-3">
-        <div className="min-w-0">
+      {/* 조작(toolbar)은 늘 제목 줄 오른쪽에 — 좁은 화면에서 줄이 바뀌면 제목 옆 표시가 아래로 내려간다 */}
+      <div className="mb-4 flex items-start justify-between gap-3 fit:mb-3">
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             {IconC && (
               <span className="grid size-8 flex-none place-items-center rounded-xl bg-accent-soft text-accent">

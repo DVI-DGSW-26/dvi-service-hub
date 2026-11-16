@@ -1,4 +1,4 @@
-import { ArrowUpRight, Star } from 'lucide-react'
+import { ArrowUpRight, Lock, Star } from 'lucide-react'
 import type { AuthMode, Service } from '../../../services'
 import { useI18n } from '../../i18n'
 import { Badge, type BadgeTone } from '../ui/Badge'
@@ -36,6 +36,8 @@ interface ServiceCardProps {
   onToggleFavorite: (id: string) => void
   /** detailed: 업무시스템 화면 — 분류, 주소, 로그인 방식, 보조 링크까지 */
   variant?: 'compact' | 'detailed'
+  /** 지금 계정에 권한이 없는 서비스 ('전체' 보기). 흐리게 두고 '권한 없음' 을 붙인다 — 막는 건 각 서비스가 한다 */
+  locked?: boolean
 }
 
 /**
@@ -43,7 +45,7 @@ interface ServiceCardProps {
  * 별 · 보조 링크는 그 위(z-10)에 올려 따로 눌리게 한다 — 링크 안에 버튼을 넣지 않기 위해서다.
  * 누르는 순간 살짝 눌리고(active), 올리면 떠오른다(hover).
  */
-export function ServiceCard({ service: s, favorite, onToggleFavorite, variant = 'compact' }: ServiceCardProps) {
+export function ServiceCard({ service: s, favorite, onToggleFavorite, variant = 'compact', locked = false }: ServiceCardProps) {
   const { t, f } = useI18n()
   const primary = s.links[0]
   const detailed = variant === 'detailed'
@@ -52,9 +54,10 @@ export function ServiceCard({ service: s, favorite, onToggleFavorite, variant = 
     <li
       className={`group relative flex flex-col rounded-2xl ring-1 ring-line transition-[background-color,box-shadow,translate,scale] duration-200 hover:-translate-y-0.5 hover:bg-raised hover:shadow-[0_12px_28px_-14px_oklch(0_0_0/0.22)] hover:ring-fg/15 active:scale-[0.985] has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-accent ${
         detailed ? 'glass' : 'bg-subtle'
-      }`}
+      } ${locked ? 'opacity-60 hover:opacity-100' : ''}`}
+      title={locked ? t.home.systems.lockedHint : undefined}
     >
-      <div className={`flex items-start gap-3 p-4 ${detailed ? '' : 'fit:p-3 tall:p-4'}`}>
+      <div className={`flex items-start gap-3 p-4 ${detailed ? '' : 'max-sm:p-3 fit:p-3 tall:p-4'}`}>
         <ServiceLogo service={s} size={detailed ? 'lg' : 'md'} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -71,16 +74,23 @@ export function ServiceCard({ service: s, favorite, onToggleFavorite, variant = 
             </h3>
             {detailed ? (
               <span className="flex-none rounded-md bg-subtle px-1.5 py-px text-xs text-muted ring-1 ring-line">{t.systems.category[s.category]}</span>
+            ) : locked ? (
+              <Badge tone="neutral">
+                <Lock className="mr-1 size-3" aria-hidden="true" />
+                {t.home.systems.locked}
+              </Badge>
             ) : (
               s.inDevelopment && <Badge tone="neutral">{t.systems.inDevelopment}</Badge>
             )}
           </div>
-          <p className={`mt-1 text-sm/normal text-muted ${detailed ? '' : 'line-clamp-2 fit:line-clamp-1 tall:line-clamp-2'}`}>{s.description}</p>
+          <p className={`mt-1 text-sm/normal text-muted ${detailed ? '' : 'line-clamp-2 max-sm:line-clamp-1 fit:line-clamp-1 tall:line-clamp-2'}`}>{s.description}</p>
           {detailed && <p className="mt-1.5 text-xs text-muted">{new URL(primary.url).host}</p>}
         </div>
         <div className="relative z-10 -mt-1.5 -mr-2 flex flex-none flex-col items-center">
+          {/* 즐겨찾기는 권한 있는 서비스에서만 모은다 — 권한 없는 카드에는 숨긴다 */}
           <button
             type="button"
+            hidden={locked}
             onClick={() => onToggleFavorite(s.id)}
             aria-pressed={favorite}
             aria-label={favorite ? f(t.systems.favorite.removeNamed, { name: s.name }) : f(t.systems.favorite.addNamed, { name: s.name })}
