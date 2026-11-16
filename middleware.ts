@@ -14,6 +14,10 @@ export const config = {
 };
 
 export default async function middleware(req: Request): Promise<Response> {
+  // 로컬 vercel dev — 화면을 목업 API 로 띄운다(vercel.json 의 devCommand 가 pnpm dev:mock).
+  // 목업에는 로그인할 것이 없으니 막지 않는다. VERCEL_ENV 는 배포에서 production · preview 라 여기에 걸리지 않는다
+  if (process.env.VERCEL_ENV === 'development') return next();
+
   const session = await verifySession(readCookie(req, SESSION_COOKIE), process.env.SESSION_SECRET);
   if (session) return next();
 
