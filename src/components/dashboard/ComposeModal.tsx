@@ -1,5 +1,6 @@
 import { Trash2 } from 'lucide-react'
 import { useId, useState, type FormEvent, type ReactNode } from 'react'
+import { isApiError } from '../../api/errors'
 import { useI18n } from '../../i18n'
 import { Modal } from '../ui/Modal'
 
@@ -140,4 +141,34 @@ export function DeletableItem({ title, onDelete, children }: { title: string; on
       )}
     </li>
   )
+}
+
+/** 서버가 받는 주소 — http:// · https:// 로 시작 (명세 2.2 · 3.2) */
+export const isHttpUrl = (url: string) => /^https?:\/\/\S+$/i.test(url)
+
+/**
+ * 등록 실패를 화면 문구로. 서버가 칸을 짚었으면(400, field) 그 칸 아래에 서버 문구를 두고,
+ * 아래 줄에는 무엇을 하면 되는지만 — 권한 없음 · 다시 로그인 · 그 밖의 실패.
+ */
+export function useSubmitError() {
+  const { t } = useI18n()
+  const [error, setError] = useState<unknown>()
+  const api = isApiError(error) ? error : undefined
+  const message =
+    error === undefined
+      ? undefined
+      : api?.field
+        ? t.compose.checkFields
+        : api?.status === 403
+          ? t.compose.forbidden
+          : api?.status === 401
+            ? t.compose.signedOut
+            : t.compose.error
+  return {
+    message,
+    /** 서버가 이 칸을 거절했으면 그 문구 */
+    field: (key: string) => (api?.field === key ? api.fieldMessage : undefined),
+    set: setError,
+    reset: () => setError(undefined),
+  }
 }

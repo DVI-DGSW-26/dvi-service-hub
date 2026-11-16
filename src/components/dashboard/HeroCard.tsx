@@ -1,12 +1,13 @@
+import { useQuery } from '@tanstack/react-query'
 import { CalendarDays, ChevronLeft, ChevronRight, Megaphone, PenLine, Star, Wrench } from 'lucide-react'
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode, type TouchEvent } from 'react'
-import { portalApi } from '../../api/portal'
-import { useAsync } from '../../hooks/useAsync'
 import { useNow } from '../../hooks/useNow'
 import { useI18n, type Plural } from '../../i18n'
 import { formatDate, longToday, shortDate } from '../../lib/format'
 import { canWriteNotice } from '../../lib/access'
+import { toIso } from '../../lib/calendar'
 import { greetings, plainGreeting } from '../../lib/greetings'
+import { maintenanceQueries, noticeQueries, scheduleQueries } from '../../queries/dashboard'
 import type { Me, Notice } from '../../types/portal'
 import { SkeletonText } from '../ui/Skeleton'
 import { DetailModal } from './DetailModal'
@@ -35,10 +36,11 @@ function Pill({ icon, children }: { icon: ReactNode; children: ReactNode }) {
  * 카드가 옆 패널 높이에 맞춰 늘어나도 내용은 세로 가운데에 둔다.
  */
 export function HeroCard({ me, loading = false, favoriteCount, className = '' }: HeroCardProps) {
-  const schedule = useAsync(portalApi.schedule)
-  const maintenance = useAsync(portalApi.maintenance, 'maintenance')
   // 자정을 넘겨 켜 두어도 날짜가 바뀌게
   const now = useNow()
+  // 오늘 일정 수 — 오늘 패널과 같은 요청(오늘 + 지난 2주)의 마지막 날
+  const schedule = useQuery({ ...scheduleQueries.recent(toIso(now)), select: (days) => days.at(-1)?.items ?? [] })
+  const maintenance = useQuery(maintenanceQueries.list())
   const { t, lang } = useI18n()
 
   return (
@@ -54,10 +56,10 @@ export function HeroCard({ me, loading = false, favoriteCount, className = '' }:
         {/* 휴대폰에서는 요약을 뺀다 — 바로 아래 일정 · 점검 패널이 같은 숫자를 보여준다 */}
         <div className="mt-6 flex flex-wrap gap-2.5 max-sm:hidden fit:mt-4">
           <Pill icon={<CalendarDays className="size-[18px]" aria-hidden="true" />}>
-            <Count entry={t.home.hero.schedule} value={schedule.data?.length} loading={schedule.loading} />
+            <Count entry={t.home.hero.schedule} value={schedule.data?.length} loading={schedule.isPending} />
           </Pill>
           <Pill icon={<Wrench className="size-[18px]" aria-hidden="true" />}>
-            <Count entry={t.home.hero.maintenance} value={maintenance.data?.length} loading={maintenance.loading} />
+            <Count entry={t.home.hero.maintenance} value={maintenance.data?.length} loading={maintenance.isPending} />
           </Pill>
           <Pill icon={<Star className="size-[18px]" aria-hidden="true" />}>
             <Count entry={t.home.hero.favorites} value={favoriteCount} loading={loading} />
@@ -119,7 +121,7 @@ export function NoticeBar({ me, className = '' }: { me: Me | null; className?: s
  * 좁은 화면에서는 위 줄에 '전사 공지' · 넘김, 아래 줄에 공지 글을 폭 가득 — 글이 몇 글자로 잘리지 않게.
  */
 function NoticeTicker({ canWrite, surface = 'hero', className = '' }: { canWrite: boolean; surface?: 'hero' | 'panel'; className?: string }) {
-  const { data, loading } = useAsync(portalApi.notices, 'notices')
+  const { data, isPending: loading } = useQuery(noticeQueries.list())
   const { t, lang } = useI18n()
   const [index, setIndex] = useState(0)
   const [open, setOpen] = useState(false)
