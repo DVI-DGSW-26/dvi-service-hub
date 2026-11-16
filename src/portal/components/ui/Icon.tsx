@@ -1,4 +1,4 @@
-import { BookOpen, CircleHelp, FileText, Folder, Gift, Headset, Network, type LucideProps } from 'lucide-react'
+import { BookOpen, CircleHelp, FileText, Folder, Gift, Globe, Headset, Mail, Network, type LucideProps } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { IconName } from '../../types/portal'
 
@@ -23,6 +23,8 @@ const ICONS = {
   book: BookOpen,
   gift: Gift,
   help: CircleHelp,
+  globe: Globe,
+  mail: Mail,
 } satisfies Record<IconName, (p: LucideProps) => ReactNode>
 
 export function Icon({ name, ...props }: { name: IconName } & LucideProps) {

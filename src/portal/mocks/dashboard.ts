@@ -11,6 +11,7 @@ export const notices: Notice[] = [
     id: 'n-2026-1113',
     title: '2026년 연말 정산 관련 안내',
     summary: '연말 정산 일정 및 제출 서류, 유의사항을 안내드립니다.',
+    body: '올해 연말 정산은 12월 1일(화)부터 12월 19일(금)까지 진행합니다.\n\n1. 홈택스 간소화 자료를 PDF로 내려받아 경영관리팀 메일로 보내 주세요.\n2. 부양가족이 바뀐 분은 가족관계증명서를 함께 내 주세요.\n3. 의료비 · 교육비 중 간소화 자료에 없는 항목은 영수증 원본이 필요합니다.\n\n기한을 넘기면 1월 급여 정산에 반영되지 않으니 꼭 기한 안에 내 주세요. 문의: 경영관리팀 내선 210',
     date: '2026-11-13',
     important: true,
     url: 'https://flow.team/',
@@ -38,15 +39,35 @@ export const maintenance: Maintenance[] = [
     id: 'm-mes-1116',
     kind: '점검',
     title: 'MES 정기 점검 안내',
-    when: '11.16 (일) 02:00 ~ 06:00',
+    date: '2026-11-22',
+    when: '11.22 (일) 02:00 ~ 06:00',
+    body: 'DB 서버 보안 패치와 백업 장비 교체를 진행합니다.\n점검 시간에는 MES 접속과 생산 실적 입력이 되지 않습니다. 야간 근무조는 실적을 종이 일지에 적어 두었다가 점검이 끝난 뒤 입력해 주세요.\n\n문의: 기술부설연구소 IT 담당',
     url: 'https://dvision.dvi-ind.com/',
   },
   {
     id: 'm-rn-1114',
     kind: '안내',
     title: '연구노트 버전 업데이트 안내',
-    when: '11.14 (금)',
+    date: '2026-11-19',
+    when: '11.19 (목)',
     url: 'https://research-note.dvi-ind.com/',
+  },
+  {
+    id: 'm-hr-1125',
+    kind: '안내',
+    title: '하이요 연차 신청 화면 개편',
+    date: '2026-11-25',
+    when: '11.25 (수)',
+    body: '연차 · 반차 신청 화면이 한 장으로 합쳐집니다. 남은 연차가 신청 화면 위에 바로 보입니다.',
+    url: 'https://hr.dvi-ind.com/',
+  },
+  {
+    id: 'm-exp-1128',
+    kind: '점검',
+    title: '사무실 경비 서버 이전',
+    date: '2026-11-28',
+    when: '11.28 (토) 09:00 ~ 12:00',
+    url: 'https://expenses.dvi-ind.com/',
   },
 ]
 
@@ -151,13 +172,65 @@ export const news: NewsItem[] = [
     image: newsResearchNote,
     url: 'https://research-note.dvi-ind.com/',
   },
+  // 아래는 그림 없는 소식 — 소식이 많을 때 패널이 길어지지 않는지 보는 용도
+  {
+    id: 'nw-1002',
+    title: '3분기 우수 제안 시상',
+    summary: '공정 개선 · 원가 절감 제안 5건이 3분기 우수 제안으로 뽑혔습니다.',
+    date: '2026-10-02',
+    body: '3분기 사내 제안 제도에서 공정 개선과 원가 절감 제안 5건이 우수 제안으로 뽑혔습니다. 시상은 10월 정례회의에서 진행했습니다.',
+    url: 'https://flow.team/',
+  },
+  {
+    id: 'nw-0918',
+    title: '신규 입사자 환영회',
+    summary: '9월 입사한 구성원 4명을 위한 환영회가 열렸습니다.',
+    date: '2026-09-18',
+    body: '9월에 입사한 연구개발팀 · 생산팀 구성원 4명을 위한 환영회가 본사 구내식당에서 열렸습니다.',
+    url: 'https://company-events-theta.vercel.app/',
+  },
+  {
+    id: 'nw-0905',
+    title: '띵동 디지털 명함 개편',
+    summary: '이메일 서명에 회사 로고와 연락처가 새 양식으로 들어갑니다.',
+    date: '2026-09-05',
+    body: '띵동 디지털 명함과 이메일 서명이 새 양식으로 바뀌었습니다. 띵동에서 내 명함을 열어 새 서명을 복사해 쓰면 됩니다.',
+    url: 'https://ddingdong.dvi-ind.com/',
+  },
+  {
+    id: 'nw-0822',
+    title: '여름 휴가 사진 공모 결과',
+    summary: '임직원 투표로 고른 여름 휴가 사진 다섯 점을 소개합니다.',
+    date: '2026-08-22',
+    body: '여름 휴가 사진 공모에 34점이 올라왔고, 임직원 투표로 다섯 점을 골랐습니다. 뽑힌 사진은 본사 로비에 한 달 동안 걸립니다.',
+    url: 'https://company-events-theta.vercel.app/',
+  },
+  {
+    id: 'nw-0808',
+    title: '품질팀 ISO 9001 갱신 심사 통과',
+    summary: '3년 주기 갱신 심사를 지적 사항 없이 마쳤습니다.',
+    date: '2026-08-08',
+    body: '품질팀이 ISO 9001 갱신 심사를 지적 사항 없이 마쳤습니다. 준비에 함께한 생산 · 구매 · 연구소 담당자분들께 감사드립니다.',
+    url: 'https://flow.team/',
+  },
+  {
+    id: 'nw-0725',
+    title: '구내식당 메뉴 사전 투표 시작',
+    summary: '다음 달 특식 메뉴를 띵동에서 미리 골라 주세요.',
+    date: '2026-07-25',
+    body: '구내식당 특식 메뉴를 사전 투표로 정합니다. 매달 마지막 주 금요일까지 띵동에서 투표할 수 있습니다.',
+    url: 'https://ddingdong.dvi-ind.com/',
+  },
 ]
 
+// 플로우 PC 앱 주소 — 설치할 때 앱이 직접 등록하는 스킴이다 (레지스트리 HKCU\Software\Classes\flownew).
+// 액션 없이 부르면 앱이 창을 앞으로 가져오고, 꺼져 있으면 OS 가 앱을 띄운다. 앱이 없으면 웹으로 넘어간다 (lib/openApp.ts)
+const FLOW_APP_URL = 'flownew://'
 export const quickLinks: QuickLink[] = [
-  { id: 'q-flow', title: '플로우 바로가기', description: '업무 협업 · 공지 · 일정', icon: 'flow', url: 'https://flow.team/' },
-  { id: 'q-forms', title: '업무 서식함', description: '공통 서식 및 양식', icon: 'folder', url: '#/info/forms' },
-  { id: 'q-org', title: '조직도', description: '부서 · 구성원 정보', icon: 'org', url: '#/info/org' },
-  { id: 'q-help', title: '시스템 문의', description: '계정 · 접속 · 장애 문의', icon: 'headset', url: '#/guide' },
+  { id: 'q-flow', title: '플로우 바로가기', description: '업무 협업 · 공지 · 일정', icon: 'flow', url: 'https://flow.team/', appUrl: FLOW_APP_URL },
+  { id: 'q-home', title: '회사 홈페이지', description: 'dvi-ind.com', icon: 'globe', url: 'https://dvi-ind.com/' },
+  { id: 'q-org', title: '조직도', description: '부서 · 구성원 정보', icon: 'org', url: '#/info/org', modal: 'org' },
+  { id: 'q-mail', title: 'Gmail 바로가기', description: '받은편지함 열기', icon: 'mail', url: 'https://mail.google.com/' },
 ]
 
 export const notifications: PortalNotification[] = [

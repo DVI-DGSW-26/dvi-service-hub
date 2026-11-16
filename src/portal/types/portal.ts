@@ -22,16 +22,30 @@ export type IconName =
   | 'book'
   | 'gift'
   | 'help'
+  | 'globe'
+  | 'mail'
 
 /** 전사 공지 (플로우 연동 예정) */
 export interface Notice {
   id: string
   title: string
   summary: string
+  /** 누르면 펼쳐 보이는 전체 내용. 공지 줄에는 요약만 한 줄 */
+  body?: string
   /** YYYY-MM-DD */
   date: string
   important: boolean
-  url: string
+  /** 원문(플로우 게시글 등). 없으면 링크 없이 보여준다 */
+  url?: string
+}
+
+/** 전사 공지 작성 (admin) */
+export interface NoticeInput {
+  title: string
+  summary: string
+  body?: string
+  important: boolean
+  url?: string
 }
 
 export type MaintenanceKind = '안내' | '점검' | '장애'
@@ -41,9 +55,27 @@ export interface Maintenance {
   id: string
   kind: MaintenanceKind
   title: string
+  /** YYYY-MM-DD — 이날이 지나면 홈에서 내려간다 */
+  date?: string
   /** 화면에 그대로 보여줄 일정 문구 */
   when: string
-  url: string
+  /** 작업 내용 · 영향 범위 등. 누르면 펼쳐 보인다 */
+  body?: string
+  /** 대상 시스템 주소. 없으면 링크 없이 보여준다 */
+  url?: string
+}
+
+/** 점검 · 안내 작성 (admin · 연구개발 · IT개발) */
+export interface MaintenanceInput {
+  kind: MaintenanceKind
+  title: string
+  /** YYYY-MM-DD */
+  date: string
+  /** HH:mm — 비우면 날짜만 */
+  start?: string
+  end?: string
+  body?: string
+  url?: string
 }
 
 export type ScheduleColor = 'violet' | 'amber' | 'teal' | 'accent'
@@ -85,28 +117,53 @@ export interface QuickLink {
   description: string
   icon: IconName
   url: string
+  /** 앱 주소(스킴). 있으면 앱으로 먼저 열어 보고, 앱이 없으면 url 을 연다 (lib/openApp.ts) */
+  appUrl?: string
+  /** 페이지로 가지 않고 홈에서 바로 여는 창. url 은 새 탭(가운데 누르기)용으로 남긴다 */
+  modal?: 'org'
 }
 
-export interface InfoDocument {
-  id: string
+/** 회사 캘린더 직접 등록 — 생일은 해마다 같은 날 보인다 */
+export interface CalendarEventInput {
+  kind: CalendarKind
   title: string
-  updated: string
-  url: string
+  /** YYYY-MM-DD */
+  date: string
+  end?: string
+  place?: string
+  department?: string
 }
 
-/** 사내정보센터 분류 */
-export interface InfoCategory {
+export type CalendarKind = 'event' | 'birthday'
+
+/** 회사 캘린더 한 칸 — 회사 행사 또는 생일자 */
+export interface CalendarEvent {
   id: string
+  kind: CalendarKind
+  /** 행사 이름 · 생일자 이름 */
   title: string
-  description: string
-  icon: IconName
-  documents: InfoDocument[]
+  /** YYYY-MM-DD */
+  date: string
+  /** 여러 날 행사의 마지막 날 (YYYY-MM-DD) */
+  end?: string
+  /** 행사 장소 */
+  place?: string
+  /** 생일자 부서 */
+  department?: string
 }
 
-export interface Faq {
+/** 조직도의 팀 하나와 그 아래 담당 */
+export interface OrgTeam {
   id: string
-  question: string
-  answer: string
+  name: string
+  units: string[]
+}
+
+/** 조직도 — 대표 아래 자문(옆 가지)과 팀들 */
+export interface OrgChart {
+  head: string
+  advisors: string[]
+  teams: OrgTeam[]
 }
 
 export interface PortalNotification {
