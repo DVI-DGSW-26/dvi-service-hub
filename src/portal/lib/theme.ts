@@ -42,6 +42,8 @@ export function applyAccent(id: string) {
   const s = document.documentElement.style
   s.setProperty('--accent-h', String(a.h))
   s.setProperty('--accent-c', String(a.c))
+  // 상태색이 강조색과 겹치는지 CSS 가 알 수 있게 (portal.css 의 [data-accent='green'])
+  document.documentElement.dataset.accent = a.id
 }
 
 export function applyGlass(on: boolean) {
