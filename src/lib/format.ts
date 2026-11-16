@@ -1,4 +1,4 @@
-import { interpolate, type Lang, type Messages } from '../i18n'
+import { interpolate, useI18n, type Lang, type Messages } from '../i18n'
 
 // 날짜 · 시각 표기. 말마다 순서 · 요일 · 오전/오후가 달라서 Intl 로 만들고, 짧은 표기만 직접 짠다.
 
@@ -69,4 +69,13 @@ export function monthDay(iso: string, lang: Lang) {
   const date = parse(iso)
   if (lang === 'ko') return `${date.getMonth() + 1}.${String(date.getDate()).padStart(2, '0')}`
   return new Intl.DateTimeFormat(LOCALE[lang], { month: 'short', day: 'numeric' }).format(date)
+}
+
+/**
+ * 바깥 서버(플로우 · 행사 아카이브)는 제목 없이 줄 수 있다 — 빈 문자열로 온다 (명세 4.1 · 6.1).
+ * 화면에 빈 줄이 생기지 않게 '(제목 없음)' 으로.
+ */
+export function useTitle() {
+  const { t } = useI18n()
+  return (title: string) => title.trim() || t.common.untitled
 }

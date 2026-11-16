@@ -1,6 +1,8 @@
 {
   "loading": "Loading",
   "loadError": "Couldn't load this. Please try again in a moment.",
+  "loadForbidden": "Only employees with an assigned department can see this.",
+  "untitled": "(Untitled)",
   "close": "Close",
   "newTab": "(opens in a new tab)",
   "more": "More",
