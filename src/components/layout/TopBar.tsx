@@ -5,7 +5,6 @@ import { useI18n } from '../../i18n'
 import type { Me } from '../../types/portal'
 import { ICON_BUTTON } from '../ui/Popover'
 import { Skeleton } from '../ui/Skeleton'
-import { NotificationMenu } from './NotificationMenu'
 import { SearchBox } from './SearchBox'
 import { Brand } from './Sidebar'
 import { ThemeMenu } from './ThemeMenu'
@@ -39,7 +38,7 @@ export function TopBar({ me, meLoading, page, query, onQueryChange, theme }: Top
         <a href={hrefOf('systems')} aria-label={t.layout.search.label} className={`${ICON_BUTTON} md:hidden`}>
           <Search className="size-5" aria-hidden="true" />
         </a>
-        <NotificationMenu />
+        {/* 알림은 서버 API 가 생길 때까지 숨긴다 */}
         <ThemeMenu theme={theme} />
         {(me || meLoading) && <span className="mx-1 hidden h-6 w-px bg-line sm:block" aria-hidden="true" />}
         {me ? (

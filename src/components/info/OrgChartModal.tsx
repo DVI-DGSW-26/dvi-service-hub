@@ -1,10 +1,8 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { portalApi } from '../../api/portal'
-import { useAsync } from '../../hooks/useAsync'
+import { orgChart } from '../../data/orgChart'
 import { useI18n } from '../../i18n'
 import { SearchBox } from '../layout/SearchBox'
 import { Modal } from '../ui/Modal'
-import { Skeleton } from '../ui/Skeleton'
 import { OrgChartView, orgMatch } from './OrgChartView'
 
 /**
@@ -14,11 +12,10 @@ import { OrgChartView, orgMatch } from './OrgChartView'
 export function OrgChartModal({ open, onClose, team }: { open: boolean; onClose: () => void; /** 열 때 고를 팀 id */ team?: string }) {
   const titleId = useId()
   const { t, f } = useI18n()
-  const { data, loading } = useAsync(portalApi.orgChart)
+  const teams = orgChart.teams
   const bodyRef = useRef<HTMLDivElement>(null)
   const [query, setQuery] = useState('')
   const [active, setActive] = useState<string>()
-  const teams = data?.teams ?? []
   const units = teams.reduce((n, team) => n + team.units.length, 0)
   const listed = teams.filter((team) => orgMatch(team, query).any)
 
@@ -34,12 +31,12 @@ export function OrgChartModal({ open, onClose, team }: { open: boolean; onClose:
     if (!open) return
     setQuery('')
     setActive(team)
-    if (!team || !data) return
+    if (!team) return
     const id = requestAnimationFrame(() => focusTeam(team))
     return () => cancelAnimationFrame(id)
     // focusTeam 은 매번 새로 만들어지지만 여는 순간에만 부른다
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, team, data])
+  }, [open, team])
 
   return (
     <Modal open={open} onClose={onClose} labelledBy={titleId} wide className="lg:h-[min(820px,calc(100dvh-32px))]">
@@ -49,7 +46,7 @@ export function OrgChartModal({ open, onClose, team }: { open: boolean; onClose:
           <h2 id={titleId} className="mt-2 text-[clamp(22px,2.4vw,28px)]/[1.3] font-bold tracking-[-0.025em]">
             {t.info.org.title}
           </h2>
-          <p className="mt-1.5 text-base text-muted">{data ? f(t.info.org.summary, { teams: teams.length, units }) : ' '}</p>
+          <p className="mt-1.5 text-base text-muted">{f(t.info.org.summary, { teams: teams.length, units })}</p>
         </div>
         <SearchBox
           value={query}
@@ -67,33 +64,27 @@ export function OrgChartModal({ open, onClose, team }: { open: boolean; onClose:
         {/* 팀 목록 — 좁은 화면에서는 가로로 넘긴다 */}
         <nav aria-label={t.info.org.teams} className="flex-none border-b border-line lg:w-60 lg:border-r lg:border-b-0">
           <ul className="flex gap-1.5 overflow-x-auto p-3 [scrollbar-width:none] lg:h-full lg:[scrollbar-width:auto] lg:flex-col lg:overflow-y-auto lg:overscroll-contain">
-            {loading
-              ? Array.from({ length: 6 }, (_, i) => (
-                  <li key={i} className="flex-none" aria-hidden="true">
-                    <Skeleton className="h-11 w-28 lg:w-full" />
-                  </li>
-                ))
-              : listed.map((team) => {
-                  const on = team.id === active
-                  return (
-                    <li key={team.id} className="flex-none">
-                      <button
-                        type="button"
-                        onClick={() => focusTeam(team.id)}
-                        aria-current={on ? 'true' : undefined}
-                        className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-left transition-[background-color,color,scale] duration-150 active:scale-[0.98] ${
-                          on ? 'bg-accent-fill text-white' : 'hover:bg-subtle'
-                        }`}
-                      >
-                        <span className="text-[15px] font-bold whitespace-nowrap">{team.name}</span>
-                        <span className={`text-sm font-semibold whitespace-nowrap tabular-nums ${on ? 'text-white/90' : 'text-muted'}`}>
-                          {f(t.info.org.units, { count: team.units.length })}
-                        </span>
-                      </button>
-                    </li>
-                  )
-                })}
-            {!loading && !listed.length && <li className="px-2 py-2 text-sm text-muted">{f(t.info.org.noResults, { query: query.trim() })}</li>}
+            {listed.map((team) => {
+              const on = team.id === active
+              return (
+                <li key={team.id} className="flex-none">
+                  <button
+                    type="button"
+                    onClick={() => focusTeam(team.id)}
+                    aria-current={on ? 'true' : undefined}
+                    className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-left transition-[background-color,color,scale] duration-150 active:scale-[0.98] ${
+                      on ? 'bg-accent-fill text-white' : 'hover:bg-subtle'
+                    }`}
+                  >
+                    <span className="text-[15px] font-bold whitespace-nowrap">{team.name}</span>
+                    <span className={`text-sm font-semibold whitespace-nowrap tabular-nums ${on ? 'text-white/90' : 'text-muted'}`}>
+                      {f(t.info.org.units, { count: team.units.length })}
+                    </span>
+                  </button>
+                </li>
+              )
+            })}
+            {!listed.length &&<li className="px-2 py-2 text-sm text-muted">{f(t.info.org.noResults, { query: query.trim() })}</li>}
           </ul>
         </nav>
 

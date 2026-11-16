@@ -12,22 +12,22 @@ import {
   SmartphoneNfc,
   type LucideIcon,
 } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import type { Service } from '../services'
-import { portalApi } from '../api/portal'
 import { ThemeSettings } from '../components/layout/ThemeSettings'
 import { ServiceLogo } from '../components/services/ServiceCard'
 import { Badge } from '../components/ui/Badge'
 import { PageTitle } from '../components/ui/PageTitle'
 import { CountTag, Panel } from '../components/ui/Panel'
 import { LoadError, Skeleton, SkeletonText } from '../components/ui/Skeleton'
-import { useAsync } from '../hooks/useAsync'
 import { hrefOf } from '../hooks/useHashRoute'
 import type { PortalTheme } from '../hooks/usePortalTheme'
 import { ACCOUNT_URL, LOGOUT_URL } from '../lib/account'
 import { useI18n } from '../i18n'
 import { hasNoDepartment } from '../lib/access'
 import { formatDate } from '../lib/format'
+import { accountQueries } from '../queries/account'
 import type { AccountSecurity, Me } from '../types/portal'
 
 interface AccountPageProps {
@@ -59,7 +59,7 @@ const MANAGE_LINK =
  */
 export function AccountPage({ me, loading, services, theme }: AccountPageProps) {
   const { t, f, rich } = useI18n()
-  const security = useAsync(portalApi.accountSecurity)
+  const security = useQuery(accountQueries.security())
 
   return (
     <>
@@ -80,12 +80,12 @@ export function AccountPage({ me, loading, services, theme }: AccountPageProps) 
               </a>
             }
           >
-            {security.loading ? (
+            {security.isPending ? (
               <>
                 <Skeleton className="mb-4 h-[74px] rounded-2xl" />
                 <MethodSkeleton rows={3} />
               </>
-            ) : security.error || !security.data ? (
+            ) : security.isError || !security.data ? (
               <LoadError />
             ) : (
               <SignInMethods data={security.data} />
@@ -97,9 +97,9 @@ export function AccountPage({ me, loading, services, theme }: AccountPageProps) 
             icon={MonitorSmartphone}
             meta={security.data && <CountTag>{f(t.account.devices.count, { count: security.data.sessions.length })}</CountTag>}
           >
-            {security.loading ? (
+            {security.isPending ? (
               <MethodSkeleton rows={3} />
-            ) : security.error || !security.data ? (
+            ) : security.isError || !security.data ? (
               <LoadError />
             ) : (
               <>

@@ -1,8 +1,6 @@
-import { portalApi } from '../../api/portal'
-import { useAsync } from '../../hooks/useAsync'
+import { orgChart } from '../../data/orgChart'
 import { useI18n } from '../../i18n'
 import type { OrgChart, OrgTeam } from '../../types/portal'
-import { LoadError, Skeleton } from '../ui/Skeleton'
 
 /** 가지를 잇는 점선 */
 const LINE = 'border-dashed border-fg/20'
@@ -29,7 +27,6 @@ interface Focus {
  * 팀 칸에는 data-team 을 달아 두어 바깥에서 그 팀으로 스크롤할 수 있다.
  */
 export function OrgChartView({ query = '', active }: Partial<Focus>) {
-  const { data, loading, error } = useAsync(portalApi.orgChart)
   const { t } = useI18n()
 
   return (
@@ -37,19 +34,8 @@ export function OrgChartView({ query = '', active }: Partial<Focus>) {
       <div className="text-center">
         <p className="text-sm font-semibold text-accent">{t.info.org.eyebrow}</p>
       </div>
-      {loading ? (
-        <div className="mt-6 space-y-4">
-          <Skeleton className="mx-auto size-36 rounded-full" />
-          <Skeleton className="h-40" />
-        </div>
-      ) : error || !data ? (
-        <LoadError />
-      ) : (
-        <>
-          <Tree chart={data} focus={{ query, active }} />
-          <Stacked chart={data} focus={{ query, active }} />
-        </>
-      )}
+      <Tree chart={orgChart} focus={{ query, active }} />
+      <Stacked chart={orgChart} focus={{ query, active }} />
     </div>
   )
 }
