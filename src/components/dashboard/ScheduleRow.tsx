@@ -1,6 +1,6 @@
 import { Check, Clock } from 'lucide-react'
 import { useI18n } from '../../i18n'
-import { clockTime, duration, monthDay, toMinutes } from '../../lib/format'
+import { clockTime, duration, monthDay, toMinutes, useTitle } from '../../lib/format'
 import type { ScheduleItem } from '../../types/portal'
 
 /** 종일 · 여러 날 일정은 시각이 없어 진행 상태 대신 '종일' 로 둔다 */
@@ -8,7 +8,15 @@ export type ScheduleStatus = 'done' | 'now' | 'upcoming' | 'allDay'
 
 // 시간 일정에는 start · end 가 늘 있다 (명세 4.2). 빠져 오면 하루 끝으로 본다
 const startOf = (s: ScheduleItem) => toMinutes(s.start ?? '00:00')
-const endOf = (s: ScheduleItem) => toMinutes(s.end ?? '23:59')
+const DAY = 24 * 60
+/**
+ * 자정에 끝나는 일정(22:00 ~ 00:00)은 end 가 start 보다 작게 온다 (명세 4.1) — 그날 끝(24:00)으로 본다.
+ * 그대로 두면 00:00 = 0분이라 시작하기도 전에 '끝남' 이 된다.
+ */
+const endOf = (s: ScheduleItem) => {
+  const end = toMinutes(s.end ?? '23:59')
+  return end < startOf(s) ? end + DAY : end
+}
 
 export function statusOf(s: ScheduleItem, now: number): ScheduleStatus {
   if (s.allDay) return 'allDay'
@@ -60,13 +68,14 @@ interface NowGuideProps {
 export function NowGuide({ items, now, date, compact = false, className = '' }: NowGuideProps) {
   const { t, f, lang } = useI18n()
   const hhmm = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+  const title = useTitle()
   const current = items.find((s) => statusOf(s, now) === 'now')
   const next = items.find((s) => statusOf(s, now) === 'upcoming')
   const until = (at: number) => duration(at - now, t.common.duration)
   const guide = current
     ? compact
       ? f(t.schedule.currentLeft, { left: until(endOf(current)) })
-      : f(t.schedule.currentTitleLeft, { title: current.title, left: until(endOf(current)) })
+      : f(t.schedule.currentTitleLeft, { title: title(current.title), left: until(endOf(current)) })
     : next
       ? f(t.schedule.untilNext, { wait: until(startOf(next)) })
       : t.schedule.allDone
@@ -114,6 +123,7 @@ function TimeCell({ item: s }: { item: ScheduleItem }) {
  * 색 막대는 플로우 일정 색 — 플로우가 분류 이름을 주지 않아 색으로 구분한다.
  */
 export function ScheduleRow({ item: s, now, className = '' }: { item: ScheduleItem; now: number; className?: string }) {
+  const title = useTitle()
   const st = statusOf(s, now)
   const done = st === 'done'
   return (
@@ -127,7 +137,7 @@ export function ScheduleRow({ item: s, now, className = '' }: { item: ScheduleIt
         aria-hidden="true"
       />
       <span className="min-w-0 flex-1">
-        <span className={`block text-base break-keep ${done ? 'font-medium text-muted' : st === 'now' ? 'font-bold' : 'font-semibold'}`}>{s.title}</span>
+        <span className={`block text-base break-keep ${done ? 'font-medium text-muted' : st === 'now' ? 'font-bold' : 'font-semibold'}`}>{title(s.title)}</span>
       </span>
       <StatusBadge status={st} />
     </li>

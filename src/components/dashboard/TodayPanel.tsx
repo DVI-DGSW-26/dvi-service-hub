@@ -28,7 +28,7 @@ export function TodayPanel({ className = '' }: { className?: string }) {
   const date = useNow()
   const now = nowMinutes(date)
   // 오늘 + 지난 2주를 한 번에 받는다 — 마지막 날이 오늘, 앞의 날들은 전체 일정 창에서 넘겨 본다
-  const { data, isPending: loading, isError: error } = useQuery({ ...scheduleQueries.recent(toIso(date)), select: (days) => days.at(-1)?.items })
+  const { data, isPending: loading, error } = useQuery({ ...scheduleQueries.recent(toIso(date)), select: (days) => days.at(-1)?.items })
   const items = data ?? []
 
   const firstOpen = items.findIndex((s) => statusOf(s, now) !== 'done')
@@ -63,7 +63,7 @@ export function TodayPanel({ className = '' }: { className?: string }) {
       {loading ? (
         <SkeletonList rows={3} className="h-16" />
       ) : error ? (
-        <LoadError />
+        <LoadError error={error} />
       ) : items.length ? (
         <>
           <NowGuide items={items} now={now} date={date} compact className="mb-3 fit:mb-1.5 fit:py-2" />
