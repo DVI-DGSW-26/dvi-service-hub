@@ -9,7 +9,7 @@ import { toIso } from '../../lib/calendar'
 import { greetings, plainGreeting } from '../../lib/greetings'
 import { maintenanceQueries, noticeQueries, scheduleQueries } from '../../queries/dashboard'
 import type { Me, Notice } from '../../types/portal'
-import { SkeletonText } from '../ui/Skeleton'
+import { LoadError, SkeletonText } from '../ui/Skeleton'
 import { DetailModal } from './DetailModal'
 import { HeroIllustration } from './HeroIllustration'
 import { NoticeComposer } from './NoticeComposer'
@@ -121,7 +121,7 @@ export function NoticeBar({ me, className = '' }: { me: Me | null; className?: s
  * 좁은 화면에서는 위 줄에 '전사 공지' · 넘김, 아래 줄에 공지 글을 폭 가득 — 글이 몇 글자로 잘리지 않게.
  */
 function NoticeTicker({ canWrite, surface = 'hero', className = '' }: { canWrite: boolean; surface?: 'hero' | 'panel'; className?: string }) {
-  const { data, isPending: loading } = useQuery(noticeQueries.list())
+  const { data, isPending: loading, error } = useQuery(noticeQueries.list())
   const { t, lang } = useI18n()
   const [index, setIndex] = useState(0)
   const [open, setOpen] = useState(false)
@@ -151,6 +151,8 @@ function NoticeTicker({ canWrite, surface = 'hero', className = '' }: { canWrite
       <div {...swipe} className="order-last w-full min-w-0 touch-pan-y overflow-hidden pr-1.5 sm:order-none sm:w-auto sm:flex-1 sm:pr-0" aria-live="polite">
         {loading ? (
           <div className="h-12 animate-pulse rounded-lg bg-fg/[0.07]" />
+        ) : error ? (
+          <LoadError error={error} className="text-[15px]" />
         ) : n ? (
           // 제목 · 요약은 한 줄로 잘리므로 누르면 전체를 펼쳐 본다 — 원문 링크는 그 안에서
           <NoticeBody key={n.id} notice={n} onOpen={() => setDetail(index)} />
