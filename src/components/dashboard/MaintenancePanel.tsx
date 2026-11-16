@@ -1,17 +1,21 @@
+import { useQuery } from '@tanstack/react-query'
 import { ChevronRight, PenLine, Wrench } from 'lucide-react'
 import { useState } from 'react'
-import { portalApi } from '../../api/portal'
-import { useAsync } from '../../hooks/useAsync'
-import { useI18n } from '../../i18n'
+import { useI18n, type Lang } from '../../i18n'
 import { canWriteMaintenance } from '../../lib/access'
-import type { MaintenanceKind, Me } from '../../types/portal'
+import { dateTimeRange } from '../../lib/format'
+import { maintenanceQueries } from '../../queries/dashboard'
+import type { Maintenance, MaintenanceKind, Me } from '../../types/portal'
 import { Badge, type BadgeTone } from '../ui/Badge'
 import { Panel } from '../ui/Panel'
 import { LoadError, SkeletonList } from '../ui/Skeleton'
 import { DetailModal } from './DetailModal'
 import { MaintenanceComposer } from './MaintenanceComposer'
 
-export const MAINTENANCE_TONE: Record<MaintenanceKind, BadgeTone> = { 안내: 'accent', 점검: 'warn', 장애: 'danger' }
+export const MAINTENANCE_TONE: Record<MaintenanceKind, BadgeTone> = { NOTICE: 'accent', MAINTENANCE: 'warn', INCIDENT: 'danger' }
+
+/** 일정 문구 — '11.22 (일) 02:00 ~ 06:00' */
+export const maintenanceWhen = (m: Maintenance, lang: Lang) => dateTimeRange(m.date, m.start, m.end, lang)
 
 /** 홈 패널에 보여줄 안내 수 — 옆 패널과 높이를 맞추려 고정하고, 나머지는 '외 n건' 에서 */
 const LISTED = 3
@@ -20,10 +24,10 @@ const LISTED = 3
 export const composeButton =
   'flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft'
 
-/** 시스템 점검 · 안내. admin · 연구개발 · IT개발이면 오른쪽 위에 작성 단추가 붙는다 */
+/** 시스템 점검 · 안내. maintenance:write · admin 이면 오른쪽 위에 작성 단추가 붙는다 */
 export function MaintenancePanel({ me, className = '' }: { me: Me | null; className?: string }) {
-  const { data, loading, error } = useAsync(portalApi.maintenance, 'maintenance')
-  const { t, f } = useI18n()
+  const { data, isPending: loading, isError: error } = useQuery(maintenanceQueries.list())
+  const { t, f, lang } = useI18n()
   const [open, setOpen] = useState(false)
   // 모달은 처음 열 때 붙이고, 닫는 애니메이션을 위해 그 뒤로는 붙여 둔다
   const [mounted, setMounted] = useState(false)
@@ -74,7 +78,7 @@ export function MaintenancePanel({ me, className = '' }: { me: Me | null; classN
                 <Badge tone={MAINTENANCE_TONE[m.kind]}>{t.home.maintenance.kind[m.kind]}</Badge>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[15px] font-semibold group-hover:text-accent">{m.title}</span>
-                  <span className="mt-1 block text-sm text-muted">{m.when}</span>
+                  <span className="mt-1 block text-sm text-muted">{maintenanceWhen(m, lang)}</span>
                 </span>
                 <ChevronRight className="size-4 flex-none text-muted transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
               </button>
@@ -111,7 +115,7 @@ export function MaintenancePanel({ me, className = '' }: { me: Me | null; classN
               <Badge tone={MAINTENANCE_TONE[m.kind]}>{t.home.maintenance.kind[m.kind]}</Badge>
               <span className="min-w-0">
                 <span className="block text-[15px] font-semibold break-keep">{m.title}</span>
-                <span className="mt-0.5 block text-[13px] text-muted">{m.when}</span>
+                <span className="mt-0.5 block text-[13px] text-muted">{maintenanceWhen(m, lang)}</span>
               </span>
             </span>
           ),
@@ -119,7 +123,7 @@ export function MaintenancePanel({ me, className = '' }: { me: Me | null; classN
         content={(m) => ({
           eyebrow: <Badge tone={MAINTENANCE_TONE[m.kind]}>{t.home.maintenance.kind[m.kind]}</Badge>,
           title: m.title,
-          lead: m.when,
+          lead: maintenanceWhen(m, lang),
           body: m.body,
           link: m.url ? { label: t.home.maintenance.open, url: m.url } : undefined,
         })}

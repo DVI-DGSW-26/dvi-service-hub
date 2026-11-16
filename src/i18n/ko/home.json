@@ -22,7 +22,7 @@
     "more": { "one": "외 {count}건 더 보기", "other": "외 {count}건 더 보기" },
     "prev": "이전 안내",
     "next": "다음 안내",
-    "kind": { "안내": "안내", "점검": "점검", "장애": "장애" }
+    "kind": { "MAINTENANCE": "점검", "NOTICE": "안내", "INCIDENT": "장애" }
   },
   "news": {
     "title": "사내 주요 소식",

@@ -54,3 +54,19 @@ export function clockTime(hhmm: string, lang: Lang) {
   const [h, m] = hhmm.split(':').map(Number)
   return new Intl.DateTimeFormat(LOCALE[lang], { hour: 'numeric', minute: '2-digit' }).format(new Date(2000, 0, 1, h, m))
 }
+
+/**
+ * 날짜 + 시각 범위 → ko 11.22 (일) 02:00 ~ 06:00 · en Nov 22 (Sun) 02:00 ~ 06:00.
+ * 서버는 날짜 · 시각을 따로 주고 문구는 만들지 않는다(명세 1.3). 시각이 없으면 날짜만, 끝이 없으면 시작만.
+ */
+export function dateTimeRange(iso: string, start: string | undefined, end: string | undefined, lang: Lang) {
+  const time = start ? ` ${start}${end ? ` ~ ${end}` : ''}` : ''
+  return `${shortDate(iso, lang)}${time}`
+}
+
+/** 2026-11-18 → ko 11.18 · en Nov 18 — 좁은 칸에 쓰는 요일 없는 날짜 */
+export function monthDay(iso: string, lang: Lang) {
+  const date = parse(iso)
+  if (lang === 'ko') return `${date.getMonth() + 1}.${String(date.getDate()).padStart(2, '0')}`
+  return new Intl.DateTimeFormat(LOCALE[lang], { month: 'short', day: 'numeric' }).format(date)
+}
