@@ -29,17 +29,18 @@ export function sortByFavorite(list: Service[], favorites: string[]) {
 export const hasNoDepartment = (me: Me | null) => me !== null && !me.realm.includes('employee')
 
 /**
- * 시스템 점검 · 안내를 쓸 수 있는 부서. 지금 토큰에는 부서 클레임이 없어서(/api/auth/me 에 department 가 없다)
- * 실제로는 admin 만 쓸 수 있다 — 부서 클레임이나 부서 역할이 생기면 여기만 바꾼다.
+ * 허브 쓰기 권한 — service-hub 클라이언트 롤(명세 1.2). realm 의 admin 은 보지 않는다.
+ * 롤은 로그인할 때 쿠키에 담기므로 롤을 바꾼 뒤에는 다시 로그인해야 반영된다.
+ * 버튼만 숨긴다, 막는 건 서버가 한다. (임시 관리자 HUB_ADMIN_EMAILS 는 서버만 안다 — 그 사람에게는 버튼이 안 보인다)
  */
-const MAINTENANCE_DEPARTMENTS = ['연구개발팀', 'IT개발팀']
+const HUB_CLIENT = 'service-hub'
+const hasHubRole = (me: Me | null, role: string) => {
+  const roles = me?.svc[HUB_CLIENT] ?? []
+  return roles.includes(role) || roles.includes('admin')
+}
 
-/** 점검 · 안내 작성 — admin 또는 연구개발 · IT개발. 버튼만 숨긴다, 막는 건 서버가 한다 */
-export const canWriteMaintenance = (me: Me | null) =>
-  me !== null && (me.realm.includes('admin') || MAINTENANCE_DEPARTMENTS.includes(me.department ?? ''))
+/** 점검 · 안내 등록 · 삭제 — maintenance:write 또는 admin */
+export const canWriteMaintenance = (me: Me | null) => hasHubRole(me, 'maintenance:write')
 
-/** 전사 공지 작성 — admin 만 */
-export const canWriteNotice = (me: Me | null) => me !== null && me.realm.includes('admin')
-
-/** 회사 캘린더 직접 등록 — admin 또는 행사 아카이브 관리자(company-events: admin) */
-export const canWriteCalendar = (me: Me | null) => me !== null && (me.realm.includes('admin') || (me.svc['company-events'] ?? []).includes('admin'))
+/** 전사 공지 등록 · 삭제 — notice:write 또는 admin */
+export const canWriteNotice = (me: Me | null) => hasHubRole(me, 'notice:write')
