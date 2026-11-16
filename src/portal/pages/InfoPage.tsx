@@ -1,9 +1,9 @@
-import { ChevronRight, Newspaper } from 'lucide-react'
-import { useState } from 'react'
+import { ChevronRight, Newspaper, Network } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { portalApi } from '../api/portal'
 import { NewsModal } from '../components/dashboard/NewsModal'
 import { NewsThumb } from '../components/dashboard/NewsPanel'
-import { Icon } from '../components/ui/Icon'
+import { OrgChartModal } from '../components/info/OrgChartModal'
 import { Panel } from '../components/ui/Panel'
 import { LoadError, SkeletonList } from '../components/ui/Skeleton'
 import { useAsync } from '../hooks/useAsync'
@@ -12,82 +12,56 @@ import { useI18n } from '../i18n'
 import { formatDate } from '../lib/format'
 import { PageTitle } from '../components/ui/PageTitle'
 
-/** 사내정보: 왼쪽 분류 목록 + 오른쪽 문서 목록, 아래 사내 소식. #/info/<분류 id> 로 바로 연다. */
+/** 사내 소식을 한 번에 보여주는 수 (3열 두 줄) */
+const PAGE = 6
+
+/**
+ * 사내정보: 사내 소식 + 조직도(창). 규정 · 매뉴얼 같은 분류는 아직 자료가 없어 두지 않는다.
+ * #/info/org 로 오면(홈 바로가기를 새 탭으로 연 경우) 조직도 창을 바로 연다.
+ */
 export function InfoPage({ categoryId }: { categoryId?: string }) {
-  const { t, lang } = useI18n()
-  const categories = useAsync(portalApi.infoCategories)
+  const { t, f, lang } = useI18n()
   const news = useAsync(portalApi.news)
   const [openNews, setOpenNews] = useState<number | null>(null)
-  const list = categories.data ?? []
-  const current = list.find((c) => c.id === categoryId) ?? list[0]
+  // 소식이 많으면 한 번에 다 그리지 않고 PAGE 건씩 더 보여준다
+  const [shownCount, setShownCount] = useState(PAGE)
+  const all = news.data ?? []
+  // #/info/org 로 들어오면 주소는 곧바로 사내정보로 바꿔 두고 조직도 창만 띄운다 — 새로고침해도 다시 뜨지 않고,
+  // 뒤로 가기는 창을 닫는다(Modal 이 쌓는 기록). 창이 기록을 쌓기(자식 effect) 전에 바꿔야 해서 처음 그릴 때 한다
+  const [org, setOrg] = useState(() => {
+    if (categoryId !== 'org') return false
+    history.replaceState(history.state, '', hrefOf('info'))
+    return true
+  })
+  const [orgMounted, setOrgMounted] = useState(org)
+  // 처음 열 때 고를 팀 (조직도 패널의 팀 칸을 누른 경우)
+  const [orgTeam, setOrgTeam] = useState<string>()
+  const openOrg = (team?: string) => {
+    setOrgTeam(team)
+    setOrgMounted(true)
+    setOrg(true)
+  }
+  // 사내정보를 보는 중에 #/info/org 로 오면 — 주소가 아직 /org 일 때만(위에서 바꿨으면 건너뛴다)
+  useEffect(() => {
+    if (categoryId !== 'org' || location.hash === hrefOf('info')) return
+    history.replaceState(history.state, '', hrefOf('info'))
+    openOrg()
+  })
 
   return (
     <>
       <PageTitle title={t.info.title} description={t.info.description} />
 
-      <div className="grid gap-5 md:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)]">
-        <nav aria-label={t.info.categoryNav} className="glass h-fit rounded-3xl p-2 md:sticky md:top-24">
-          {categories.loading ? (
-            <SkeletonList rows={5} className="h-11" />
-          ) : (
-            <ul className="space-y-0.5">
-              {list.map((c) => {
-                const active = c.id === current?.id
-                return (
-                  <li key={c.id}>
-                    <a
-                      href={hrefOf('info', c.id)}
-                      aria-current={active ? 'page' : undefined}
-                      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] font-semibold ${
-                        active ? 'bg-accent-fill text-white shadow-[0_4px_12px_-4px_oklch(0_0_0/0.25)]' : 'text-muted hover:bg-subtle hover:text-fg'
-                      }`}
-                    >
-                      <Icon name={c.icon} className="size-5 flex-none" strokeWidth={1.8} />
-                      {c.title}
-                    </a>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-        </nav>
+      <OrgPanel onOpen={openOrg} className="mb-5" />
 
-        <section aria-live="polite" className="glass min-w-0 rounded-3xl p-5 sm:p-6">
-          {categories.loading ? (
-            <SkeletonList rows={3} />
-          ) : categories.error || !current ? (
-            <LoadError />
-          ) : (
-            <>
-              <h2 className="text-lg font-bold">{current.title}</h2>
-              <p className="mt-1 text-sm text-muted">{current.description}</p>
-              <ul className="mt-4 divide-y divide-line">
-                {current.documents.map((d) => (
-                  <li key={d.id}>
-                    <a href={d.url} className="group -mx-2 flex items-center gap-3 rounded-xl px-2 py-3.5 transition-colors hover:bg-subtle">
-                      <Icon name="file" className="size-[18px] flex-none text-muted" />
-                      <span className="min-w-0 flex-1 truncate font-medium group-hover:text-accent group-hover:underline">
-                        {d.title}
-                      </span>
-                      <span className="flex-none text-sm text-muted tabular-nums">{formatDate(d.updated, lang)}</span>
-                      <ChevronRight className="size-4 flex-none text-muted" aria-hidden="true" />
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </section>
-      </div>
-
-      <Panel title={t.info.news} icon={Newspaper} className="mt-5">
+      <Panel title={t.info.news} icon={Newspaper}>
         {news.loading ? (
           <SkeletonList rows={3} className="h-24" />
         ) : news.error ? (
           <LoadError />
         ) : (
           <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {news.data?.map((n, i) => (
+            {all.slice(0, shownCount).map((n, i) => (
               <li key={n.id}>
                 <button
                   type="button"
@@ -106,8 +80,79 @@ export function InfoPage({ categoryId }: { categoryId?: string }) {
             ))}
           </ul>
         )}
-        <NewsModal news={news.data ?? []} index={openNews} onIndexChange={setOpenNews} />
+        {all.length > shownCount && (
+          <div className="mt-6 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setShownCount((n) => n + PAGE)}
+              className="h-11 cursor-pointer rounded-xl px-5 text-[15px] font-semibold ring-1 ring-line transition-[background-color,scale] duration-150 hover:bg-subtle active:scale-95"
+            >
+              {f(t.info.moreNews, { count: Math.min(PAGE, all.length - shownCount), left: all.length - shownCount })}
+            </button>
+          </div>
+        )}
+        <NewsModal news={all} index={openNews} onIndexChange={setOpenNews} />
       </Panel>
+      {orgMounted && (
+        <OrgChartModal
+          open={org}
+          team={orgTeam}
+          onClose={() => setOrg(false)}
+        />
+      )}
     </>
+  )
+}
+
+/**
+ * 조직도 미리보기 — 팀 이름을 칩으로 늘어놓고, 누르면 조직도 창에서 그 팀을 보여준다.
+ * 큰 그림은 창에서만 그린다 (페이지에 그대로 두면 소식이 한참 아래로 밀린다).
+ */
+function OrgPanel({ onOpen, className = '' }: { onOpen: (team?: string) => void; className?: string }) {
+  const { t, f } = useI18n()
+  const { data, loading, error } = useAsync(portalApi.orgChart)
+  const teams = data?.teams ?? []
+  const units = teams.reduce((n, team) => n + team.units.length, 0)
+
+  return (
+    <Panel
+      title={t.info.org.title}
+      icon={Network}
+      description={data ? f(t.info.org.summary, { teams: teams.length, units }) : undefined}
+      toolbar={
+        <button
+          type="button"
+          onClick={() => onOpen()}
+          aria-haspopup="dialog"
+          className="flex cursor-pointer items-center gap-0.5 rounded-lg px-2 py-1 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft"
+        >
+          {t.info.org.open}
+          <ChevronRight className="size-4" aria-hidden="true" />
+        </button>
+      }
+      className={className}
+    >
+      {loading ? (
+        <SkeletonList rows={1} className="h-11" />
+      ) : error ? (
+        <LoadError />
+      ) : (
+        <ul className="flex flex-wrap gap-2">
+          {teams.map((team) => (
+            <li key={team.id}>
+              <button
+                type="button"
+                onClick={() => onOpen(team.id)}
+                aria-haspopup="dialog"
+                className="flex cursor-pointer items-center gap-2 rounded-xl bg-subtle px-3.5 py-2.5 ring-1 ring-line transition-[background-color,scale] duration-150 hover:bg-raised active:scale-[0.97]"
+              >
+                <span className="text-[15px] font-bold">{team.name}</span>
+                <span className="text-[13px] text-muted">{f(t.info.org.units, { count: team.units.length })}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Panel>
   )
 }

@@ -11,7 +11,6 @@ import { usePortalTheme } from './hooks/usePortalTheme'
 import { useI18n } from './i18n'
 import { canSee, sortByFavorite } from './lib/access'
 import { readPref, writePref } from './lib/theme'
-import { GuidePage } from './pages/GuidePage'
 import { HomePage } from './pages/HomePage'
 import { InfoPage } from './pages/InfoPage'
 import { AccountPage } from './pages/AccountPage'
@@ -36,6 +35,8 @@ export default function PortalApp() {
 
   // 권한으로 거르고 즐겨찾기를 앞으로 — 홈과 업무시스템 화면이 같은 목록을 쓴다
   const mine = useMemo(() => sortByFavorite(services.filter((s) => canSee(s, me)), favorites), [me, favorites])
+  // 권한과 상관없이 전부 — 홈 업무시스템의 '전체' 보기
+  const all = useMemo(() => sortByFavorite(services, favorites), [favorites])
 
   // 상단 검색칸은 어느 화면에서든 업무시스템 화면으로 데려가 결과를 보여준다
   const onQueryChange = (q: string) => {
@@ -68,13 +69,13 @@ export default function PortalApp() {
       {/* 사이드바(왼쪽 12px + 너비) 만큼 비우고 나머지 폭을 모두 쓴다 */}
       {/* 홈은 넓은 화면에서 화면 높이에 딱 맞춘다(fit) — 스크롤 없이 한눈에 */}
       <div
-        className={`flex min-h-dvh flex-col px-3 pt-3 pb-28 sm:px-4 lg:pr-4 lg:pb-4 lg:transition-[padding-left] lg:duration-300 lg:ease-[cubic-bezier(0.32,0.72,0,1)] ${collapsed ? 'lg:pl-[104px]' : 'lg:pl-[276px]'} ${home ? 'fit:h-dvh' : ''}`}
+        className={`flex min-h-dvh flex-col px-3 pt-3 pb-24 sm:px-4 lg:pr-4 lg:pb-4 lg:transition-[padding-left] lg:duration-300 lg:ease-[cubic-bezier(0.32,0.72,0,1)] ${collapsed ? 'lg:pl-[104px]' : 'lg:pl-[276px]'} ${home ? 'fit:h-dvh' : ''}`}
       >
         <TopBar me={me} meLoading={meLoading} page={route.page} query={query} onQueryChange={onQueryChange} theme={theme} />
 
         <main id="main" tabIndex={-1} className={`flex-1 pt-5 outline-none ${home ? 'fit:min-h-0 fit:pt-4' : ''}`}>
           {home && (
-            <HomePage me={me} meLoading={meLoading} services={mine} favorites={favorites} onToggleFavorite={toggleFavorite} />
+            <HomePage me={me} meLoading={meLoading} services={mine} allServices={all} favorites={favorites} onToggleFavorite={toggleFavorite} />
           )}
           {route.page === 'systems' && (
             <SystemsPage
@@ -88,7 +89,6 @@ export default function PortalApp() {
             />
           )}
           {route.page === 'info' && <InfoPage categoryId={route.param} />}
-          {route.page === 'guide' && <GuidePage />}
           {route.page === 'account' && <AccountPage me={me} loading={meLoading} services={mine} theme={theme} />}
         </main>
 

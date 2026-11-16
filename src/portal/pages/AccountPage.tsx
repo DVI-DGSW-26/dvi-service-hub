@@ -124,15 +124,7 @@ export function AccountPage({ me, loading, services, theme }: AccountPageProps) 
                     )
                   })}
                 </ul>
-                <p className="mt-4 rounded-2xl bg-subtle px-4 py-3 text-sm/relaxed text-muted">
-                  {rich(t.account.devices.note, {
-                    link: (
-                      <a href={hrefOf('guide')} className="font-semibold text-accent hover:underline">
-                        {t.account.contactLink}
-                      </a>
-                    ),
-                  })}
-                </p>
+                <p className="mt-4 rounded-2xl bg-subtle px-4 py-3 text-sm/relaxed text-muted">{t.account.devices.note}</p>
               </>
             )}
           </Panel>
@@ -198,7 +190,7 @@ export function AccountPage({ me, loading, services, theme }: AccountPageProps) 
 
 /** 이름 · 이메일 · 부서. 바꾸는 일은 관리팀 몫이라 보기만 한다 */
 function ProfileCard({ me, loading }: { me: Me | null; loading: boolean }) {
-  const { t, f, rich } = useI18n()
+  const { t, f } = useI18n()
   if (loading) {
     return (
       <section className="glass rounded-3xl p-6 sm:p-8" role="status" aria-label={t.account.profile.loading}>
@@ -262,15 +254,7 @@ function ProfileCard({ me, loading }: { me: Me | null; loading: boolean }) {
         <Field label={t.account.profile.email}>{me.email}</Field>
         <Field label={t.account.profile.department}>{me.department || t.account.profile.unassigned}</Field>
       </dl>
-      <p className="mt-4 text-sm text-muted">
-        {rich(t.account.profile.note, {
-          link: (
-            <a href={hrefOf('guide')} className="font-semibold text-accent hover:underline">
-              {t.account.contactLink}
-            </a>
-          ),
-        })}
-      </p>
+      <p className="mt-4 text-sm text-muted">{t.account.profile.note}</p>
     </section>
   )
 }

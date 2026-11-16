@@ -1,6 +1,17 @@
 {
   "title": "Company info",
-  "description": "Find policies, manuals, benefits, and company news.",
-  "categoryNav": "Company info categories",
-  "news": "Company news"
+  "description": "Company news and the organization chart.",
+  "news": "Company news",
+  "moreNews": { "one": "Show {count} more ({left} left)", "other": "Show {count} more ({left} left)" },
+  "org": {
+    "open": "Organization chart",
+    "eyebrow": "Organization chart",
+    "title": "Organization chart",
+    "summary": "{teams} teams · {units} units under the CEO",
+    "search": "Find a team or unit",
+    "searchPlaceholder": "e.g. Quality, HR",
+    "teams": "Teams",
+    "units": { "one": "{count} unit", "other": "{count} units" },
+    "noResults": "No team or unit matches ‘{query}’."
+  }
 }

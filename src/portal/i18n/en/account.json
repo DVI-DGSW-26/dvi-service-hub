@@ -1,7 +1,6 @@
 {
   "title": "Settings",
   "description": "Review your company account and sign-in methods, and adjust display settings like appearance and animation.",
-  "contactLink": "IT support",
   "profile": {
     "loading": "Loading your profile",
     "greeting": "{name}",
@@ -12,7 +11,7 @@
     "email": "Work email",
     "department": "Department",
     "unassigned": "Not assigned",
-    "note": "Your name, email, and department are managed by the admin team. To change them, contact {link}."
+    "note": "Your name, email, and department are managed by the admin team. To change them, let the IT team know."
   },
   "signIn": {
     "title": "Sign-in methods",
@@ -66,7 +65,7 @@
       "other": "{count} devices"
     },
     "current": "This device",
-    "note": "If you see a device you don’t recognize, change your password right away and let {link} know."
+    "note": "If you see a device you don’t recognize, change your password right away and let the IT team know."
   },
   "display": "Display",
   "services": {

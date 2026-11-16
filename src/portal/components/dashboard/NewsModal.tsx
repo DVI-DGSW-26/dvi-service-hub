@@ -11,15 +11,17 @@ interface NewsModalProps {
   /** 보고 있는 소식. null 이면 닫힘 */
   index: number | null
   onIndexChange: (i: number | null) => void
+  /** 홈에서 열었을 때 — 창에는 최신 몇 건만 있으니 '전체 n건'(사내정보)으로 가는 링크를 둔다 */
+  viewAll?: { href: string; count: number }
 }
 
 /**
  * 사내 소식 펼쳐 보기. 이전 · 다음으로 넘기고, 아래 목록에서 다른 소식을 고른다.
  * 넓은 화면에서는 왼쪽에 그림을 크게, 오른쪽에 글을 두고 글만 스크롤한다.
  */
-export function NewsModal({ news, index, onIndexChange }: NewsModalProps) {
+export function NewsModal({ news, index, onIndexChange, viewAll }: NewsModalProps) {
   const titleId = useId()
-  const { t, lang } = useI18n()
+  const { t, f, lang } = useI18n()
   // 닫히는 애니메이션 동안에도 내용이 남아 있도록 마지막으로 본 소식을 기억해 그린다
   const last = useRef(0)
   if (index !== null) last.current = index
@@ -91,6 +93,16 @@ export function NewsModal({ news, index, onIndexChange }: NewsModalProps) {
                   )}
                 </ul>
               </section>
+            )}
+
+            {viewAll && (
+              <a
+                href={viewAll.href}
+                className="mt-6 flex min-h-11 items-center justify-center gap-1 rounded-xl text-[15px] font-semibold text-accent ring-1 ring-line transition-[background-color,scale] duration-150 hover:bg-accent-soft active:scale-[0.98]"
+              >
+                {f(t.home.news.viewAll, { count: viewAll.count })}
+                <ChevronRight className="size-4" aria-hidden="true" />
+              </a>
             )}
           </div>
         </div>

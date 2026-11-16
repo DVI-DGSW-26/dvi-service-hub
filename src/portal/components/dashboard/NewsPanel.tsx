@@ -2,6 +2,7 @@ import { ChevronRight, Newspaper, Presentation } from 'lucide-react'
 import { useState } from 'react'
 import { portalApi } from '../../api/portal'
 import { useAsync } from '../../hooks/useAsync'
+import { hrefOf } from '../../hooks/useHashRoute'
 import { useI18n } from '../../i18n'
 import { formatDate } from '../../lib/format'
 import type { NewsItem } from '../../types/portal'
@@ -20,32 +21,36 @@ export function NewsThumb({ item, className = '' }: { item: NewsItem; className?
   )
 }
 
+/** 홈에 보여줄 최신 소식 수 — 대표 1건(그림) + 제목 2건. API 가 주는 수와 상관없이 여기서 자른다 */
+const SHOWN = 3
+
 /**
- * 가장 최근 소식은 그림과 함께, 나머지는 제목 목록. 누르면 모달로 펼친다.
+ * 가장 최근 소식은 그림과 함께, 그다음 2건은 제목으로. 누르면 모달로 펼친다.
  * 한 화면 모드(fit)에서는 그림이 남는 높이만큼만 차지한다.
  */
 export function NewsPanel({ className = '' }: { className?: string }) {
   const { data, loading, error } = useAsync(portalApi.news)
-  const { t, lang } = useI18n()
+  const { t, f, lang } = useI18n()
   const [open, setOpen] = useState<number | null>(null)
   const news = data ?? []
-  const [top, ...rest] = news
+  // 소식이 늘어도 패널 높이는 같고, 나머지는 '전체 n건'(사내정보)에서 — 펼쳐 보기 창도 이 3건만 넘긴다
+  const shown = news.slice(0, SHOWN)
+  const [top, ...listed] = shown
 
   return (
     <Panel
       title={t.home.news.title}
       icon={Newspaper}
       toolbar={
+        // 전체 소식은 사내정보 페이지에서 — 소식이 많아도 그림과 함께 훑어보고 더 불러온다
         news.length > 0 && (
-          <button
-            type="button"
-            onClick={() => setOpen(0)}
-            aria-haspopup="dialog"
-            className="flex cursor-pointer items-center gap-0.5 rounded-lg px-2 py-1 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft"
+          <a
+            href={hrefOf('info')}
+            className="flex items-center gap-0.5 rounded-lg px-2 py-1 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft"
           >
-            {t.common.more}
+            {f(t.home.news.viewAll, { count: news.length })}
             <ChevronRight className="size-4" aria-hidden="true" />
-          </button>
+          </a>
         )
       }
       className={`fit:overflow-hidden ${className}`}
@@ -80,9 +85,9 @@ export function NewsPanel({ className = '' }: { className?: string }) {
             </span>
           </button>
 
-          {rest.length > 0 && (
+          {listed.length > 0 && (
             <ul className="mt-3 flex-none divide-y divide-line border-t border-line fit:mt-2 tall:mt-4">
-              {rest.map((n, i) => (
+              {listed.map((n, i) => (
                 <li key={n.id}>
                   <button
                     type="button"
@@ -102,7 +107,7 @@ export function NewsPanel({ className = '' }: { className?: string }) {
         <p className="py-4 text-base text-muted">{t.home.news.empty}</p>
       )}
 
-      <NewsModal news={news} index={open} onIndexChange={setOpen} />
+      <NewsModal news={shown} index={open} onIndexChange={setOpen} viewAll={{ href: hrefOf('info'), count: news.length }} />
     </Panel>
   )
 }

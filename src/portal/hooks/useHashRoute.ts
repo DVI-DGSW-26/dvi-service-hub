@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-export type Page = 'home' | 'systems' | 'info' | 'guide' | 'account'
+export type Page = 'home' | 'systems' | 'info' | 'account'
 
 export interface Route {
   page: Page
@@ -8,7 +8,7 @@ export interface Route {
   param?: string
 }
 
-const PAGES: Page[] = ['home', 'systems', 'info', 'guide', 'account']
+const PAGES: Page[] = ['home', 'systems', 'info', 'account']
 
 /**
  * 해시 주소(#/systems)로 화면을 고른다. 서버는 해시를 보지 않으므로
