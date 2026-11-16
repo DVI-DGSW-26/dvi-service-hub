@@ -1,10 +1,11 @@
+import { useQuery } from '@tanstack/react-query'
 import { CalendarDays, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
-import { portalApi } from '../../api/portal'
-import { useAsync } from '../../hooks/useAsync'
 import { useNow } from '../../hooks/useNow'
 import { useI18n } from '../../i18n'
+import { toIso } from '../../lib/calendar'
 import { nowMinutes } from '../../lib/format'
+import { scheduleQueries } from '../../queries/dashboard'
 import { Panel, SourceTag } from '../ui/Panel'
 import { LoadError, SkeletonList } from '../ui/Skeleton'
 import { NowGuide, ScheduleRow, statusOf } from './ScheduleRow'
@@ -13,8 +14,6 @@ import { TodayModal } from './TodayModal'
 /** 패널에 보여줄 일정 수 — 나머지는 전체 일정 모달에서 */
 const VISIBLE = 3
 
-const preloadHistory = () => void portalApi.scheduleHistory()
-
 /**
  * 오늘의 일정. 연령대가 넓은 사용자를 생각해
  * 시각은 크게 '오전/오후'로, 상태는 글자로, 지금 기준 안내는 문장으로 보여준다.
@@ -22,13 +21,14 @@ const preloadHistory = () => void portalApi.scheduleHistory()
  * 전체 · 지난 일정 · 검색은 '전체 N건' 버튼의 모달에서.
  */
 export function TodayPanel({ className = '' }: { className?: string }) {
-  const { data, loading, error } = useAsync(portalApi.schedule)
   const [open, setOpen] = useState(false)
   const { t, f } = useI18n()
-  // 모달은 처음 열 때 붙이고(지난 일정도 그때 받는다), 닫는 애니메이션을 위해 그 뒤로는 붙여 둔다
+  // 모달은 처음 열 때 붙이고, 닫는 애니메이션을 위해 그 뒤로는 붙여 둔다
   const [mounted, setMounted] = useState(false)
   const date = useNow()
   const now = nowMinutes(date)
+  // 오늘 + 지난 2주를 한 번에 받는다 — 마지막 날이 오늘, 앞의 날들은 전체 일정 창에서 넘겨 본다
+  const { data, isPending: loading, isError: error } = useQuery({ ...scheduleQueries.recent(toIso(date)), select: (days) => days.at(-1)?.items })
   const items = data ?? []
 
   const firstOpen = items.findIndex((s) => statusOf(s, now) !== 'done')
@@ -50,9 +50,6 @@ export function TodayPanel({ className = '' }: { className?: string }) {
               setMounted(true)
               setOpen(true)
             }}
-            // 누르기 직전에 지난 일정을 미리 받아 둔다 (같은 요청은 한 번만 간다)
-            onPointerEnter={preloadHistory}
-            onFocus={preloadHistory}
             aria-haspopup="dialog"
             className="flex cursor-pointer items-center gap-0.5 rounded-lg px-2 py-1 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft"
           >

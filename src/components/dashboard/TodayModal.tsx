@@ -1,8 +1,9 @@
+import { useQuery } from '@tanstack/react-query'
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
-import { portalApi } from '../../api/portal'
-import { useAsync } from '../../hooks/useAsync'
 import { useI18n } from '../../i18n'
+import { toIso } from '../../lib/calendar'
 import { longToday, shortDate, toMinutes } from '../../lib/format'
+import { scheduleQueries } from '../../queries/dashboard'
 import type { ScheduleItem } from '../../types/portal'
 import { SearchBox } from '../layout/SearchBox'
 import { Modal } from '../ui/Modal'
@@ -24,11 +25,14 @@ const parse = (iso: string) => {
   const [y, m, d] = iso.split('-').map(Number)
   return new Date(y, m - 1, d)
 }
-const matches = (s: ScheduleItem, q: string) => `${s.title} ${s.place ?? ''}`.toLowerCase().includes(q)
-const halves = (items: ScheduleItem[], labels: { morning: string; afternoon: string }) =>
+const matches = (s: ScheduleItem, q: string) => s.title.toLowerCase().includes(q)
+const timed = (s: ScheduleItem) => !s.allDay && !!s.start
+/** 종일 → 오전 → 오후 묶음 (서버도 종일을 먼저 준다) */
+const halves = (items: ScheduleItem[], labels: { allDay: string; morning: string; afternoon: string }) =>
   [
-    { label: labels.morning, items: items.filter((s) => toMinutes(s.start) < 12 * 60) },
-    { label: labels.afternoon, items: items.filter((s) => toMinutes(s.start) >= 12 * 60) },
+    { label: labels.allDay, items: items.filter((s) => !timed(s)) },
+    { label: labels.morning, items: items.filter((s) => timed(s) && toMinutes(s.start!) < 12 * 60) },
+    { label: labels.afternoon, items: items.filter((s) => timed(s) && toMinutes(s.start!) >= 12 * 60) },
   ].filter((g) => g.items.length)
 
 /**
@@ -39,11 +43,13 @@ export function TodayModal({ items, now, date, open, onClose }: TodayModalProps)
   const titleId = useId()
   const { t, f, rich, lang } = useI18n()
   const listRef = useRef<HTMLDivElement>(null)
-  const history = useAsync(portalApi.scheduleHistory)
+  // 오늘 패널과 같은 요청 — 이미 받아 둔 것을 그대로 쓴다
+  const history = useQuery(scheduleQueries.recent(toIso(date)))
   const [day, setDay] = useState(0)
   const [query, setQuery] = useState('')
 
-  const days = history.data ?? [{ date: '', items }]
+  // 서버는 날짜 오름차순 — 창은 오늘부터 거꾸로 넘겨 본다
+  const days = history.data ? [...history.data].reverse() : [{ date: '', items }]
   const selected = days[day] ?? days[0]
   const isToday = day === 0
   const q = query.trim().toLowerCase()
@@ -141,7 +147,7 @@ export function TodayModal({ items, now, date, open, onClose }: TodayModalProps)
               )
             })}
             {/* 지난 일정을 받는 동안 날짜 자리 */}
-            {history.loading &&
+            {history.isPending &&
               Array.from({ length: 6 }, (_, i) => (
                 <li key={`sk-${i}`} className="flex-none" aria-hidden="true">
                   <Skeleton className="h-11 w-28 lg:w-full" />
@@ -160,7 +166,7 @@ export function TodayModal({ items, now, date, open, onClose }: TodayModalProps)
                   return (
                     <DaySection key={d.date} label={[dayLabel(i, d.date), ...(i < 2 ? [shortDate(d.date, lang)] : []), count(d.items.length)].join(' · ')}>
                       {d.items.map((s) => (
-                        <ScheduleRow key={s.id} item={s} now={dayNow(i)} withPlace />
+                        <ScheduleRow key={s.id} item={s} now={dayNow(i)} />
                       ))}
                     </DaySection>
                   )
@@ -178,7 +184,7 @@ export function TodayModal({ items, now, date, open, onClose }: TodayModalProps)
                   halves(selected.items, t.schedule).map((g) => (
                     <DaySection key={g.label} label={`${g.label} · ${count(g.items.length)}`}>
                       {g.items.map((s) => (
-                        <ScheduleRow key={s.id} item={s} now={dayNow(day)} withPlace />
+                        <ScheduleRow key={s.id} item={s} now={dayNow(day)} />
                       ))}
                     </DaySection>
                   ))

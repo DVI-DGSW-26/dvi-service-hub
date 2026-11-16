@@ -1,20 +1,19 @@
 import { Check, Clock } from 'lucide-react'
 import { useI18n } from '../../i18n'
-import { clockTime, duration, toMinutes } from '../../lib/format'
-import type { ScheduleColor, ScheduleItem } from '../../types/portal'
+import { clockTime, duration, monthDay, toMinutes } from '../../lib/format'
+import type { ScheduleItem } from '../../types/portal'
 
-const BAR: Record<ScheduleColor, string> = {
-  violet: 'bg-violet',
-  amber: 'bg-amber',
-  teal: 'bg-teal',
-  accent: 'bg-accent-fill',
-}
+/** 종일 · 여러 날 일정은 시각이 없어 진행 상태 대신 '종일' 로 둔다 */
+export type ScheduleStatus = 'done' | 'now' | 'upcoming' | 'allDay'
 
-export type ScheduleStatus = 'done' | 'now' | 'upcoming'
+// 시간 일정에는 start · end 가 늘 있다 (명세 4.2). 빠져 오면 하루 끝으로 본다
+const startOf = (s: ScheduleItem) => toMinutes(s.start ?? '00:00')
+const endOf = (s: ScheduleItem) => toMinutes(s.end ?? '23:59')
 
 export function statusOf(s: ScheduleItem, now: number): ScheduleStatus {
-  if (now >= toMinutes(s.end)) return 'done'
-  if (now >= toMinutes(s.start)) return 'now'
+  if (s.allDay) return 'allDay'
+  if (now >= endOf(s)) return 'done'
+  if (now >= startOf(s)) return 'now'
   return 'upcoming'
 }
 
@@ -37,8 +36,8 @@ function StatusBadge({ status }: { status: ScheduleStatus }) {
       </span>
     )
   }
-  if (status === 'upcoming') {
-    return <span className={`${base} font-semibold text-fg/80 ring-1 ring-fg/20 ring-inset`}>{t.schedule.status.upcoming}</span>
+  if (status === 'upcoming' || status === 'allDay') {
+    return <span className={`${base} font-semibold text-fg/80 ring-1 ring-fg/20 ring-inset`}>{t.schedule.status[status]}</span>
   }
   return (
     <span className={`${base} font-medium text-muted`}>
@@ -63,13 +62,13 @@ export function NowGuide({ items, now, date, compact = false, className = '' }: 
   const hhmm = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
   const current = items.find((s) => statusOf(s, now) === 'now')
   const next = items.find((s) => statusOf(s, now) === 'upcoming')
-  const until = (at: string) => duration(toMinutes(at) - now, t.common.duration)
+  const until = (at: number) => duration(at - now, t.common.duration)
   const guide = current
     ? compact
-      ? f(t.schedule.currentLeft, { left: until(current.end) })
-      : f(t.schedule.currentTitleLeft, { title: current.title, left: until(current.end) })
+      ? f(t.schedule.currentLeft, { left: until(endOf(current)) })
+      : f(t.schedule.currentTitleLeft, { title: current.title, left: until(endOf(current)) })
     : next
-      ? f(t.schedule.untilNext, { wait: until(next.start) })
+      ? f(t.schedule.untilNext, { wait: until(startOf(next)) })
       : t.schedule.allDone
 
   return (
@@ -86,27 +85,49 @@ const ROW: Record<ScheduleStatus, string> = {
   now: 'bg-live-soft ring-1 ring-live/35',
   upcoming: '',
   done: '',
+  allDay: '',
+}
+
+/** 왼쪽 시각 칸 — 시간 일정은 '오후 2:00 / ~ 오후 3:00', 종일은 '종일', 여러 날이면 아래에 끝나는 날 */
+function TimeCell({ item: s }: { item: ScheduleItem }) {
+  const { t, lang } = useI18n()
+  if (s.allDay) {
+    const multi = s.startDate && s.endDate && s.startDate !== s.endDate
+    return (
+      <>
+        <span className="block text-[17px] font-bold">{t.schedule.allDay}</span>
+        {multi && <span className="mt-0.5 block text-sm text-muted tabular-nums">~ {monthDay(s.endDate!, lang)}</span>}
+      </>
+    )
+  }
+  return (
+    <>
+      <span className="block text-[17px] font-bold tabular-nums">{s.start && clockTime(s.start, lang)}</span>
+      {s.end && <span className="mt-0.5 block text-sm text-muted tabular-nums">~ {clockTime(s.end, lang)}</span>}
+    </>
+  )
 }
 
 /**
  * 일정 한 줄. 연령대가 넓은 사용자를 생각해 시각은 크게 '오전/오후'로, 상태는 글자로.
  * 눈이 가는 순서는 진행 중 → 예정 → 끝남. 끝난 줄은 글자 · 색 막대를 흐려 뒤로 물린다.
- * 모달에서는 장소까지 보여준다(withPlace).
+ * 색 막대는 플로우 일정 색 — 플로우가 분류 이름을 주지 않아 색으로 구분한다.
  */
-export function ScheduleRow({ item: s, now, withPlace = false, className = '' }: { item: ScheduleItem; now: number; withPlace?: boolean; className?: string }) {
-  const { lang } = useI18n()
+export function ScheduleRow({ item: s, now, className = '' }: { item: ScheduleItem; now: number; className?: string }) {
   const st = statusOf(s, now)
   const done = st === 'done'
   return (
     <li data-status={st} className={`flex items-center gap-3 rounded-2xl px-3 py-3 sm:gap-3.5 ${ROW[st]} ${className}`}>
       <span className={`w-[84px] flex-none sm:w-[92px] ${done ? 'text-muted' : st === 'now' ? 'text-live' : ''}`}>
-        <span className="block text-[17px] font-bold tabular-nums">{clockTime(s.start, lang)}</span>
-        <span className="mt-0.5 block text-sm text-muted tabular-nums">~ {clockTime(s.end, lang)}</span>
+        <TimeCell item={s} />
       </span>
-      <span className={`h-10 w-1 flex-none rounded-full ${BAR[s.color]} ${done ? 'opacity-30' : ''}`} aria-hidden="true" />
+      <span
+        className={`h-10 w-1 flex-none rounded-full ${s.color ? '' : 'bg-accent-fill'} ${done ? 'opacity-30' : ''}`}
+        style={s.color ? { backgroundColor: s.color } : undefined}
+        aria-hidden="true"
+      />
       <span className="min-w-0 flex-1">
         <span className={`block text-base break-keep ${done ? 'font-medium text-muted' : st === 'now' ? 'font-bold' : 'font-semibold'}`}>{s.title}</span>
-        {withPlace && s.place && <span className={`mt-0.5 block text-sm text-muted ${done ? 'opacity-70' : ''}`}>{s.place}</span>}
       </span>
       <StatusBadge status={st} />
     </li>
