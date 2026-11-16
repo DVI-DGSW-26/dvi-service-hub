@@ -1,9 +1,11 @@
+import { useQuery } from '@tanstack/react-query'
 import { Globe } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { services } from '../../services'
+import { services as bundledServices } from '../../services'
 import { useI18n } from '../../i18n'
 import { toIso } from '../../lib/calendar'
 import { useCreateMaintenance, useDeleteMaintenance } from '../../queries/dashboard'
+import { serviceQueries } from '../../queries/hub'
 import type { Maintenance, MaintenanceKind } from '../../types/portal'
 import { ServiceLogo } from '../services/ServiceCard'
 import { Badge } from '../ui/Badge'
@@ -21,7 +23,7 @@ const MAX = { title: 100, body: 2000, url: 500 }
 /** 대상 시스템 '기타' — 주소를 직접 적는다 */
 const OTHER = ''
 
-const blank = () => ({ kind: 'MAINTENANCE' as MaintenanceKind, serviceId: services[0].id, title: '', body: '', date: toIso(new Date()), start: '', end: '', url: '' })
+const blank = (serviceId: string) => ({ kind: 'MAINTENANCE' as MaintenanceKind, serviceId, title: '', body: '', date: toIso(new Date()), start: '', end: '', url: '' })
 const host = (url: string) => new URL(url).host
 
 interface MaintenanceComposerProps {
@@ -38,7 +40,11 @@ interface MaintenanceComposerProps {
 export function MaintenanceComposer({ open, onClose, items }: MaintenanceComposerProps) {
   const { t, lang } = useI18n()
   const c = t.compose.maintenance
-  const [form, setForm] = useState(blank)
+  // serviceId 는 서버 목록의 id 와 글자 그대로 같아야 한다 (명세 3.2) — 서버 목록을 쓰고, 못 받으면 내장 목록
+  const serverServices = useQuery(serviceQueries.list())
+  const services = serverServices.data ?? bundledServices
+  const firstId = services[0]?.id ?? OTHER
+  const [form, setForm] = useState(() => blank(firstId))
   // 한 번 등록을 눌러 본 뒤에만 빠진 칸을 빨갛게 — 열자마자 혼내지 않는다
   const [tried, setTried] = useState(false)
   const create = useCreateMaintenance()
@@ -53,11 +59,16 @@ export function MaintenanceComposer({ open, onClose, items }: MaintenanceCompose
   // 열 때마다 빈 폼으로
   useEffect(() => {
     if (!open) return
-    setForm(blank())
+    setForm(blank(firstId))
     setTried(false)
     submitError.reset()
     setRound((r) => r + 1)
   }, [open])
+
+  // 창을 연 뒤에 서버 목록이 와서 고른 시스템이 목록에 없으면 첫 시스템으로
+  useEffect(() => {
+    setForm((f) => (f.serviceId === OTHER || services.some((s) => s.id === f.serviceId) ? f : { ...f, serviceId: firstId }))
+  }, [services, firstId])
 
   const set = <K extends keyof ReturnType<typeof blank>>(key: K, value: ReturnType<typeof blank>[K]) => setForm((f) => ({ ...f, [key]: value }))
   const service = services.find((s) => s.id === form.serviceId)

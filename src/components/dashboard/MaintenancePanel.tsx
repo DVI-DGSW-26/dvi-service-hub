@@ -26,7 +26,7 @@ export const composeButton =
 
 /** 시스템 점검 · 안내. maintenance:write · admin 이면 오른쪽 위에 작성 단추가 붙는다 */
 export function MaintenancePanel({ me, className = '' }: { me: Me | null; className?: string }) {
-  const { data, isPending: loading, isError: error } = useQuery(maintenanceQueries.list())
+  const { data, isPending: loading, error } = useQuery(maintenanceQueries.list())
   const { t, f, lang } = useI18n()
   const [open, setOpen] = useState(false)
   // 모달은 처음 열 때 붙이고, 닫는 애니메이션을 위해 그 뒤로는 붙여 둔다
@@ -62,7 +62,7 @@ export function MaintenancePanel({ me, className = '' }: { me: Me | null; classN
       {loading ? (
         <SkeletonList rows={2} className="h-16" />
       ) : error ? (
-        <LoadError />
+        <LoadError error={error} />
       ) : data?.length ? (
         // 낮은 한 화면(fit)에서만 줄 간격을 좁히고, 높은 화면(tall)에서는 다시 넉넉하게
         <ul className="space-y-2 fit:space-y-1.5 tall:space-y-2.5">
