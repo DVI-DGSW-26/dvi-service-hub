@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
 import { useId, useRef } from 'react'
 import { useI18n } from '../../i18n'
-import { formatDate } from '../../lib/format'
+import { formatDate, useTitle } from '../../lib/format'
 import type { NewsItem } from '../../types/portal'
 import { Modal } from '../ui/Modal'
 import { NewsThumb } from './NewsPanel'
@@ -22,6 +22,7 @@ interface NewsModalProps {
 export function NewsModal({ news, index, onIndexChange, viewAll }: NewsModalProps) {
   const titleId = useId()
   const { t, f, lang } = useI18n()
+  const title = useTitle()
   // 닫히는 애니메이션 동안에도 내용이 남아 있도록 마지막으로 본 소식을 기억해 그린다
   const last = useRef(0)
   if (index !== null) last.current = index
@@ -40,7 +41,7 @@ export function NewsModal({ news, index, onIndexChange, viewAll }: NewsModalProp
           <div className="p-6 sm:p-8 lg:overflow-y-auto lg:overscroll-contain lg:p-10 lg:pt-14">
             <p className="text-[15px] font-semibold text-accent tabular-nums">{formatDate(item.date, lang)}</p>
             <h2 id={titleId} className="mt-2 text-[clamp(22px,2.4vw,28px)]/[1.3] font-bold tracking-[-0.025em] text-balance">
-              {item.title}
+              {title(item.title)}
             </h2>
             {/* 본문은 행사 메모를 줄바꿈(\n)으로 이은 일반 글자 */}
             <p className="mt-4 text-[17px]/[1.75] whitespace-pre-line text-fg/90">{item.body || item.summary}</p>
@@ -85,7 +86,7 @@ export function NewsModal({ news, index, onIndexChange, viewAll }: NewsModalProp
                         >
                           <NewsThumb item={n} className="aspect-[16/10] w-24 flex-none rounded-xl" />
                           <span className="min-w-0">
-                            <span className="block truncate text-base font-semibold">{n.title}</span>
+                            <span className="block truncate text-base font-semibold">{title(n.title)}</span>
                             <span className="mt-1 block text-sm text-muted tabular-nums">{formatDate(n.date, lang)}</span>
                           </span>
                         </button>

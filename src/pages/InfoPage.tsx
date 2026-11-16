@@ -9,7 +9,7 @@ import { LoadError, SkeletonList } from '../components/ui/Skeleton'
 import { orgChart } from '../data/orgChart'
 import { hrefOf } from '../hooks/useHashRoute'
 import { useI18n } from '../i18n'
-import { formatDate } from '../lib/format'
+import { formatDate, useTitle } from '../lib/format'
 import { PageTitle } from '../components/ui/PageTitle'
 import { NEWS_PAGE, newsQueries } from '../queries/dashboard'
 
@@ -19,6 +19,7 @@ import { NEWS_PAGE, newsQueries } from '../queries/dashboard'
  */
 export function InfoPage({ categoryId }: { categoryId?: string }) {
   const { t, f, lang } = useI18n()
+  const title = useTitle()
   // 소식은 한 쪽(6건)씩 받고 '더 보기'로 다음 쪽을 이어 받는다 — 홈 패널과 같은 캐시
   const news = useInfiniteQuery(newsQueries.pages())
   const [openNews, setOpenNews] = useState<number | null>(null)
@@ -56,7 +57,7 @@ export function InfoPage({ categoryId }: { categoryId?: string }) {
         {news.isPending ? (
           <SkeletonList rows={3} className="h-24" />
         ) : news.isError ? (
-          <LoadError />
+          <LoadError error={news.error} />
         ) : (
           <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {all.map((n, i) => (
@@ -70,7 +71,7 @@ export function InfoPage({ categoryId }: { categoryId?: string }) {
                   <span className="block overflow-hidden rounded-2xl ring-1 ring-line">
                     <NewsThumb item={n} className="aspect-[16/9] w-full transition-transform duration-300 group-hover:scale-[1.03]" />
                   </span>
-                  <span className="mt-3 block text-[17px] font-bold group-hover:text-accent">{n.title}</span>
+                  <span className="mt-3 block text-[17px] font-bold group-hover:text-accent">{title(n.title)}</span>
                   <span className="mt-1 line-clamp-2 block text-[15px]/relaxed text-muted">{n.summary}</span>
                   <span className="mt-1.5 block text-sm text-muted tabular-nums">{formatDate(n.date, lang)}</span>
                 </button>

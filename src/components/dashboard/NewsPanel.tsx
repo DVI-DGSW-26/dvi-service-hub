@@ -3,16 +3,19 @@ import { ChevronRight, Newspaper, Presentation } from 'lucide-react'
 import { useState } from 'react'
 import { hrefOf } from '../../hooks/useHashRoute'
 import { useI18n } from '../../i18n'
-import { formatDate } from '../../lib/format'
+import { formatDate, useTitle } from '../../lib/format'
 import { newsQueries } from '../../queries/dashboard'
 import type { NewsItem } from '../../types/portal'
 import { Panel } from '../ui/Panel'
 import { LoadError, Skeleton } from '../ui/Skeleton'
 import { NewsModal } from './NewsModal'
 
-/** 소식 그림. 목록은 작은 그림(400px), 펼쳐 보기는 큰 그림(1920px · large). 그림이 없으면 자리표시 */
+/**
+ * 소식 그림. 목록은 작은 그림(400px), 펼쳐 보기는 큰 그림(1920px · large).
+ * 한쪽만 올 수 있어(명세 6.2) 없는 쪽은 다른 쪽으로 채운다. 둘 다 없으면 자리표시
+ */
 export function NewsThumb({ item, large = false, className = '' }: { item: NewsItem; large?: boolean; className?: string }) {
-  const src = large ? (item.imageLarge ?? item.image) : item.image
+  const src = large ? (item.imageLarge ?? item.image) : (item.image ?? item.imageLarge)
   return src ? (
     <img src={src} alt="" loading="lazy" className={`bg-subtle object-cover ${className}`} />
   ) : (
@@ -31,8 +34,9 @@ const SHOWN = 3
  */
 export function NewsPanel({ className = '' }: { className?: string }) {
   // 사내정보의 소식 목록과 같은 캐시 — 홈은 첫 쪽만 쓴다
-  const { data, isPending: loading, isError: error } = useInfiniteQuery(newsQueries.pages())
+  const { data, isPending: loading, error } = useInfiniteQuery(newsQueries.pages())
   const { t, f, lang } = useI18n()
+  const title = useTitle()
   const [open, setOpen] = useState<number | null>(null)
   const news = data?.pages[0]?.items ?? []
   const total = data?.pages[0]?.total ?? 0
@@ -65,7 +69,7 @@ export function NewsPanel({ className = '' }: { className?: string }) {
           <Skeleton className="h-4" />
         </div>
       ) : error ? (
-        <LoadError />
+        <LoadError error={error} />
       ) : top ? (
         // 한 화면 모드: 칸이 넓고 낮아 위에 그림을 깔면 띠처럼 잘린다. 그림을 왼쪽에 제 비율(16:10)로 두고
         // (높이 = 남는 높이와 칸 폭 48% 에 맞는 높이(30cqw) 중 작은 쪽), 아주 낮으면 작은 그림으로 줄인다
@@ -80,7 +84,7 @@ export function NewsPanel({ className = '' }: { className?: string }) {
               <NewsThumb item={top} className="aspect-[2/1] w-full fit:aspect-auto fit:h-full transition-transform duration-300 group-hover:scale-[1.03]" />
             </span>
             <span className="mt-3 block min-w-0 fit:mt-0">
-              <span className="block font-bold group-hover:text-accent">{top.title}</span>
+              <span className="block font-bold group-hover:text-accent">{title(top.title)}</span>
               <span className="mt-1 line-clamp-2 block text-sm/relaxed text-muted tall:line-clamp-3 [@container(max-height:220px)]:line-clamp-1">
                 {top.summary}
               </span>
@@ -98,7 +102,7 @@ export function NewsPanel({ className = '' }: { className?: string }) {
                     aria-haspopup="dialog"
                     className="group flex w-full cursor-pointer items-baseline gap-3 py-3 text-left fit:py-2.5 tall:py-3.5"
                   >
-                    <span className="min-w-0 flex-1 truncate text-[15px] font-semibold group-hover:text-accent">{n.title}</span>
+                    <span className="min-w-0 flex-1 truncate text-[15px] font-semibold group-hover:text-accent">{title(n.title)}</span>
                     <span className="flex-none text-[13px] text-muted tabular-nums">{formatDate(n.date, lang)}</span>
                   </button>
                 </li>
