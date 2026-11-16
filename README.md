@@ -39,7 +39,7 @@ src/
     http.ts       axios 인스턴스 — /api/hub(허브 서버) · /api/auth(Edge). 인터셉터가 로그 · 오류 변환 · 401 처리
     errors.ts     ApiError { status, code, message, field } — 화면 분기는 code 로
     logger.ts     API 로그 (아래)
-    dashboard.ts  공지 · 점검 · 일정 · 캘린더 · 소식 (포털 대시보드 API 명세 v0.1)
+    dashboard.ts  공지 · 점검 · 일정 · 캘린더 · 소식 (포털 대시보드 API 명세 v0.5)
     hub.ts        기존 API — 서비스 목록 · 즐겨찾기 · 최근 사용 · 서비스 관리 · 플로우 글
     auth.ts       /api/auth/me
   queries/        TanStack Query — queryOptions · 쓰기 훅(성공하면 목록 무효화) · 기본 설정(client.ts)
