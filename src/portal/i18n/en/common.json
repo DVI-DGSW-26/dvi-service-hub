@@ -5,6 +5,7 @@
   "newTab": "(opens in a new tab)",
   "more": "More",
   "viewAll": "View all",
+  "picker": { "date": "Pick a date", "time": "Pick a time", "noTime": "No time", "clear": "Clear", "timePlaceholder": "e.g. 2230", "timeList": "Pick from list" },
   "duration": {
     "h": "{h}h",
     "m": "{m}m",
