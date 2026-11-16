@@ -15,8 +15,43 @@
   },
   "signIn": {
     "title": "Sign-in methods",
-    "manage": "Manage in SSO",
-    "pending": "We're working on showing your sign-in methods here. You can change your password, OTP and passkeys in the company sign-in page now."
+    "description": "Manage how you sign in. Changes open the company sign-in page and bring you back here.",
+    "manage": "Manage in company sign-in",
+    "basic": "Basic authentication",
+    "secondFactor": "Two-factor authentication",
+    "created": "Added",
+    "delete": "Delete",
+    "deleteLabel": "Delete {name}",
+    "listPending": "We're working on listing your sign-in methods. You can still change and add them now.",
+    "password": {
+      "title": "Password",
+      "description": "Sign in by entering your password.",
+      "mine": "My password",
+      "change": "Change"
+    },
+    "otp": {
+      "title": "Authenticator app",
+      "description": "Enter the 6-digit code from an authenticator app (Google Authenticator, etc.).",
+      "add": "Add authenticator app",
+      "empty": "No authenticator app added.",
+      "defaultLabel": "OTP"
+    },
+    "passkey": {
+      "title": "Passkey (fingerprint · face)",
+      "description": "Sign in with your device's fingerprint or face recognition.",
+      "add": "Add passkey",
+      "empty": "No passkey added.",
+      "defaultLabel": "Passkey"
+    },
+    "result": {
+      "UPDATE_PASSWORD": "Your password was changed.",
+      "CONFIGURE_TOTP": "Authenticator app added.",
+      "webauthn-register-passwordless": "Passkey added.",
+      "delete_credential": "Deleted.",
+      "done": "Done in company sign-in.",
+      "cancelled": "Cancelled. Nothing was changed.",
+      "error": "Company sign-in couldn't finish this. Please try again in a moment."
+    }
   },
   "devices": {
     "title": "Signed-in devices",

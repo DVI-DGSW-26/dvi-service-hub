@@ -9,9 +9,28 @@ pnpm 을 쓴다 (`package.json` 의 `packageManager` 버전).
 ```bash
 pnpm install
 pnpm dev        # http://localhost:5173 — 실제 허브 서버(/api/hub)를 부른다
+pnpm dev:mock   # 서버 없이 가짜 데이터로 (아래 '목업으로 보기')
 pnpm typecheck  # 화면(src) · 서버(api, lib, middleware.ts) 타입 검사
 pnpm build      # dist/ 생성
 ```
+
+### 목업으로 보기 (`pnpm dev:mock`)
+
+서버 · 쿠키 없이 화면을 띄운다. axios 의 adapter 만 `src/mocks/server.ts` 로 바꿔 끼우므로 인터셉터 · `[api]` 로그 ·
+TanStack Query 는 실제와 똑같이 돈다. 데이터는 오늘 날짜를 기준으로 만들고(`src/mocks/data.ts`), 입력 검사 · 정렬 ·
+오류 코드는 포털 대시보드 API 명세 v0.5 를 따른다. 공지 · 점검 등록 · 삭제도 되고, 새로 고침하면 처음 상태로 돌아간다.
+
+주소에 `?mock=` 을 붙이면 상황을 바꿀 수 있다 (쉼표로 여러 개, 예: `http://localhost:5173/?mock=slow,empty#/`).
+
+| 값 | 상황 |
+| --- | --- |
+| `empty` | 목록이 모두 비었다 |
+| `error` | 조회 실패 — 일정 · 캘린더 502 `FLOW_UNAVAILABLE`, 소식 502 `NEWS_UNAVAILABLE`, 공지 · 점검 500 |
+| `forbidden` | 조회 403 (재직자가 아닌 사람) |
+| `slow` | 응답 2.5초 |
+| `readonly` | 쓰기 롤이 없는 사람 — 작성 버튼이 안 보인다 |
+
+운영 빌드에는 들어가지 않는다 (`main.tsx` 가 `--mode mock` 일 때만 불러온다).
 
 ### 로컬에서 실제 데이터 보기
 
@@ -44,7 +63,7 @@ src/
     auth.ts       /api/auth/me
   queries/        TanStack Query — queryOptions · 쓰기 훅(성공하면 목록 무효화) · 기본 설정(client.ts)
   data/           서버 API 가 없는 정적 데이터 — 빠른 바로가기 · 조직도
-  mocks/          로컬 로그인 사용자 · 계정 보안(Keycloak 계정 API 연동 전)
+  mocks/          로컬 로그인 사용자 · pnpm dev:mock 의 가짜 API(server.ts) · 데이터(data.ts)
   components/ pages/ hooks/ lib/ types/ i18n/
 ```
 

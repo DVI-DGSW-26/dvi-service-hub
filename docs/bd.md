@@ -66,34 +66,51 @@ access token 이 없으므로, 서버가 **서비스 계정(client credentials)�
 
 ## 3. 로그인 수단
 
+화면은 Keycloak 계정 콘솔의 "로그인 수단" 과 같은 구성이다 — 기본 인증(비밀번호) · 2차 인증(OTP 앱 · 패스키).
+
+**바꾸기 · 등록 · 삭제는 API 가 필요 없다.** 화면이 허브 로그인 주소에 `kc_action` 을 실어 Keycloak 으로 보낸다
+(Application Initiated Action, `api/auth/login.ts`). 이미 만들어 두었고 지금도 동작한다.
+
+| 버튼 | kc_action |
+| --- | --- |
+| 비밀번호 변경 | `UPDATE_PASSWORD` |
+| OTP 앱 등록 | `CONFIGURE_TOTP` |
+| 패스키 등록 | `webauthn-register-passwordless` |
+| 삭제 | `delete_credential:<credential id>` — 아래 목록의 `id` 가 필요하다 |
+
+Keycloak 쪽 확인 **[정해 주세요]**:
+- 버전이 `delete_credential` 동작을 지원하는지 (계정 콘솔 v3 가 쓰는 것과 같다).
+- realm 의 Required actions 에 위 동작들이 켜져 있는지 (`webauthn-register-passwordless` 는 꺼져 있는 경우가 많다).
+
+서버에 필요한 것은 **목록 조회 하나**다.
+
 ### 3.1 `GET /account/credentials`
 
 ```json
 {
-  "password": { "changed": "2026-08-21" },
-  "otp": { "registered": true, "label": "Google Authenticator", "added": "2026-03-04" },
+  "password": { "id": "8d1f…", "createdDate": "2026-09-30", "createdTime": "08:31" },
+  "otp": [
+    { "id": "3e7a…", "label": "otp", "createdDate": "2026-09-30", "createdTime": "08:33" }
+  ],
   "passkeys": [
-    { "id": "c0f1…", "name": "업무용 노트북 (Windows Hello)", "added": "2026-03-04", "lastUsedDate": "2026-11-16", "lastUsedTime": "08:42" }
+    { "id": "5c2b…", "provider": "Google Password Manager", "createdDate": "2026-09-30", "createdTime": "08:33" },
+    { "id": "9a1b…", "label": "업무용 노트북", "provider": "Windows Hello", "createdDate": "2026-10-14", "createdTime": "17:02" }
   ]
 }
 ```
 
 | 칸 | 항상 | 설명 |
 | --- | --- | --- |
-| `password` | - | 비밀번호가 없는 계정(외부 로그인만)이면 칸이 빠진다 |
-| `password.changed` | O | 마지막으로 바꾼 날. Keycloak credential `type=password` 의 `createdDate` |
-| `otp.registered` | O | OTP(`type=otp`) 가 하나라도 있으면 true |
-| `otp.label` | - | 등록할 때 붙인 이름(`userLabel`). 없으면 칸이 빠진다 |
-| `otp.added` | - | 등록한 날(`createdDate`). 여러 개면 가장 최근 것 |
-| `passkeys` | O | 패스키(`type=webauthn-passwordless`) 목록. 없으면 빈 배열. 등록일 내림차순 |
-| `passkeys[].id` | O | credential id |
-| `passkeys[].name` | O | `userLabel`. 없으면 빈 문자열 |
-| `passkeys[].added` | O | 등록한 날 |
-| `passkeys[].lastUsedDate` · `lastUsedTime` | - | 마지막 사용. Keycloak 이 기록하지 않으면 칸이 빠진다 **[정해 주세요: 알 수 있는지]** |
+| `password` | - | `type=password` credential. 비밀번호가 없는 계정(외부 로그인만)이면 칸이 빠진다 |
+| `otp` | O | `type=otp` credential 목록. 없으면 빈 배열. 등록 일시 오름차순 |
+| `passkeys` | O | `type=webauthn-passwordless` credential 목록. 없으면 빈 배열. 등록 일시 오름차순 |
+| `*.id` | O | Keycloak credential id — 화면이 삭제(`delete_credential:<id>`)에 쓴다 |
+| `*.label` | - | `userLabel`. 비었으면 칸이 빠진다(화면은 "OTP" · "패스키" 로 보여준다) |
+| `*.provider` | - | 패스키를 만든 곳(AAGUID 로 찾은 인증기 이름). 모르면 칸이 빠진다 **[정해 주세요: 알 수 있는지]** |
+| `*.createdDate` · `createdTime` | O · - | `createdDate`(epoch ms)를 한국 시간 날짜 · 시각으로 |
 
-- 화면: 설정 › 로그인 수단. "3가지 중 몇 가지를 쓰는지", 비밀번호를 180일 넘게 안 바꿨으면 경고.
-- 바꾸기 · 등록 · 삭제는 지금처럼 Keycloak 계정 화면으로 보낸다. **쓰기 API 는 필요 없다.**
-- 2단계 인증용 `type=webauthn`(패스키가 아닌 보안키)도 쓰는지 **[정해 주세요]** — 쓰면 `passkeys` 에 함께 넣을지 따로 둘지.
+- 화면: 설정 › 로그인 수단. 목록 없이도(이 API 전) 변경 · 등록 버튼은 나온다.
+- 2단계 인증용 `type=webauthn`(패스키가 아닌 보안키)도 쓰는지 **[정해 주세요]** — 쓰면 따로 칸을 둔다.
 
 ## 4. 로그인한 기기
 
@@ -141,7 +158,7 @@ access token 이 없으므로, 서버가 **서비스 계정(client credentials)�
 | --- | --- | --- |
 | 0 | `SESSION_SECRET` 맞추기 | 이게 안 되면 아무것도 안 나온다 |
 | 1 | 부서 (2.1 또는 mapper) | 칸 하나, 가장 쉽다. 사용자 메뉴에도 쓰인다 |
-| 2 | 로그인 수단 (3.1) | Admin API 한 번으로 끝난다 |
+| 2 | 로그인 수단 목록 (3.1) | Admin API 한 번으로 끝난다. 바꾸기 · 등록 · 삭제는 이미 된다 |
 | 3 | 로그인한 기기 (4.1) | 기기 정보 · `current` 처리에 정할 것이 많다 |
 | 4 | 다른 기기 로그아웃 (4.2) | 화면에 버튼부터 새로 만들어야 한다 |
 
@@ -150,3 +167,4 @@ access token 이 없으므로, 서버가 **서비스 계정(client credentials)�
 | 날짜 | 내용 |
 | --- | --- |
 | 2026-11-16 | 처음 씀 |
+| 2026-11-16 | 3장: 바꾸기 · 등록 · 삭제는 kc_action 으로(서버 API 불필요). 목록을 credential 단위(id · label · provider · 등록 일시)로 |

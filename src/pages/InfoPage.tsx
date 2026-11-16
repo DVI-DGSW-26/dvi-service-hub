@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { NewsModal } from '../components/dashboard/NewsModal'
 import { NewsThumb } from '../components/dashboard/NewsPanel'
 import { OrgChartModal } from '../components/info/OrgChartModal'
+import { unitCount } from '../components/info/OrgChartView'
 import { Panel } from '../components/ui/Panel'
 import { LoadError, SkeletonList } from '../components/ui/Skeleton'
 import { orgChart } from '../data/orgChart'
@@ -111,7 +112,7 @@ export function InfoPage({ categoryId }: { categoryId?: string }) {
 function OrgPanel({ onOpen, className = '' }: { onOpen: (team?: string) => void; className?: string }) {
   const { t, f } = useI18n()
   const teams = orgChart.teams
-  const units = teams.reduce((n, team) => n + team.units.length, 0)
+  const units = teams.reduce((n, team) => n + unitCount(team), 0)
 
   return (
     <Panel
@@ -141,7 +142,7 @@ function OrgPanel({ onOpen, className = '' }: { onOpen: (team?: string) => void;
               className="flex cursor-pointer items-center gap-2 rounded-xl bg-subtle px-3.5 py-2.5 ring-1 ring-line transition-[background-color,scale] duration-150 hover:bg-raised active:scale-[0.97]"
             >
               <span className="text-[15px] font-bold">{team.name}</span>
-              <span className="text-[13px] text-muted">{f(t.info.org.units, { count: team.units.length })}</span>
+              <span className="text-[13px] text-muted">{f(t.info.org.units, { count: unitCount(team) })}</span>
             </button>
           </li>
         ))}

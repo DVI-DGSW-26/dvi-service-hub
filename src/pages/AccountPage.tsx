@@ -1,6 +1,7 @@
 import { ArrowUpRight, LayoutGrid, LogOut, MonitorSmartphone, Palette, ShieldCheck } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { Service } from '../services'
+import { SignInMethods } from '../components/account/SignInMethods'
 import { ThemeSettings } from '../components/layout/ThemeSettings'
 import { ServiceLogo } from '../components/services/ServiceCard'
 import { Badge } from '../components/ui/Badge'
@@ -24,15 +25,12 @@ interface AccountPageProps {
   theme: PortalTheme
 }
 
-/** 같은 탭에서 열어 뒤로 가기로 포털에 돌아오게 한다 */
-const MANAGE_LINK =
-  'inline-flex min-h-10 flex-none cursor-pointer items-center gap-1 rounded-xl px-3.5 text-sm font-semibold ring-1 ring-line transition-[background-color,color,scale] duration-150 hover:bg-subtle hover:text-accent active:scale-[0.97]'
-
 /**
  * 설정. 내 정보 · 로그인 수단 · 로그인한 기기를 보고, 바꾸는 일은 통합 로그인(Keycloak) 화면으로 보낸다
  * — 비밀번호 · OTP · 패스키는 로그인 서버만 다룰 수 있어서다. 화면 설정과 로그아웃도 여기 모았다.
  *
- * 로그인 수단 · 기기를 줄 API 가 아직 없어 '준비 중' 으로 둔다 (docs/adr/0001-unbacked-features-coming-soon.md).
+ * 로그인 수단의 바꾸기 · 등록 · 삭제는 통합 로그인으로 보내 지금도 된다. 목록과 로그인한 기기는 API 가 아직 없다
+ * (docs/adr/0001-unbacked-features-coming-soon.md).
  */
 export function AccountPage({ me, loading, services, theme }: AccountPageProps) {
   const { t, rich } = useI18n()
@@ -49,18 +47,15 @@ export function AccountPage({ me, loading, services, theme }: AccountPageProps) 
           <Panel
             title={t.account.signIn.title}
             icon={ShieldCheck}
-            meta={soon}
+            description={t.account.signIn.description}
+            toolbar={
+              <a href={ACCOUNT_URL} className="flex items-center gap-0.5 rounded-lg px-2 py-1 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft">
+                {t.account.signIn.manage}
+                <ArrowUpRight className="size-4" aria-hidden="true" />
+              </a>
+            }
           >
-            <ComingSoon
-              action={
-                <a href={ACCOUNT_URL} className={MANAGE_LINK}>
-                  {t.account.signIn.manage}
-                  <ArrowUpRight className="size-4" aria-hidden="true" />
-                </a>
-              }
-            >
-              {t.account.signIn.pending}
-            </ComingSoon>
+            <SignInMethods />
           </Panel>
 
           <Panel

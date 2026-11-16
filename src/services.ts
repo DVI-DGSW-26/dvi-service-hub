@@ -150,5 +150,17 @@ export const services: Service[] = [
     access: { type: 'employee' },
     logo: '/logos/homepage.png',
     emoji: '🏭',
-  }
+  },
+  {
+    id: 'debrief',
+    name: 'Debrief',
+    // TODO: 서비스 설명 · 접근 권한이 정해지면 고친다
+    description: '디브리프',
+    category: '업무',
+    links: [{ label: '열기', url: 'https://api.dvi-ind.com/debrief/' }],
+    auth: 'sso',
+    access: { type: 'employee' },
+    logo: '/logos/debrief-symbol.png',
+    emoji: '📝',
+  },
 ]

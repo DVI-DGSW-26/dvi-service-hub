@@ -43,6 +43,19 @@ function collectRoles(tokens: (JwtClaims | null)[]): Pick<Session, 'realm' | 'sv
   return { realm: [...realm], svc };
 }
 
+/**
+ * 돌아갈 주소. 설정에서 보낸 일(kc_action)이었으면 결과를 ?kc_action=&kc_action_status= 로 붙인다 —
+ * 화면이 "비밀번호를 바꿨어요" 같은 안내를 띄운다. credential id 는 붙이지 않는다.
+ */
+function withActionResult(pending: PendingLogin, status: string | null, origin: string): string {
+  const dest = new URL(safePath(pending.next), origin);
+  if (pending.action && status) {
+    dest.searchParams.set('kc_action', pending.action.split(':')[0]);
+    dest.searchParams.set('kc_action_status', status);
+  }
+  return dest.toString();
+}
+
 export default async function handler(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const secret = process.env.SESSION_SECRET;
@@ -53,6 +66,14 @@ export default async function handler(req: Request): Promise<Response> {
   if (!secret || !issuer || !clientId) return configError('서버 환경변수가 설정되지 않았습니다.');
 
   if (url.searchParams.get('error')) {
+    // 설정에서 보낸 일(kc_action)을 취소 · 실패한 것이면 로그인은 그대로 두고 설정으로 돌아간다
+    const status = url.searchParams.get('kc_action_status');
+    const back = status ? await verifySession<PendingLogin>(readCookie(req, AUTH_COOKIE), secret) : null;
+    if (back?.action && back.state === url.searchParams.get('state')) {
+      const headers = new Headers({ Location: withActionResult(back, status, url.origin), 'cache-control': 'no-store' });
+      headers.append('Set-Cookie', buildCookie(AUTH_COOKIE, '', 0));
+      return new Response(null, { status: 302, headers });
+    }
     const desc = url.searchParams.get('error_description') || url.searchParams.get('error');
     return htmlError('로그인하지 못했습니다', `통합 로그인에서 거절되었습니다. (${desc})`);
   }
@@ -130,7 +151,7 @@ export default async function handler(req: Request): Promise<Response> {
   };
 
   const headers = new Headers({
-    Location: new URL(safePath(pending.next), url.origin).toString(),
+    Location: withActionResult(pending, url.searchParams.get('kc_action_status'), url.origin),
     'cache-control': 'no-store',
   });
   headers.append('Set-Cookie', buildCookie(SESSION_COOKIE, await signSession(session, secret), SESSION_HOURS * 3600));

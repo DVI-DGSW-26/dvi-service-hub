@@ -15,8 +15,43 @@
   },
   "signIn": {
     "title": "로그인 수단",
+    "description": "로그인에 쓰는 수단을 관리합니다. 바꾸면 통합 로그인 화면으로 갔다가 돌아옵니다.",
     "manage": "통합 로그인에서 관리",
-    "pending": "여기서 로그인 수단을 한눈에 보는 기능을 준비하고 있어요. 비밀번호 · OTP · 패스키는 통합 로그인 화면에서 바로 바꿀 수 있어요."
+    "basic": "기본 인증",
+    "secondFactor": "2차 인증",
+    "created": "등록일",
+    "delete": "삭제",
+    "deleteLabel": "{name} 삭제",
+    "listPending": "등록한 수단 목록을 보여주는 기능은 준비 중이에요. 변경 · 등록은 지금도 할 수 있어요.",
+    "password": {
+      "title": "비밀번호",
+      "description": "비밀번호를 입력해 로그인합니다.",
+      "mine": "내 비밀번호",
+      "change": "변경"
+    },
+    "otp": {
+      "title": "OTP 앱",
+      "description": "인증 앱(Google OTP 등)의 6자리 코드를 입력합니다.",
+      "add": "OTP 앱 등록",
+      "empty": "등록한 OTP 앱이 없습니다.",
+      "defaultLabel": "OTP"
+    },
+    "passkey": {
+      "title": "패스키 (지문 · 얼굴)",
+      "description": "기기의 지문 · 얼굴 인식으로 로그인합니다.",
+      "add": "패스키 등록",
+      "empty": "등록한 패스키가 없습니다.",
+      "defaultLabel": "패스키"
+    },
+    "result": {
+      "UPDATE_PASSWORD": "비밀번호를 바꿨어요.",
+      "CONFIGURE_TOTP": "OTP 앱을 등록했어요.",
+      "webauthn-register-passwordless": "패스키를 등록했어요.",
+      "delete_credential": "삭제했어요.",
+      "done": "통합 로그인에서 처리했어요.",
+      "cancelled": "취소했어요. 바뀐 것은 없습니다.",
+      "error": "통합 로그인에서 처리하지 못했어요. 잠시 후 다시 시도해 주세요."
+    }
   },
   "devices": {
     "title": "로그인한 기기",

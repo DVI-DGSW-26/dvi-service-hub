@@ -3,7 +3,7 @@ import { orgChart } from '../../data/orgChart'
 import { useI18n } from '../../i18n'
 import { SearchBox } from '../layout/SearchBox'
 import { Modal } from '../ui/Modal'
-import { OrgChartView, orgMatch } from './OrgChartView'
+import { OrgChartView, orgMatch, unitCount } from './OrgChartView'
 
 /**
  * 조직도 창 — 오늘의 일정 창과 같은 틀(위 머리말 · 검색, 왼쪽 목록, 오른쪽 본문).
@@ -16,7 +16,7 @@ export function OrgChartModal({ open, onClose, team }: { open: boolean; onClose:
   const bodyRef = useRef<HTMLDivElement>(null)
   const [query, setQuery] = useState('')
   const [active, setActive] = useState<string>()
-  const units = teams.reduce((n, team) => n + team.units.length, 0)
+  const units = teams.reduce((n, team) => n + unitCount(team), 0)
   const listed = teams.filter((team) => orgMatch(team, query).any)
 
   const focusTeam = (id: string) => {
@@ -78,7 +78,7 @@ export function OrgChartModal({ open, onClose, team }: { open: boolean; onClose:
                   >
                     <span className="text-[15px] font-bold whitespace-nowrap">{team.name}</span>
                     <span className={`text-sm font-semibold whitespace-nowrap tabular-nums ${on ? 'text-white/90' : 'text-muted'}`}>
-                      {f(t.info.org.units, { count: team.units.length })}
+                      {f(t.info.org.units, { count: unitCount(team) })}
                     </span>
                   </button>
                 </li>

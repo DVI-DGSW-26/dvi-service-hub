@@ -173,16 +173,49 @@ export interface CalendarEvent {
   color?: string
 }
 
+/** 팀 아래 담당 하나. 그 아래 담당이 더 있으면 units (예: 생산관리 → AL압출 · 정밀가공) */
+export interface OrgUnit {
+  name: string
+  units?: string[]
+}
+
 /** 조직도의 팀 하나와 그 아래 담당 */
 export interface OrgTeam {
   id: string
   name: string
-  units: string[]
+  units: OrgUnit[]
 }
 
-/** 조직도 — 대표 아래 자문(옆 가지)과 팀들 */
+/** 조직도 — 대표 → 총괄 → (옆 가지) 자문 → 팀들 */
 export interface OrgChart {
   head: string
+  /** 대표 바로 아래 칸 (총괄관리). 팀들과 자문은 여기서 갈라진다 */
+  chief?: string
   advisors: string[]
   teams: OrgTeam[]
+}
+
+/**
+ * 로그인 수단 하나 (Keycloak credential). 날짜 · 시각은 따로 온다 (명세 1.3).
+ * 요청 중인 API — docs/bd.md 3.1
+ */
+export interface Credential {
+  /** Keycloak credential id — 삭제(delete_credential:<id>)에 쓴다 */
+  id: string
+  /** 등록할 때 붙인 이름. 없으면 칸이 빠진다 */
+  label?: string
+  /** 패스키를 만든 곳 ('Google Password Manager' · 'Windows Hello' 등). 모르면 칸이 빠진다 */
+  provider?: string
+  /** YYYY-MM-DD */
+  createdDate: string
+  /** HH:mm */
+  createdTime?: string
+}
+
+/** GET /account/credentials — 내 로그인 수단 */
+export interface AccountCredentials {
+  /** 비밀번호가 없는 계정(외부 로그인만)이면 칸이 빠진다 */
+  password?: Credential
+  otp: Credential[]
+  passkeys: Credential[]
 }

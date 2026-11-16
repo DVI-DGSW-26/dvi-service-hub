@@ -17,6 +17,8 @@ export interface PendingLogin extends Signed {
   nonce: string;
   verifier: string;
   next: string;
+  /** 통합 로그인에서 할 일(kc_action). 있으면 callback 이 결과를 돌아갈 주소에 붙인다 */
+  action?: string;
 }
 
 /** discovery 문서 중 이 허브가 쓰는 항목 */

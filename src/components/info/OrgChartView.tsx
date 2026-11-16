@@ -1,16 +1,22 @@
 import { orgChart } from '../../data/orgChart'
 import { useI18n } from '../../i18n'
-import type { OrgChart, OrgTeam } from '../../types/portal'
+import type { OrgChart, OrgTeam, OrgUnit } from '../../types/portal'
 
 /** 가지를 잇는 점선 */
 const LINE = 'border-dashed border-fg/20'
+
+/** 팀의 담당 이름 전부 — 담당 아래 담당까지 */
+const unitNames = (team: OrgTeam) => team.units.flatMap((u) => [u.name, ...(u.units ?? [])])
+
+/** 팀의 담당 수 — 담당 아래 담당까지 센다 */
+export const unitCount = (team: OrgTeam) => unitNames(team).length
 
 /** 찾는 글자에 맞는 팀 · 파트. 팀 이름이 맞으면 그 팀의 파트 전부 */
 export function orgMatch(team: OrgTeam, query: string) {
   const q = query.trim().toLowerCase()
   if (!q) return { team: false, units: [] as string[], any: true }
   const byName = team.name.toLowerCase().includes(q)
-  const units = byName ? team.units : team.units.filter((u) => u.toLowerCase().includes(q))
+  const units = byName ? unitNames(team) : unitNames(team).filter((u) => u.toLowerCase().includes(q))
   return { team: byName, units, any: byName || units.length > 0 }
 }
 
@@ -22,7 +28,7 @@ interface Focus {
 }
 
 /**
- * 조직도. 대표 → (옆 가지) 자문 → 팀 → 담당 순으로 내려간다.
+ * 조직도. 대표 → 총괄 → (옆 가지) 자문 → 팀 → 담당 순으로 내려간다.
  * 넓은 칸(md 이상)은 나무 모양으로 그리고, 칸이 좁으면 가로로 넘겨 본다. 휴대폰은 팀 카드 목록으로 바꾼다.
  * 팀 칸에는 data-team 을 달아 두어 바깥에서 그 팀으로 스크롤할 수 있다.
  */
@@ -52,7 +58,9 @@ function Head({ name, className = '' }: { name: string; className?: string }) {
 
 const advisorBox = 'rounded-2xl bg-accent-fill px-4 py-4 text-center text-base font-bold text-white shadow-[0_10px_24px_-12px_oklch(0_0_0/0.45)]'
 const teamBox = 'glass w-full rounded-2xl px-2 py-5 text-center text-base font-bold break-keep'
+const chiefBox = 'rounded-2xl bg-raised px-4 py-4 text-center text-base font-bold ring-2 ring-accent/50 shadow-[0_10px_24px_-14px_oklch(0_0_0/0.4)]'
 const unitBox = 'w-full rounded-xl bg-subtle px-2 py-3 text-center text-sm text-muted ring-1 ring-line break-keep'
+const subUnitBox = 'w-full rounded-lg border border-dashed border-fg/20 px-2 py-2 text-center text-[13px] text-muted break-keep'
 const HIT = 'ring-2! ring-accent! text-accent!'
 
 /** 팀 칸 · 파트 칸에 덧붙일 강조 · 흐림 */
@@ -76,7 +84,16 @@ function Tree({ chart, focus }: { chart: OrgChart; focus: Focus }) {
           <Head name={chart.head} className="size-44" />
         </div>
 
-        {/* 대표에서 내려오는 줄 + 오른쪽 자문 가지 */}
+        {chart.chief && (
+          <div className="flex flex-col items-center">
+            <span className={`h-8 border-l ${LINE}`} aria-hidden="true" />
+            <div className={chiefBox} style={{ width: `calc(100% / ${n})` }}>
+              {chart.chief}
+            </div>
+          </div>
+        )}
+
+        {/* 위에서 내려오는 줄 + 오른쪽 자문 가지 */}
         <div className="relative h-28">
           <span className={`absolute top-0 left-1/2 h-full border-l ${LINE}`} />
           {chart.advisors.map((a) => (
@@ -99,9 +116,10 @@ function Tree({ chart, focus }: { chart: OrgChart; focus: Focus }) {
                 <div className={`${teamBox} ${mk.team}`}>{team.name}</div>
                 <ul className="flex w-full flex-col items-center" aria-label={team.name}>
                   {team.units.map((u) => (
-                    <li key={u} className="flex w-full flex-col items-center">
+                    <li key={u.name} className="flex w-full flex-col items-center">
                       <span className={`h-7 border-l ${LINE}`} aria-hidden="true" />
-                      <div className={`${unitBox} ${mk.unit(u)}`}>{u}</div>
+                      <div className={`${unitBox} ${mk.unit(u.name)}`}>{u.name}</div>
+                      <SubUnits unit={u} mark={mk.unit} />
                     </li>
                   ))}
                 </ul>
@@ -120,6 +138,7 @@ function Stacked({ chart, focus }: { chart: OrgChart; focus: Focus }) {
     <div className="mt-5 md:hidden">
       <div className="flex flex-col items-center gap-3">
         <Head name={chart.head} className="size-36" />
+        {chart.chief && <div className={`${chiefBox} w-40`}>{chart.chief}</div>}
         {chart.advisors.map((a) => (
           <div key={a} className={`${advisorBox} w-40`}>
             {a}
@@ -134,8 +153,9 @@ function Stacked({ chart, focus }: { chart: OrgChart; focus: Focus }) {
               <p className="text-center text-[15px] font-bold break-keep">{team.name}</p>
               <ul className="mt-2.5 space-y-1.5" aria-label={team.name}>
                 {team.units.map((u) => (
-                  <li key={u} className={`${unitBox} ${mk.unit(u)}`}>
-                    {u}
+                  <li key={u.name}>
+                    <div className={`${unitBox} ${mk.unit(u.name)}`}>{u.name}</div>
+                    <SubUnits unit={u} mark={mk.unit} />
                   </li>
                 ))}
               </ul>
@@ -144,5 +164,20 @@ function Stacked({ chart, focus }: { chart: OrgChart; focus: Focus }) {
         })}
       </ul>
     </div>
+  )
+}
+
+/** 담당 아래 담당 — 한 칸 들여 작게 (생산관리 → AL압출 · 정밀가공) */
+function SubUnits({ unit, mark }: { unit: OrgUnit; mark: (name: string) => string }) {
+  if (!unit.units?.length) return null
+  return (
+    <ul className="flex w-full flex-col items-center pl-5" aria-label={unit.name}>
+      {unit.units.map((s) => (
+        <li key={s} className="flex w-full flex-col items-center">
+          <span className={`h-4 border-l ${LINE}`} aria-hidden="true" />
+          <div className={`${subUnitBox} ${mark(s)}`}>{s}</div>
+        </li>
+      ))}
+    </ul>
   )
 }

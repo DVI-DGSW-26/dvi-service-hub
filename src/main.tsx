@@ -14,17 +14,28 @@ const QueryDevtools = import.meta.env.DEV
 
 applySavedPrefs()
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <I18nProvider>
-        <App />
-      </I18nProvider>
-      {QueryDevtools && (
-        <Suspense>
-          <QueryDevtools buttonPosition="bottom-left" />
-        </Suspense>
-      )}
-    </QueryClientProvider>
-  </StrictMode>,
-)
+// pnpm dev:mock — 서버 없이 가짜 API 로 연다. 운영 빌드에서는 MODE 가 'production' 이라 이 import 가 통째로 빠진다
+async function prepare() {
+  if (import.meta.env.MODE !== 'mock') return
+  const { installMockApi } = await import('./mocks/server')
+  installMockApi()
+}
+
+prepare().then(render)
+
+function render() {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <I18nProvider>
+          <App />
+        </I18nProvider>
+        {QueryDevtools && (
+          <Suspense>
+            <QueryDevtools buttonPosition="bottom-left" />
+          </Suspense>
+        )}
+      </QueryClientProvider>
+    </StrictMode>,
+  )
+}

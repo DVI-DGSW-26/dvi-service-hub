@@ -24,6 +24,15 @@ export function formatDate(iso: string, lang: Lang) {
   return new Intl.DateTimeFormat(LOCALE[lang], { dateStyle: 'medium' }).format(parse(iso))
 }
 
+/** 2026-09-30 + 08:31 → ko 2026년 9월 30일 오전 8:31 · en September 30, 2026 at 8:31 AM. 시각이 없으면 날짜만 */
+export function dateTime(iso: string, hhmm: string | undefined, lang: Lang) {
+  const date = parse(iso)
+  if (!hhmm) return new Intl.DateTimeFormat(LOCALE[lang], { dateStyle: 'long' }).format(date)
+  const [h, m] = hhmm.split(':').map(Number)
+  date.setHours(h, m)
+  return new Intl.DateTimeFormat(LOCALE[lang], { dateStyle: 'long', timeStyle: 'short' }).format(date)
+}
+
 /** 오늘 → ko 2026년 11월 13일 금요일 · en Friday, November 13, 2026 */
 export function longToday(now: Date, lang: Lang) {
   return new Intl.DateTimeFormat(LOCALE[lang], { dateStyle: 'full' }).format(now)
