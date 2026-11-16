@@ -7,8 +7,14 @@
  *
  *  referrer 파라미터는 콘솔 상단에 "돌아가기" 링크를 만든다(Keycloak 내장).
  *  referrer_uri 는 service-hub client 의 redirect 목록으로 검증된다. */
-/** 전체 로그아웃(SSO 세션까지). 로컬 개발(vite)에는 로그아웃 함수(Edge)가 없어 홈으로 */
-export const LOGOUT_URL = import.meta.env.DEV ? '#/' : '/api/auth/logout'
+/**
+ * 로그인 함수(/api/auth/*)를 쓰지 않는 화면 — 로컬 vite(함수가 돌지 않는다)와 목업(dev:mock · Vercel preview,
+ * 로그인 서버 설정이 없다). 로그아웃 · 통합 로그인 버튼은 흉내만 낸다
+ */
+const NO_AUTH = import.meta.env.DEV || import.meta.env.VITE_MOCK
+
+/** 전체 로그아웃(SSO 세션까지). 로그인 함수가 없으면 홈으로 */
+export const LOGOUT_URL = NO_AUTH ? '#/' : '/api/auth/logout'
 
 export const ACCOUNT_URL =
   'https://api.dvi-ind.com/dauth/realms/dvi/account/account-security/signing-in' +
@@ -27,8 +33,8 @@ export type AccountAction = 'UPDATE_PASSWORD' | 'CONFIGURE_TOTP' | 'webauthn-reg
 export type AccountActionStatus = 'success' | 'cancelled' | 'error'
 
 export function accountActionUrl(action: AccountAction) {
-  // 로컬(vite)에는 로그인 함수가 없다 — 다녀온 것처럼 결과만 붙여 다시 연다
-  if (import.meta.env.DEV) return `?kc_action=${encodeURIComponent(action.split(':')[0])}&kc_action_status=success#/account`
+  // 로그인 함수가 없다 — 다녀온 것처럼 결과만 붙여 다시 연다
+  if (NO_AUTH) return `?kc_action=${encodeURIComponent(action.split(':')[0])}&kc_action_status=success#/account`
   return `/api/auth/login?next=${encodeURIComponent('/#/account')}&action=${encodeURIComponent(action)}`
 }
 

@@ -19,9 +19,11 @@ const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 export default async function middleware(req: Request): Promise<Response> {
   const url = new URL(req.url);
 
-  // 로컬 vercel dev — 화면을 목업 API 로 띄운다(vercel.json 의 devCommand 가 pnpm dev:mock).
-  // 목업에는 로그인할 것이 없으니 막지 않는다. (VERCEL_ENV 는 프로젝트를 연결하지 않은 vercel dev 에서 비어 있어 쓰지 않는다)
-  if (LOCAL_HOSTS.has(url.hostname)) return next();
+  // 목업으로 띄운 화면 — 로그인할 것이 없으니 막지 않는다. production 은 그대로 막는다.
+  //   preview 배포   빌드가 목업이다(vite.config.ts). 로그인 서버(OIDC) 설정 없이 미리보기로 연다.
+  //                  바깥 공개를 막는 일은 Vercel 의 Deployment Protection 이 맡는다
+  //   로컬 vercel dev  vercel.json 의 devCommand 가 pnpm dev:mock. 프로젝트를 연결하지 않으면 VERCEL_ENV 가 비어 주소로 본다
+  if (process.env.VERCEL_ENV === 'preview' || LOCAL_HOSTS.has(url.hostname)) return next();
 
   const session = await verifySession(readCookie(req, SESSION_COOKIE), process.env.SESSION_SECRET);
   if (session) return next();

@@ -14,9 +14,9 @@ const QueryDevtools = import.meta.env.DEV
 
 applySavedPrefs()
 
-// pnpm dev:mock — 서버 없이 가짜 API 로 연다. 운영 빌드에서는 MODE 가 'production' 이라 이 import 가 통째로 빠진다
+// pnpm dev:mock · Vercel preview — 서버 없이 가짜 API 로 연다. production 빌드에서는 VITE_MOCK 이 false 라 이 import 가 통째로 빠진다
 async function prepare() {
-  if (import.meta.env.MODE !== 'mock') return
+  if (!import.meta.env.VITE_MOCK) return
   const { installMockApi } = await import('./mocks/server')
   installMockApi()
 }
