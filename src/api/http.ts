@@ -53,18 +53,25 @@ let redirecting = false
 /**
  * 세션이 끝났다 — 로그인으로 보내고 돌아오면 지금 화면으로.
  * 로컬 개발에는 로그인 함수(Edge)가 없으니 쿠키 설정을 안내만 한다.
+ *
+ * 허브 로그인(/api/auth/me)은 살아 있는데 서버만 401 이면 다시 로그인해도 똑같다 — 그때 보내면
+ * Keycloak 이 곧장 돌려보내 화면과 로그인을 끝없이 오간다. 그래서 보내기 전에 허브 로그인을 확인한다.
  */
 function onUnauthorized() {
+  // 패널마다 401 이 오므로 한 번만
+  if (redirecting) return
+  redirecting = true
   if (import.meta.env.DEV) {
-    // 패널마다 401 이 오므로 안내는 한 번만
-    if (redirecting) return
-    redirecting = true
     apiLog.hint('401 — .env.local 의 HUB_SESSION_COOKIE 가 비었거나 만료됐습니다. 운영 허브에 로그인한 브라우저의 hub_session 쿠키 값을 넣고 dev 서버를 다시 켜세요.')
     return
   }
-  if (redirecting) return
-  redirecting = true
-  window.location.href = '/api/auth/login?next=' + encodeURIComponent(location.pathname + location.search + location.hash)
+  auth.get('/me').then(
+    () => apiLog.hint('401 — 허브 로그인은 살아 있는데 허브 서버가 쿠키를 받지 않습니다. 서버의 SESSION_SECRET 이 Vercel 과 같은지 확인하세요.'),
+    (e: ApiError) => {
+      if (e.status !== 401) return
+      window.location.href = '/api/auth/login?next=' + encodeURIComponent(location.pathname + location.search + location.hash)
+    },
+  )
 }
 
 function withInterceptors(instance: AxiosInstance, { redirectOn401 }: { redirectOn401: boolean }) {
