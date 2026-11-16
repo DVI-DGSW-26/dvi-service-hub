@@ -1,5 +1,5 @@
-// 포털 화면이 쓰는 데이터 모양. 지금은 src/mocks 가 채우고,
-// 실제 API 가 생기면 같은 모양으로 내려주면 화면은 고칠 필요가 없다.
+// 포털 화면이 쓰는 데이터 모양. 서버 응답은 포털 대시보드 API 명세(v0.1)를 따른다 —
+// 값이 없는 칸은 null 이 아니라 빠져서 온다(그래서 ?: 로 둔다).
 
 /** /api/auth/me 응답 */
 export interface Me {
@@ -25,90 +25,126 @@ export type IconName =
   | 'globe'
   | 'mail'
 
-/** 전사 공지 (플로우 연동 예정) */
+/** 전사 공지 (GET /notices) — 종료일이 없어 지울 때까지 보인다 */
 export interface Notice {
+  /** 숫자로 된 문자열 */
   id: string
   title: string
+  /** 공지 줄에 한 줄로 보여줄 요약 */
   summary: string
-  /** 누르면 펼쳐 보이는 전체 내용. 공지 줄에는 요약만 한 줄 */
-  body?: string
-  /** YYYY-MM-DD */
+  /** 펼쳐 보는 전체 내용. 줄바꿈(
+)이 든 일반 글자 */
+  body: string
+  /** 등록한 날 YYYY-MM-DD (서버가 채운다) */
   date: string
   important: boolean
-  /** 원문(플로우 게시글 등). 없으면 링크 없이 보여준다 */
+  /** 원문 링크. 없으면 칸이 빠진다 */
   url?: string
 }
 
-/** 전사 공지 작성 (admin) */
+/** 전사 공지 등록 (POST /notices) */
 export interface NoticeInput {
+  /** 100자 이하 */
   title: string
+  /** 150자 이하 */
   summary: string
-  body?: string
+  /** 5,000자 이하 */
+  body: string
   important: boolean
-  url?: string
+  /** http:// · https:// 로 시작, 500자 이하. 없으면 null */
+  url: string | null
 }
 
-export type MaintenanceKind = '안내' | '점검' | '장애'
+/** 점검 종류 — 화면 문구는 사전(home.maintenance.kind)에서 */
+export type MaintenanceKind = 'MAINTENANCE' | 'NOTICE' | 'INCIDENT'
 
-/** 시스템 점검 · 업데이트 안내 */
+/** 시스템 점검 · 안내 (GET /maintenance) — 점검 당일까지 보인다 */
 export interface Maintenance {
   id: string
   kind: MaintenanceKind
-  title: string
-  /** YYYY-MM-DD — 이날이 지나면 홈에서 내려간다 */
-  date?: string
-  /** 화면에 그대로 보여줄 일정 문구 */
-  when: string
-  /** 작업 내용 · 영향 범위 등. 누르면 펼쳐 보인다 */
-  body?: string
-  /** 대상 시스템 주소. 없으면 링크 없이 보여준다 */
-  url?: string
-}
-
-/** 점검 · 안내 작성 (admin · 연구개발 · IT개발) */
-export interface MaintenanceInput {
-  kind: MaintenanceKind
+  /** 대상 업무시스템 id (GET /services 의 id). '기타'면 칸이 빠진다 */
+  serviceId?: string
   title: string
   /** YYYY-MM-DD */
   date: string
-  /** HH:mm — 비우면 날짜만 */
+  /** HH:mm — 입력하지 않았으면 칸이 빠진다 */
   start?: string
   end?: string
-  body?: string
+  /** 작업 내용 · 영향 범위. 줄바꿈이 든 일반 글자 */
+  body: string
+  /** 대상 시스템 주소. 없으면 칸이 빠진다 */
   url?: string
 }
 
-export type ScheduleColor = 'violet' | 'amber' | 'teal' | 'accent'
-
-/** 오늘의 일정 (플로우 캘린더 연동 예정) */
-export interface ScheduleItem {
-  id: string
+/** 점검 · 안내 등록 (POST /maintenance) */
+export interface MaintenanceInput {
+  kind: MaintenanceKind
+  /** null 이면 '기타' */
+  serviceId: string | null
+  /** 100자 이하 */
   title: string
-  /** HH:mm */
-  start: string
-  end: string
-  color: ScheduleColor
-  /** 장소 · 방식 (전체 일정 모달에 보여준다) */
-  place?: string
+  /** YYYY-MM-DD */
+  date: string
+  /** HH:mm. end 만 있으면 서버가 거절한다 */
+  start: string | null
+  end: string | null
+  /** 2,000자 이하 */
+  body: string
+  /** '기타'일 때만 저장된다 */
+  url: string | null
 }
 
-/** 하루치 일정 — 전체 일정 모달에서 지난 날짜를 넘겨 보고 검색한다 */
+/**
+ * 일정 한 건 (플로우 "대외업무 공유방").
+ *   하루 안의 시간 일정  allDay: false, start · end
+ *   하루짜리 종일 일정   allDay: true
+ *   여러 날 일정         allDay: true, startDate · endDate — 걸친 날마다 나온다
+ */
+export interface ScheduleItem {
+  /** flow-ev-<eventSrno>[-<repeatInstanceId>] */
+  id: string
+  title: string
+  allDay: boolean
+  /** HH:mm */
+  start?: string
+  end?: string
+  /** YYYY-MM-DD — 여러 날 일정의 첫날 · 끝나는 날 */
+  startDate?: string
+  endDate?: string
+  /** #RRGGBB — 플로우가 분류 이름을 주지 않아 색으로 구분한다 */
+  color?: string
+}
+
+/** 하루치 일정 (GET /schedule) — 일정이 없는 날도 items: [] 로 온다 */
 export interface ScheduleDay {
   /** YYYY-MM-DD */
   date: string
   items: ScheduleItem[]
 }
 
+/** 사내 주요 소식 한 건 (행사 아카이브) */
 export interface NewsItem {
   id: string
   title: string
   summary: string
+  /** YYYY-MM-DD 행사 날짜 */
   date: string
-  /** 소식 모달에 보여줄 본문 */
+  /** 줄바꿈이 든 일반 글자. 없으면 빈 문자열 */
   body: string
-  /** 그림 주소. 없으면 자리표시 그림을 보여준다 */
+  /** 작은 그림(긴 변 400px). 주소는 30~60분 뒤 만료된다 */
   image?: string
+  /** 큰 그림(긴 변 1920px) */
+  imageLarge?: string
   url: string
+}
+
+/** GET /news 한 쪽 */
+export interface NewsPage {
+  /** 전체 행사 수 */
+  total: number
+  /** 다음 쪽을 물을 값. 뜻을 해석하지 말고 그대로 돌려보낸다. 마지막 쪽이면 없다 */
+  nextCursor?: string
+  items: NewsItem[]
 }
 
 export interface QuickLink {
@@ -123,33 +159,18 @@ export interface QuickLink {
   modal?: 'org'
 }
 
-/** 회사 캘린더 직접 등록 — 생일은 해마다 같은 날 보인다 */
-export interface CalendarEventInput {
-  kind: CalendarKind
-  title: string
-  /** YYYY-MM-DD */
-  date: string
-  end?: string
-  place?: string
-  department?: string
-}
-
-export type CalendarKind = 'event' | 'birthday'
-
-/** 회사 캘린더 한 칸 — 회사 행사 또는 생일자 */
+/** 회사 캘린더 한 줄 (GET /calendar) — 플로우 방의 일정을 한 건당 한 줄로 */
 export interface CalendarEvent {
   id: string
-  kind: CalendarKind
-  /** 행사 이름 · 생일자 이름 */
+  kind: 'event'
   title: string
-  /** YYYY-MM-DD */
+  /** 첫날 YYYY-MM-DD */
   date: string
-  /** 여러 날 행사의 마지막 날 (YYYY-MM-DD) */
+  /** 여러 날 일정의 끝나는 날. 하루짜리면 없다 */
   end?: string
-  /** 행사 장소 */
-  place?: string
-  /** 생일자 부서 */
-  department?: string
+  source: 'flow'
+  /** #RRGGBB */
+  color?: string
 }
 
 /** 조직도의 팀 하나와 그 아래 담당 */
@@ -164,15 +185,6 @@ export interface OrgChart {
   head: string
   advisors: string[]
   teams: OrgTeam[]
-}
-
-export interface PortalNotification {
-  id: string
-  title: string
-  /** 화면에 그대로 보여줄 시각 문구 */
-  time: string
-  read: boolean
-  url: string
 }
 
 /** 등록한 패스키(지문 · 얼굴 · 보안키) 하나 */

@@ -11,13 +11,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.107.1",
     "@vercel/edge": "^1.2.2",
+    "axios": "^1.21.1",
     "lucide-react": "^1.72.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.5",
+    "@tanstack/react-query-devtools": "^5.107.1",
     "@types/node": "^26.6.6",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

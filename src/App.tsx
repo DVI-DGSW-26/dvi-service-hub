@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
 import { services } from './services'
-import { fetchMe } from './api/portal'
 import { GooFilter } from './components/layout/LiquidParts'
 import { Sidebar } from './components/layout/Sidebar'
 import { TabBar } from './components/layout/TabBar'
@@ -15,23 +15,19 @@ import { HomePage } from './pages/HomePage'
 import { InfoPage } from './pages/InfoPage'
 import { AccountPage } from './pages/AccountPage'
 import { SystemsPage } from './pages/SystemsPage'
-import type { Me } from './types/portal'
+import { accountQueries } from './queries/account'
 
 export default function App() {
   const { t } = useI18n()
   const route = useHashRoute()
   const theme = usePortalTheme()
-  // undefined: 아직 받는 중 (스켈레톤) · null: 로그인 정보 없음
-  const [user, setUser] = useState<Me | null | undefined>(undefined)
-  const me = user ?? null
-  const meLoading = user === undefined
+  // 받는 중이면 스켈레톤 · 받은 뒤 null 이면 로그인 정보 없음
+  const meQuery = useQuery(accountQueries.me())
+  const me = meQuery.data ?? null
+  const meLoading = meQuery.isPending
   const [query, setQuery] = useState('')
   const { favorites, toggleFavorite } = useFavorites()
   const [collapsed, setCollapsed] = useState(() => readPref('portal-sidebar') === 'collapsed')
-
-  useEffect(() => {
-    fetchMe().then(setUser)
-  }, [])
 
   // 권한으로 거르고 즐겨찾기를 앞으로 — 홈과 업무시스템 화면이 같은 목록을 쓴다
   const mine = useMemo(() => sortByFavorite(services.filter((s) => canSee(s, me)), favorites), [me, favorites])
