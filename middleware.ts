@@ -13,15 +13,18 @@ export const config = {
   matcher: ['/((?!api/auth|_vercel|favicon\\.svg).*)'],
 };
 
+/** 로컬에서 띄운 것(vercel dev). 배포는 *.vercel.app · 회사 도메인으로만 들어와 이 이름이 될 수 없다 */
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
+
 export default async function middleware(req: Request): Promise<Response> {
+  const url = new URL(req.url);
+
   // 로컬 vercel dev — 화면을 목업 API 로 띄운다(vercel.json 의 devCommand 가 pnpm dev:mock).
-  // 목업에는 로그인할 것이 없으니 막지 않는다. VERCEL_ENV 는 배포에서 production · preview 라 여기에 걸리지 않는다
-  if (process.env.VERCEL_ENV === 'development') return next();
+  // 목업에는 로그인할 것이 없으니 막지 않는다. (VERCEL_ENV 는 프로젝트를 연결하지 않은 vercel dev 에서 비어 있어 쓰지 않는다)
+  if (LOCAL_HOSTS.has(url.hostname)) return next();
 
   const session = await verifySession(readCookie(req, SESSION_COOKIE), process.env.SESSION_SECRET);
   if (session) return next();
-
-  const url = new URL(req.url);
 
   // 페이지가 아니라 파일 요청이면 리다이렉트 대신 401 을 준다.
   const wantsHtml = (req.headers.get('accept') || '').includes('text/html');

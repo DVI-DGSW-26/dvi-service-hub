@@ -33,7 +33,8 @@ TanStack Query 는 실제와 똑같이 돈다. 데이터는 오늘 날짜를 기
 운영 빌드에는 들어가지 않는다 (`main.tsx` 가 `--mode mock` 일 때만 불러온다).
 
 `vercel dev` 도 목업으로 뜬다 — `vercel.json` 의 `devCommand` 가 `pnpm dev:mock` 이고, `middleware.ts` 는
-`VERCEL_ENV=development`(로컬 vercel dev)에서는 로그인을 검사하지 않는다. 배포(production · preview)에는 해당하지 않는다.
+주소가 `localhost` · `127.0.0.1`(로컬 vercel dev)이면 로그인을 검사하지 않는다. 배포(production · preview)는 그 주소로
+들어올 수 없어 해당하지 않는다.
 
 ### 로컬에서 실제 데이터 보기
 
