@@ -1,19 +1,17 @@
+import { useInfiniteQuery } from '@tanstack/react-query'
 import { ChevronRight, Newspaper, Network } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { portalApi } from '../api/portal'
 import { NewsModal } from '../components/dashboard/NewsModal'
 import { NewsThumb } from '../components/dashboard/NewsPanel'
 import { OrgChartModal } from '../components/info/OrgChartModal'
 import { Panel } from '../components/ui/Panel'
 import { LoadError, SkeletonList } from '../components/ui/Skeleton'
-import { useAsync } from '../hooks/useAsync'
+import { orgChart } from '../data/orgChart'
 import { hrefOf } from '../hooks/useHashRoute'
 import { useI18n } from '../i18n'
 import { formatDate } from '../lib/format'
 import { PageTitle } from '../components/ui/PageTitle'
-
-/** 사내 소식을 한 번에 보여주는 수 (3열 두 줄) */
-const PAGE = 6
+import { NEWS_PAGE, newsQueries } from '../queries/dashboard'
 
 /**
  * 사내정보: 사내 소식 + 조직도(창). 규정 · 매뉴얼 같은 분류는 아직 자료가 없어 두지 않는다.
@@ -21,11 +19,11 @@ const PAGE = 6
  */
 export function InfoPage({ categoryId }: { categoryId?: string }) {
   const { t, f, lang } = useI18n()
-  const news = useAsync(portalApi.news)
+  // 소식은 한 쪽(6건)씩 받고 '더 보기'로 다음 쪽을 이어 받는다 — 홈 패널과 같은 캐시
+  const news = useInfiniteQuery(newsQueries.pages())
   const [openNews, setOpenNews] = useState<number | null>(null)
-  // 소식이 많으면 한 번에 다 그리지 않고 PAGE 건씩 더 보여준다
-  const [shownCount, setShownCount] = useState(PAGE)
-  const all = news.data ?? []
+  const all = news.data?.pages.flatMap((p) => p.items) ?? []
+  const left = Math.max(0, (news.data?.pages[0]?.total ?? 0) - all.length)
   // #/info/org 로 들어오면 주소는 곧바로 사내정보로 바꿔 두고 조직도 창만 띄운다 — 새로고침해도 다시 뜨지 않고,
   // 뒤로 가기는 창을 닫는다(Modal 이 쌓는 기록). 창이 기록을 쌓기(자식 effect) 전에 바꿔야 해서 처음 그릴 때 한다
   const [org, setOrg] = useState(() => {
@@ -55,13 +53,13 @@ export function InfoPage({ categoryId }: { categoryId?: string }) {
       <OrgPanel onOpen={openOrg} className="mb-5" />
 
       <Panel title={t.info.news} icon={Newspaper}>
-        {news.loading ? (
+        {news.isPending ? (
           <SkeletonList rows={3} className="h-24" />
-        ) : news.error ? (
+        ) : news.isError ? (
           <LoadError />
         ) : (
           <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {all.slice(0, shownCount).map((n, i) => (
+            {all.map((n, i) => (
               <li key={n.id}>
                 <button
                   type="button"
@@ -80,14 +78,15 @@ export function InfoPage({ categoryId }: { categoryId?: string }) {
             ))}
           </ul>
         )}
-        {all.length > shownCount && (
+        {news.hasNextPage && (
           <div className="mt-6 flex justify-center">
             <button
               type="button"
-              onClick={() => setShownCount((n) => n + PAGE)}
-              className="h-11 cursor-pointer rounded-xl px-5 text-[15px] font-semibold ring-1 ring-line transition-[background-color,scale] duration-150 hover:bg-subtle active:scale-95"
+              onClick={() => news.fetchNextPage()}
+              disabled={news.isFetchingNextPage}
+              className="h-11 cursor-pointer rounded-xl px-5 text-[15px] font-semibold ring-1 ring-line transition-[background-color,scale,opacity] duration-150 hover:bg-subtle active:scale-95 disabled:cursor-wait disabled:opacity-60"
             >
-              {f(t.info.moreNews, { count: Math.min(PAGE, all.length - shownCount), left: all.length - shownCount })}
+              {news.isFetchingNextPage ? t.common.loading : f(t.info.moreNews, { count: Math.min(NEWS_PAGE, left), left })}
             </button>
           </div>
         )}
@@ -110,15 +109,14 @@ export function InfoPage({ categoryId }: { categoryId?: string }) {
  */
 function OrgPanel({ onOpen, className = '' }: { onOpen: (team?: string) => void; className?: string }) {
   const { t, f } = useI18n()
-  const { data, loading, error } = useAsync(portalApi.orgChart)
-  const teams = data?.teams ?? []
+  const teams = orgChart.teams
   const units = teams.reduce((n, team) => n + team.units.length, 0)
 
   return (
     <Panel
       title={t.info.org.title}
       icon={Network}
-      description={data ? f(t.info.org.summary, { teams: teams.length, units }) : undefined}
+      description={f(t.info.org.summary, { teams: teams.length, units })}
       toolbar={
         <button
           type="button"
@@ -132,27 +130,21 @@ function OrgPanel({ onOpen, className = '' }: { onOpen: (team?: string) => void;
       }
       className={className}
     >
-      {loading ? (
-        <SkeletonList rows={1} className="h-11" />
-      ) : error ? (
-        <LoadError />
-      ) : (
-        <ul className="flex flex-wrap gap-2">
-          {teams.map((team) => (
-            <li key={team.id}>
-              <button
-                type="button"
-                onClick={() => onOpen(team.id)}
-                aria-haspopup="dialog"
-                className="flex cursor-pointer items-center gap-2 rounded-xl bg-subtle px-3.5 py-2.5 ring-1 ring-line transition-[background-color,scale] duration-150 hover:bg-raised active:scale-[0.97]"
-              >
-                <span className="text-[15px] font-bold">{team.name}</span>
-                <span className="text-[13px] text-muted">{f(t.info.org.units, { count: team.units.length })}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul className="flex flex-wrap gap-2">
+        {teams.map((team) => (
+          <li key={team.id}>
+            <button
+              type="button"
+              onClick={() => onOpen(team.id)}
+              aria-haspopup="dialog"
+              className="flex cursor-pointer items-center gap-2 rounded-xl bg-subtle px-3.5 py-2.5 ring-1 ring-line transition-[background-color,scale] duration-150 hover:bg-raised active:scale-[0.97]"
+            >
+              <span className="text-[15px] font-bold">{team.name}</span>
+              <span className="text-[13px] text-muted">{f(t.info.org.units, { count: team.units.length })}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
     </Panel>
   )
 }

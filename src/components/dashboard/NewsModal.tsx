@@ -35,14 +35,15 @@ export function NewsModal({ news, index, onIndexChange, viewAll }: NewsModalProp
     <Modal open={index !== null} onClose={() => onIndexChange(null)} labelledBy={titleId} wide className="lg:h-[min(720px,calc(100dvh-32px))]">
       {item && (
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain lg:grid lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:overflow-hidden">
-          <NewsThumb item={item} className="aspect-[16/8] w-full lg:aspect-auto lg:h-full" />
+          <NewsThumb item={item} large className="aspect-[16/8] w-full lg:aspect-auto lg:h-full" />
 
           <div className="p-6 sm:p-8 lg:overflow-y-auto lg:overscroll-contain lg:p-10 lg:pt-14">
             <p className="text-[15px] font-semibold text-accent tabular-nums">{formatDate(item.date, lang)}</p>
             <h2 id={titleId} className="mt-2 text-[clamp(22px,2.4vw,28px)]/[1.3] font-bold tracking-[-0.025em] text-balance">
               {item.title}
             </h2>
-            <p className="mt-4 text-[17px]/[1.75] text-fg/90">{item.body}</p>
+            {/* 본문은 행사 메모를 줄바꿈(\n)으로 이은 일반 글자 */}
+            <p className="mt-4 text-[17px]/[1.75] whitespace-pre-line text-fg/90">{item.body || item.summary}</p>
 
             <div className="mt-7 flex flex-wrap items-center justify-between gap-3">
               <a

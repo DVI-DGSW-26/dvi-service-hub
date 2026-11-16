@@ -1,19 +1,20 @@
+import { useInfiniteQuery } from '@tanstack/react-query'
 import { ChevronRight, Newspaper, Presentation } from 'lucide-react'
 import { useState } from 'react'
-import { portalApi } from '../../api/portal'
-import { useAsync } from '../../hooks/useAsync'
 import { hrefOf } from '../../hooks/useHashRoute'
 import { useI18n } from '../../i18n'
 import { formatDate } from '../../lib/format'
+import { newsQueries } from '../../queries/dashboard'
 import type { NewsItem } from '../../types/portal'
 import { Panel } from '../ui/Panel'
 import { LoadError, Skeleton } from '../ui/Skeleton'
 import { NewsModal } from './NewsModal'
 
-/** 소식 그림. 그림이 없으면 자리표시 */
-export function NewsThumb({ item, className = '' }: { item: NewsItem; className?: string }) {
-  return item.image ? (
-    <img src={item.image} alt="" loading="lazy" className={`bg-subtle object-cover ${className}`} />
+/** 소식 그림. 목록은 작은 그림(400px), 펼쳐 보기는 큰 그림(1920px · large). 그림이 없으면 자리표시 */
+export function NewsThumb({ item, large = false, className = '' }: { item: NewsItem; large?: boolean; className?: string }) {
+  const src = large ? (item.imageLarge ?? item.image) : item.image
+  return src ? (
+    <img src={src} alt="" loading="lazy" className={`bg-subtle object-cover ${className}`} />
   ) : (
     <div className={`grid place-items-center bg-accent-soft text-accent ring-1 ring-line ${className}`} aria-hidden="true">
       <Presentation className="size-9" strokeWidth={1.6} />
@@ -21,7 +22,7 @@ export function NewsThumb({ item, className = '' }: { item: NewsItem; className?
   )
 }
 
-/** 홈에 보여줄 최신 소식 수 — 대표 1건(그림) + 제목 2건. API 가 주는 수와 상관없이 여기서 자른다 */
+/** 홈에 보여줄 최신 소식 수 — 대표 1건(그림) + 제목 2건. 첫 쪽(6건)에서 여기서 자른다 */
 const SHOWN = 3
 
 /**
@@ -29,10 +30,12 @@ const SHOWN = 3
  * 한 화면 모드(fit)에서는 그림이 남는 높이만큼만 차지한다.
  */
 export function NewsPanel({ className = '' }: { className?: string }) {
-  const { data, loading, error } = useAsync(portalApi.news)
+  // 사내정보의 소식 목록과 같은 캐시 — 홈은 첫 쪽만 쓴다
+  const { data, isPending: loading, isError: error } = useInfiniteQuery(newsQueries.pages())
   const { t, f, lang } = useI18n()
   const [open, setOpen] = useState<number | null>(null)
-  const news = data ?? []
+  const news = data?.pages[0]?.items ?? []
+  const total = data?.pages[0]?.total ?? 0
   // 소식이 늘어도 패널 높이는 같고, 나머지는 '전체 n건'(사내정보)에서 — 펼쳐 보기 창도 이 3건만 넘긴다
   const shown = news.slice(0, SHOWN)
   const [top, ...listed] = shown
@@ -48,7 +51,7 @@ export function NewsPanel({ className = '' }: { className?: string }) {
             href={hrefOf('info')}
             className="flex items-center gap-0.5 rounded-lg px-2 py-1 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft"
           >
-            {f(t.home.news.viewAll, { count: news.length })}
+            {f(t.home.news.viewAll, { count: total })}
             <ChevronRight className="size-4" aria-hidden="true" />
           </a>
         )
@@ -107,7 +110,7 @@ export function NewsPanel({ className = '' }: { className?: string }) {
         <p className="py-4 text-base text-muted">{t.home.news.empty}</p>
       )}
 
-      <NewsModal news={shown} index={open} onIndexChange={setOpen} viewAll={{ href: hrefOf('info'), count: news.length }} />
+      <NewsModal news={shown} index={open} onIndexChange={setOpen} viewAll={{ href: hrefOf('info'), count: total }} />
     </Panel>
   )
 }
