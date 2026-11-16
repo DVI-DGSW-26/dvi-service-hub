@@ -1,6 +1,6 @@
 import { useI18n } from '../../i18n'
 import { eventsOn, inMonth, monthWeeks, toIso, weekdayNames, type Month } from '../../lib/calendar'
-import { longToday } from '../../lib/format'
+import { longToday, useTitle } from '../../lib/format'
 import type { CalendarEvent } from '../../types/portal'
 
 /** 모달 칸에 이름으로 보여줄 개수 — 나머지는 '+n' */
@@ -55,6 +55,7 @@ interface MonthGridProps {
  */
 export function MonthGrid({ month, events, today, variant, selected, onSelect, className = '' }: MonthGridProps) {
   const { t, f, lang } = useI18n()
+  const title = useTitle()
   const full = variant === 'full'
   const weeks = monthWeeks(month, full)
 
@@ -96,7 +97,7 @@ export function MonthGrid({ month, events, today, variant, selected, onSelect, c
               type="button"
               onClick={() => onSelect(iso)}
               aria-label={name}
-              title={items.map((e) => e.title).join('\n') || undefined}
+              title={items.map((e) => title(e.title)).join('\n') || undefined}
               className={`flex min-h-0 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-xl py-0.5 transition-colors hover:bg-subtle ${own ? '' : 'opacity-35'}`}
             >
               {number}
@@ -126,7 +127,7 @@ export function MonthGrid({ month, events, today, variant, selected, onSelect, c
                   style={chipStyle(e)}
                 >
                   <EventDot event={e} />
-                  <span className="truncate">{e.title}</span>
+                  <span className="truncate">{title(e.title)}</span>
                 </span>
               ))}
               {items.length > CHIPS && (

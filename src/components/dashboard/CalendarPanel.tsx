@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useNow } from '../../hooks/useNow'
 import { useI18n } from '../../i18n'
 import { monthKey, monthOf, monthTitle, toIso } from '../../lib/calendar'
-import { shortDate } from '../../lib/format'
+import { shortDate, useTitle } from '../../lib/format'
 import { calendarQueries } from '../../queries/dashboard'
 import { CountTag, Panel, SourceTag } from '../ui/Panel'
 import { LoadError, Skeleton } from '../ui/Skeleton'
@@ -18,10 +18,11 @@ import { EventDot, MonthGrid, WeekdayRow } from './MonthGrid'
  */
 export function CalendarPanel({ className = '' }: { className?: string }) {
   const { t, f, lang, locale } = useI18n()
+  const title = useTitle()
   const now = useNow()
   const month = monthOf(now)
   const today = toIso(now)
-  const { data, isPending: loading, isError: error } = useQuery(calendarQueries.month(monthKey(month)))
+  const { data, isPending: loading, error } = useQuery(calendarQueries.month(monthKey(month)))
   const [open, setOpen] = useState(false)
   // 모달은 처음 열 때 붙이고, 닫는 애니메이션을 위해 그 뒤로는 붙여 둔다
   const [mounted, setMounted] = useState(false)
@@ -61,7 +62,7 @@ export function CalendarPanel({ className = '' }: { className?: string }) {
       className={`fit:overflow-hidden ${className}`}
     >
       {error ? (
-        <LoadError />
+        <LoadError error={error} />
       ) : (
         <div className="flex min-h-0 flex-1 flex-col">
           <WeekdayRow className="mb-1" />
@@ -81,7 +82,7 @@ export function CalendarPanel({ className = '' }: { className?: string }) {
               >
                 <span className="flex-none text-[13px] font-semibold text-muted">{t.calendar.upNext}</span>
                 <EventDot event={next} className="size-2.5" />
-                <span className="min-w-0 truncate text-[15px] font-semibold">{next.title}</span>
+                <span className="min-w-0 truncate text-[15px] font-semibold">{title(next.title)}</span>
                 <span className="ml-auto flex-none text-[13px] text-muted">{next.date <= today ? t.calendar.today : shortDate(next.date, lang)}</span>
                 {later.length > 0 && (
                   <span className="flex-none rounded-full bg-subtle px-2 py-0.5 text-xs font-semibold text-muted ring-1 ring-line">

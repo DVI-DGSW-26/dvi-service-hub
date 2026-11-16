@@ -4,7 +4,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type MouseEvent as
 import { flushSync } from 'react-dom'
 import { useI18n } from '../../i18n'
 import { addMonths, eventsOn, fromIso, inMonth, monthKey, monthOf, monthTitle, type Month } from '../../lib/calendar'
-import { longToday, shortDate } from '../../lib/format'
+import { longToday, shortDate, useTitle } from '../../lib/format'
 import { project, settle, snap, spring, step } from '../../lib/spring'
 import { motionOff } from '../../lib/theme'
 import { calendarQueries } from '../../queries/dashboard'
@@ -205,6 +205,7 @@ function useMonthSwipe(onCommit: (dir: Dir) => void, keyboard: boolean) {
 export function CalendarModal({ open, start, today, onClose }: CalendarModalProps) {
   const titleId = useId()
   const { t, f, lang, locale } = useI18n()
+  const title = useTitle()
   const [month, setMonth] = useState(() => monthOf(fromIso(start)))
   const [selected, setSelected] = useState(start)
   // 세 장(앞 · 이번 · 다음 달)이 각자 받은 것과 같은 캐시다
@@ -324,7 +325,7 @@ export function CalendarModal({ open, start, today, onClose }: CalendarModalProp
                     >
                       <span className="w-[4.5rem] flex-none text-[13px] text-muted tabular-nums">{shortDate(e.date, lang)}</span>
                       <EventDot event={e} className="size-2.5" />
-                      <span className="min-w-0 truncate text-[15px]">{e.title}</span>
+                      <span className="min-w-0 truncate text-[15px]">{title(e.title)}</span>
                     </button>
                   </li>
                 ))}
@@ -352,6 +353,7 @@ function MonthPane({ month, today, selected, onSelect, inert }: { month: Month; 
 /** 고른 날짜의 일정 한 줄 — 여러 날 일정이면 기간을 함께 */
 function EventRow({ event: e }: { event: CalendarEvent }) {
   const { t, f, lang } = useI18n()
+  const title = useTitle()
   const period = e.end && e.end !== e.date ? f(t.calendar.period, { start: shortDate(e.date, lang), end: shortDate(e.end, lang) }) : t.calendar.oneDay
   return (
     <li className="flex items-start gap-3 rounded-2xl bg-subtle p-3 ring-1 ring-line">
@@ -359,7 +361,7 @@ function EventRow({ event: e }: { event: CalendarEvent }) {
         <EventDot event={e} className="size-3" />
       </span>
       <span className="min-w-0">
-        <span className="block text-[15px] font-bold">{e.title}</span>
+        <span className="block text-[15px] font-bold">{title(e.title)}</span>
         <span className="mt-0.5 block text-[13px] text-muted">{period}</span>
       </span>
     </li>
