@@ -7,6 +7,7 @@
 
 import { infiniteQueryOptions, queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
 import { calendarApi, maintenanceApi, newsApi, noticesApi, scheduleApi } from '../api/dashboard'
+import { isApiError } from '../api/errors'
 import { fromIso, toIso } from '../lib/calendar'
 import type { MaintenanceInput, NoticeInput } from '../types/portal'
 
@@ -90,7 +91,13 @@ function useWrite<TInput, TResult>(mutationFn: (input: TInput) => Promise<TResul
   })
 }
 
+/** 같은 글을 다른 사람이 먼저(또는 동시에) 지웠으면 404 가 온다 (명세 2.3 · 3.3) — 지우려던 결과는 같으니 성공으로 */
+const alreadyGone = (e: unknown) => {
+  if (isApiError(e) && e.status === 404) return
+  throw e
+}
+
 export const useCreateNotice = () => useWrite((input: NoticeInput) => noticesApi.create(input), dashboardKeys.notices)
-export const useDeleteNotice = () => useWrite((id: string) => noticesApi.remove(id), dashboardKeys.notices)
+export const useDeleteNotice = () => useWrite((id: string) => noticesApi.remove(id).catch(alreadyGone), dashboardKeys.notices)
 export const useCreateMaintenance = () => useWrite((input: MaintenanceInput) => maintenanceApi.create(input), dashboardKeys.maintenance)
-export const useDeleteMaintenance = () => useWrite((id: string) => maintenanceApi.remove(id), dashboardKeys.maintenance)
+export const useDeleteMaintenance = () => useWrite((id: string) => maintenanceApi.remove(id).catch(alreadyGone), dashboardKeys.maintenance)
