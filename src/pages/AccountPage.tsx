@@ -13,7 +13,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
-import type { Service } from '../../services'
+import type { Service } from '../services'
 import { portalApi } from '../api/portal'
 import { ThemeSettings } from '../components/layout/ThemeSettings'
 import { ServiceLogo } from '../components/services/ServiceCard'

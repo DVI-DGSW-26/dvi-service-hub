@@ -1,5 +1,5 @@
 import { ArrowUpRight, Lock, Star } from 'lucide-react'
-import type { AuthMode, Service } from '../../../services'
+import type { AuthMode, Service } from '../../services'
 import { useI18n } from '../../i18n'
 import { Badge, type BadgeTone } from '../ui/Badge'
 

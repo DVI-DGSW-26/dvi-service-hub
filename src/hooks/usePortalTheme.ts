@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ACCENTS, KEYS, applyAccent, applyGlass, applyMotion, readPref, resolveMode, writePref, type ThemeMode } from '../lib/theme'
 
-/** 밝기가 확 뒤집히지 않게 바꾸는 순간에만 색 전환을 켠다 (portal.css 의 .theme-switching) */
+/** 밝기가 확 뒤집히지 않게 바꾸는 순간에만 색 전환을 켠다 (styles.css 의 .theme-switching) */
 function easeThemeSwitch() {
   const root = document.documentElement
   root.classList.add('theme-switching')

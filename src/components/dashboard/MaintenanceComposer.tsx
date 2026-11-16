@@ -1,6 +1,6 @@
 import { Globe } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { services } from '../../../services'
+import { services } from '../../services'
 import { portalApi } from '../../api/portal'
 import { useI18n } from '../../i18n'
 import { toIso } from '../../lib/calendar'

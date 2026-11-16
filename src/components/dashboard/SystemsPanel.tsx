@@ -1,6 +1,6 @@
 import { ChevronRight, LayoutGrid } from 'lucide-react'
 import { useState } from 'react'
-import type { Service } from '../../../services'
+import type { Service } from '../../services'
 import { hrefOf } from '../../hooks/useHashRoute'
 import { useI18n } from '../../i18n'
 import { canSee } from '../../lib/access'

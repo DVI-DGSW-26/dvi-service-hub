@@ -19,7 +19,7 @@ interface ModalProps {
 const CLOSE_MS = 170
 /** 끌어 내려 닫을 때 남은 거리를 내려가는 최대 시간 */
 const SHEET_MS = 240
-/** 휴대폰 — portal.css 의 시트 규칙과 같은 폭 */
+/** 휴대폰 — styles.css 의 시트 규칙과 같은 폭 */
 const SHEET_QUERY = '(max-width: 639.98px)'
 
 /** 놓는 속도(px/s)로 더 미끄러질 거리 — 스크롤 감속과 같은 식 */
@@ -221,7 +221,7 @@ function useScrollTrap(ref: RefObject<HTMLDialogElement | null>, open: boolean) 
 
 /**
  * 네이티브 <dialog> 모달. 초점 가두기 · 뒤 화면 비활성 · 닫은 뒤 원래 버튼으로 초점 복귀는
- * 브라우저가 맡는다. 닫을 때는 사라지는 애니메이션(portal.css 의 data-closing)이 끝난 뒤 닫는다.
+ * 브라우저가 맡는다. 닫을 때는 사라지는 애니메이션(styles.css 의 data-closing)이 끝난 뒤 닫는다.
  * 휴대폰에서는 화면 아래에 붙어 올라오는 시트가 된다 — 엄지가 닿는 쪽이고, 손잡이를 끌어 내려 닫는다.
  */
 export function Modal({ open, onClose, labelledBy, wide = false, full = false, className = '', children }: ModalProps) {

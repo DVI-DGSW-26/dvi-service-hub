@@ -20,7 +20,7 @@ export function statusOf(s: ScheduleItem, now: number): ScheduleStatus {
 
 /**
  * 상태 표시 — 색만으로 구분하지 않고 글자로 적되(사전 schedule.status), 무게를 셋으로 나눈다.
- * 목록에서 색이 있는 건 진행 중 하나뿐이다 — 꽉 찬 초록(강조색이 초록이면 파랑, portal.css --color-live) + 퍼지는 점. 예정은 색 없는 회색 테두리, 끝남은 바탕 없이 물러난다.
+ * 목록에서 색이 있는 건 진행 중 하나뿐이다 — 꽉 찬 초록(강조색이 초록이면 파랑, styles.css --color-live) + 퍼지는 점. 예정은 색 없는 회색 테두리, 끝남은 바탕 없이 물러난다.
  * 상태 색은 강조색을 따르지 않는다: 버튼 · 링크와 같은 색이면 묻히고, 테마마다 바뀌면 '초록 = 지금' 을 익힐 수 없다.
  */
 function StatusBadge({ status }: { status: ScheduleStatus }) {

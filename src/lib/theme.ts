@@ -42,7 +42,7 @@ export function applyAccent(id: string) {
   const s = document.documentElement.style
   s.setProperty('--accent-h', String(a.h))
   s.setProperty('--accent-c', String(a.c))
-  // 상태색이 강조색과 겹치는지 CSS 가 알 수 있게 (portal.css 의 [data-accent='green'])
+  // 상태색이 강조색과 겹치는지 CSS 가 알 수 있게 (styles.css 의 [data-accent='green'])
   document.documentElement.dataset.accent = a.id
 }
 
@@ -50,7 +50,7 @@ export function applyGlass(on: boolean) {
   document.documentElement.dataset.glass = on ? 'on' : 'off'
 }
 
-/** 애니메이션 끄기 — portal.css 가 transition · animation 을 없애고, JS 애니메이션은 motionOff() 를 본다 */
+/** 애니메이션 끄기 — styles.css 가 transition · animation 을 없애고, JS 애니메이션은 motionOff() 를 본다 */
 export function applyMotion(on: boolean) {
   document.documentElement.dataset.motion = on ? 'on' : 'off'
 }

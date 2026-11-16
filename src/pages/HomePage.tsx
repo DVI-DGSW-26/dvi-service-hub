@@ -6,7 +6,7 @@ import { NoDepartmentNotice } from '../components/dashboard/NoDepartmentNotice'
 import { QuickLinksPanel } from '../components/dashboard/QuickLinksPanel'
 import { SystemsPanel } from '../components/dashboard/SystemsPanel'
 import { TodayPanel } from '../components/dashboard/TodayPanel'
-import type { Service } from '../../services'
+import type { Service } from '../services'
 import { hasNoDepartment } from '../lib/access'
 import type { Me } from '../types/portal'
 

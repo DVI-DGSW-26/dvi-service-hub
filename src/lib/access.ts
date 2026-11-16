@@ -1,4 +1,4 @@
-import type { Service } from '../../services'
+import type { Service } from '../services'
 import type { Me } from '../types/portal'
 
 /** 링크를 숨기는 것은 안내이고 차단이 아니다. 실제 차단은 각 서비스가 한다. */
