@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { CalendarDays, ChevronLeft, ChevronRight, Megaphone, PenLine, Star, Wrench } from 'lucide-react'
-import { useEffect, useRef, useState, type MouseEvent, type ReactNode, type TouchEvent } from 'react'
+import { Suspense, lazy, useRef, useState, type MouseEvent, type ReactNode, type TouchEvent } from 'react'
 import { useNow } from '../../hooks/useNow'
 import { useI18n, type Plural } from '../../i18n'
 import { formatDate, longToday, shortDate } from '../../lib/format'
@@ -12,8 +12,10 @@ import type { Me, Notice } from '../../types/portal'
 import { LoadError, SkeletonText } from '../ui/Skeleton'
 import { DetailModal } from './DetailModal'
 import { HeroIllustration } from './HeroIllustration'
-import { NoticeComposer } from './NoticeComposer'
 import { useLazyModal } from '../../hooks/useLazyModal'
+
+// 눌러서 열 때 받는다 — 첫 화면 번들에서 뺀다
+const NoticeComposer = lazy(() => import('./NoticeComposer').then((m) => ({ default: m.NoticeComposer })))
 
 interface HeroCardProps {
   me: Me | null
@@ -130,7 +132,11 @@ function NoticeTicker({ canWrite, surface = 'hero', className = '' }: { canWrite
   const notices = data ?? []
   const n = notices[index]
   // 새로 받으면(공지를 올린 뒤 포함) 맨 앞 — 가장 최근 공지부터
-  useEffect(() => setIndex(0), [data])
+  const [seen, setSeen] = useState(data)
+  if (seen !== data) {
+    setSeen(data)
+    setIndex(0)
+  }
   const step = (d: number) => setIndex((i) => (i + d + notices.length) % notices.length)
   const swipe = useSwipe((d) => notices.length > 1 && step(d))
   const arrow =
@@ -212,7 +218,11 @@ function NoticeTicker({ canWrite, surface = 'hero', className = '' }: { canWrite
           link: x.url ? { label: t.home.notice.original, url: x.url } : undefined,
         })}
       />
-      {composer.mounted && <NoticeComposer key={composer.key} open={composer.open} onClose={composer.close} items={notices} />}
+      {composer.mounted && (
+        <Suspense>
+          <NoticeComposer key={composer.key} open={composer.open} onClose={composer.close} items={notices} />
+        </Suspense>
+      )}
     </div>
   )
 }

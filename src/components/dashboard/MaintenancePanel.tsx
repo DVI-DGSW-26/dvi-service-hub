@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { ChevronRight, PenLine, Wrench } from 'lucide-react'
-import { useState } from 'react'
+import { Suspense, lazy, useState } from 'react'
 import { useI18n, type Lang } from '../../i18n'
 import { canWriteMaintenance } from '../../lib/access'
 import { dateTimeRange } from '../../lib/format'
@@ -10,8 +10,10 @@ import { Badge, type BadgeTone } from '../ui/Badge'
 import { Panel } from '../ui/Panel'
 import { LoadError, SkeletonList } from '../ui/Skeleton'
 import { DetailModal } from './DetailModal'
-import { MaintenanceComposer } from './MaintenanceComposer'
 import { useLazyModal } from '../../hooks/useLazyModal'
+
+// 눌러서 열 때 받는다 — 첫 화면 번들에서 뺀다
+const MaintenanceComposer = lazy(() => import('./MaintenanceComposer').then((m) => ({ default: m.MaintenanceComposer })))
 
 export const MAINTENANCE_TONE: Record<MaintenanceKind, BadgeTone> = { NOTICE: 'accent', MAINTENANCE: 'warn', INCIDENT: 'danger' }
 
@@ -126,7 +128,11 @@ export function MaintenancePanel({ me, className = '' }: { me: Me | null; classN
           link: m.url ? { label: t.home.maintenance.open, url: m.url } : undefined,
         })}
       />
-      {composer.mounted && <MaintenanceComposer key={composer.key} open={composer.open} onClose={composer.close} items={items} />}
+      {composer.mounted && (
+        <Suspense>
+          <MaintenanceComposer key={composer.key} open={composer.open} onClose={composer.close} items={items} />
+        </Suspense>
+      )}
     </Panel>
   )
 }

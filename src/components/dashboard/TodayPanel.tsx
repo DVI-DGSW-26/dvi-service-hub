@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { CalendarDays, ChevronRight } from 'lucide-react'
+import { Suspense, lazy } from 'react'
 import { useNow } from '../../hooks/useNow'
 import { useI18n } from '../../i18n'
 import { toIso } from '../../lib/calendar'
@@ -8,8 +9,10 @@ import { scheduleQueries } from '../../queries/dashboard'
 import { PANEL_LINK, Panel, SourceTag } from '../ui/Panel'
 import { LoadError, SkeletonList } from '../ui/Skeleton'
 import { NowGuide, ScheduleRow, statusOf } from './ScheduleRow'
-import { TodayModal } from './TodayModal'
 import { useLazyModal } from '../../hooks/useLazyModal'
+
+// 눌러서 열 때 받는다 — 첫 화면 번들에서 뺀다
+const TodayModal = lazy(() => import('./TodayModal').then((m) => ({ default: m.TodayModal })))
 
 /** 패널에 보여줄 일정 수 — 나머지는 전체 일정 모달에서 */
 const VISIBLE = 3
@@ -74,7 +77,11 @@ export function TodayPanel({ className = '' }: { className?: string }) {
         <p className="py-4 text-base text-muted">{t.schedule.empty}</p>
       )}
       {/* 오늘 일정이 없어도 지난 일정 · 검색은 볼 수 있게 목록 밖에 둔다 */}
-      {modal.mounted && <TodayModal key={modal.key} items={items} now={now} date={date} open={modal.open} onClose={modal.close} />}
+      {modal.mounted && (
+        <Suspense>
+          <TodayModal key={modal.key} items={items} now={now} date={date} open={modal.open} onClose={modal.close} />
+        </Suspense>
+      )}
     </Panel>
   )
 }

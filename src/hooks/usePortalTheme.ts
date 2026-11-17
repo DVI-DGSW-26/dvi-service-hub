@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ACCENTS, KEYS, applyAccent, applyGlass, applyMotion, readPref, resolveMode, writePref, type ThemeMode } from '../lib/theme'
+import { ACCENTS, KEYS, applyAccent, applyGlass, applyMotion, readPref, resolveMode, savedGlass, writePref, type ThemeMode } from '../lib/theme'
 
 /** 밝기가 확 뒤집히지 않게 바꾸는 순간에만 색 전환을 켠다 (styles.css 의 .theme-switching) */
 function easeThemeSwitch() {
@@ -14,7 +14,7 @@ export function usePortalTheme() {
     return t === 'light' || t === 'dark' ? t : 'system'
   })
   const [accent, setAccentState] = useState(() => readPref(KEYS.accent) ?? ACCENTS[0].id)
-  const [glass, setGlassState] = useState(() => readPref(KEYS.glass) !== 'off')
+  const [glass, setGlassState] = useState(savedGlass)
   const [motion, setMotionState] = useState(() => readPref(KEYS.motion) !== 'off')
 
   // '시스템'이면 OS 설정이 바뀔 때 따라간다
@@ -48,7 +48,8 @@ export function usePortalTheme() {
 
   const setGlass = (on: boolean) => {
     applyGlass(on)
-    writePref(KEYS.glass, on ? null : 'off')
+    // 기본값이 기기마다 달라 켬 · 끔을 둘 다 적어 둔다
+    writePref(KEYS.glass, on ? 'on' : 'off')
     setGlassState(on)
   }
 

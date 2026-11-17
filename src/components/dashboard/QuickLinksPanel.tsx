@@ -1,11 +1,14 @@
 import { Zap } from 'lucide-react'
+import { Suspense, lazy } from 'react'
 import { quickLinks } from '../../data/quickLinks'
 import { useI18n } from '../../i18n'
 import { openApp } from '../../lib/openApp'
-import { OrgChartModal } from '../info/OrgChartModal'
 import { Icon } from '../ui/Icon'
 import { Panel } from '../ui/Panel'
 import { useLazyModal } from '../../hooks/useLazyModal'
+
+// 눌러서 열 때 받는다 — 첫 화면 번들에서 뺀다
+const OrgChartModal = lazy(() => import('../info/OrgChartModal').then((m) => ({ default: m.OrgChartModal })))
 
 const isExternal = (url: string) => /^https?:/.test(url)
 // 앱 스킴은 PC 앱 것만 안다 — 휴대폰에서 모르는 스킴을 부르면 Safari 가 오류 창을 띄우므로 웹으로만 연다
@@ -48,7 +51,11 @@ export function QuickLinksPanel({ className = '' }: { className?: string }) {
           </li>
         ))}
       </ul>
-      {org.mounted && <OrgChartModal key={org.key} open={org.open} onClose={org.close} />}
+      {org.mounted && (
+        <Suspense>
+          <OrgChartModal key={org.key} open={org.open} onClose={org.close} />
+        </Suspense>
+      )}
     </Panel>
   )
 }

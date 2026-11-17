@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { Suspense, lazy, useState } from 'react'
 import { services } from './services'
 import { GooFilter } from './components/layout/LiquidParts'
 import { Sidebar } from './components/layout/Sidebar'
@@ -12,10 +12,12 @@ import { useI18n } from './i18n'
 import { canSee, sortByFavorite } from './lib/access'
 import { readPref, writePref } from './lib/theme'
 import { HomePage } from './pages/HomePage'
-import { InfoPage } from './pages/InfoPage'
-import { AccountPage } from './pages/AccountPage'
-import { SystemsPage } from './pages/SystemsPage'
 import { accountQueries } from './queries/account'
+
+// 홈만 첫 번들에 — 나머지 화면은 처음 갈 때 받는다
+const SystemsPage = lazy(() => import('./pages/SystemsPage').then((m) => ({ default: m.SystemsPage })))
+const InfoPage = lazy(() => import('./pages/InfoPage').then((m) => ({ default: m.InfoPage })))
+const AccountPage = lazy(() => import('./pages/AccountPage').then((m) => ({ default: m.AccountPage })))
 
 export default function App() {
   const { t } = useI18n()
@@ -30,9 +32,9 @@ export default function App() {
   const [collapsed, setCollapsed] = useState(() => readPref('portal-sidebar') === 'collapsed')
 
   // 권한으로 거르고 즐겨찾기를 앞으로 — 홈과 업무시스템 화면이 같은 목록을 쓴다
-  const mine = useMemo(() => sortByFavorite(services.filter((s) => canSee(s, me)), favorites), [me, favorites])
+  const mine = sortByFavorite(services.filter((s) => canSee(s, me)), favorites)
   // 권한과 상관없이 전부 — 홈 업무시스템의 '전체' 보기
-  const all = useMemo(() => sortByFavorite(services, favorites), [favorites])
+  const all = sortByFavorite(services, favorites)
 
   // 상단 검색칸은 어느 화면에서든 업무시스템 화면으로 데려가 결과를 보여준다
   const onQueryChange = (q: string) => {
@@ -70,22 +72,24 @@ export default function App() {
         <TopBar me={me} meLoading={meLoading} page={route.page} query={query} onQueryChange={onQueryChange} theme={theme} />
 
         <main id="main" tabIndex={-1} className={`flex-1 pt-5 outline-none ${home ? 'fit:min-h-0 fit:pt-4' : ''}`}>
-          {home && (
-            <HomePage me={me} meLoading={meLoading} services={mine} allServices={all} favorites={favorites} onToggleFavorite={toggleFavorite} />
-          )}
-          {route.page === 'systems' && (
-            <SystemsPage
-              me={me}
-              loading={meLoading}
-              services={mine}
-              query={query}
-              onQueryChange={setQuery}
-              favorites={favorites}
-              onToggleFavorite={toggleFavorite}
-            />
-          )}
-          {route.page === 'info' && <InfoPage categoryId={route.param} />}
-          {route.page === 'account' && <AccountPage me={me} loading={meLoading} services={mine} theme={theme} />}
+          <Suspense>
+            {home && (
+              <HomePage me={me} meLoading={meLoading} services={mine} allServices={all} favorites={favorites} onToggleFavorite={toggleFavorite} />
+            )}
+            {route.page === 'systems' && (
+              <SystemsPage
+                me={me}
+                loading={meLoading}
+                services={mine}
+                query={query}
+                onQueryChange={setQuery}
+                favorites={favorites}
+                onToggleFavorite={toggleFavorite}
+              />
+            )}
+            {route.page === 'info' && <InfoPage categoryId={route.param} />}
+            {route.page === 'account' && <AccountPage me={me} loading={meLoading} services={mine} theme={theme} />}
+          </Suspense>
         </main>
 
         <footer className={`px-1 pt-8 text-xs text-muted ${home ? 'fit:hidden' : ''}`}>© DVISION · DVI Portal</footer>

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { CalendarHeart, Maximize2 } from 'lucide-react'
-import { useState } from 'react'
+import { Suspense, lazy, useState } from 'react'
 import { useNow } from '../../hooks/useNow'
 import { useI18n } from '../../i18n'
 import { monthKey, monthOf, monthTitle, toIso } from '../../lib/calendar'
@@ -8,9 +8,11 @@ import { shortDate, useTitle } from '../../lib/format'
 import { calendarQueries } from '../../queries/dashboard'
 import { CountTag, Panel, SourceTag } from '../ui/Panel'
 import { LoadError, Skeleton } from '../ui/Skeleton'
-import { CalendarModal } from './CalendarModal'
 import { EventDot, MonthGrid, WeekdayRow } from './MonthGrid'
 import { useLazyModal } from '../../hooks/useLazyModal'
+
+// 눌러서 열 때 받는다 — 첫 화면 번들에서 뺀다
+const CalendarModal = lazy(() => import('./CalendarModal').then((m) => ({ default: m.CalendarModal })))
 
 /**
  * 회사 캘린더 — 플로우 "대외업무 공유방"의 이번 달 일정을 점으로 보여준다(조회만, 등록 · 수정은 플로우에서).
@@ -95,7 +97,11 @@ export function CalendarPanel({ className = '' }: { className?: string }) {
           <p className="sr-only">{f(t.calendar.eventCount, { count: events.length })}</p>
         </div>
       )}
-      {modal.mounted && <CalendarModal key={modal.key} open={modal.open} start={start} today={today} onClose={modal.close} />}
+      {modal.mounted && (
+        <Suspense>
+          <CalendarModal key={modal.key} open={modal.open} start={start} today={today} onClose={modal.close} />
+        </Suspense>
+      )}
     </Panel>
   )
 }
