@@ -1,0 +1,32 @@
+name: publish-switcher
+
+# switcher.js 를 사내 서버(api.dvi-ind.com/static/switcher/)로 내보낸다.
+# - 트리거는 태그 push 만 둔다. 저장소가 공개라 pull_request · pull_request_target 을 붙이면 포크 코드가 서버 키에 닿는다.
+# - 태그 이름은 script 에 ${{ }} 로 끼워 넣지 않고 환경변수로 넘긴다 (명령 주입 방지).
+# - 액션은 태그가 아니라 커밋 SHA 로 고정한다.
+# - 승인은 environment: production 의 Required reviewers 가 한다 — 저장소 설정에 그 environment 가 미리 있어야 한다.
+on:
+  push:
+    tags: ['switcher-v*.*.*']
+
+concurrency: publish-switcher
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      # v1.0.3 — 태그는 옮겨질 수 있어 커밋으로 고정한다
+      - uses: appleboy/ssh-action@029f5b4aeeeb58fdfe1410a5d17f967dacf36262
+        env:
+          TAG: ${{ github.ref_name }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: TAG
+          script: |
+            set -e
+            ~/DVI-proxy/scripts/publish-switcher.sh "$TAG" -y
+            curl -fsSI https://api.dvi-ind.com/static/switcher/switcher.js | head -1
