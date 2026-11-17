@@ -58,7 +58,7 @@ function isLink(x: unknown): x is ServiceLink {
 /** 서비스 목록. 서버가 응답하지 않거나 모양이 어긋나면 예외 — 호출부가 내장 목록(services.ts)으로 돌아간다 */
 export async function fetchServices({ signal }: Opts = {}): Promise<Service[]> {
   const list = parseServices(await hubApi.get<unknown>('/services', { signal }))
-  if (!list) throw new ApiError(502, 'UNKNOWN', '서비스 목록을 읽지 못했습니다.')
+  if (!list) throw new ApiError(500, 'UNKNOWN', '서비스 목록을 읽지 못했습니다.') // 모양이 틀린 응답 — 다시 받아도 같으니 재시도(502) 대상이 아니다
   return list
 }
 

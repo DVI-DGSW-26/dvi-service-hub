@@ -208,8 +208,8 @@ export function CalendarModal({ open, start, today, onClose }: CalendarModalProp
   const title = useTitle()
   const [month, setMonth] = useState(() => monthOf(fromIso(start)))
   const [selected, setSelected] = useState(start)
-  // 세 장(앞 · 이번 · 다음 달)이 각자 받은 것과 같은 캐시다
-  const { data } = useQuery(calendarQueries.month(monthKey(month)))
+  // 세 장(앞 · 이번 · 다음 달)이 각자 받은 것과 같은 캐시다. 닫힌 뒤에도 붙어 있어 열려 있을 때만 받는다
+  const { data } = useQuery({ ...calendarQueries.month(monthKey(month)), enabled: open })
   const events = data ?? []
   const dayItems = eventsOn(events, selected)
 
@@ -293,6 +293,7 @@ export function CalendarModal({ open, start, today, onClose }: CalendarModalProp
                       onSelect={select}
                       // 옆 달은 넘기는 동안 보이기만 한다 — Tab 으로 들어가지 않게
                       inert={offset !== 0}
+                      enabled={open}
                     />
                   )
                 })}
@@ -341,8 +342,8 @@ export function CalendarModal({ open, start, today, onClose }: CalendarModalProp
 }
 
 /** 넘기는 세 장 중 한 장 — 달마다 따로 불러와서, 옆 달도 미리 받아 둔다 */
-function MonthPane({ month, today, selected, onSelect, inert }: { month: Month; today: string; selected: string; onSelect: (iso: string) => void; inert: boolean }) {
-  const { data } = useQuery(calendarQueries.month(monthKey(month)))
+function MonthPane({ month, today, selected, onSelect, inert, enabled }: { month: Month; today: string; selected: string; onSelect: (iso: string) => void; inert: boolean; enabled: boolean }) {
+  const { data } = useQuery({ ...calendarQueries.month(monthKey(month)), enabled })
   return (
     <div className="h-full w-full flex-none" inert={inert}>
       <MonthGrid month={month} events={data ?? []} today={today} variant="full" selected={selected} onSelect={onSelect} className="h-full" />

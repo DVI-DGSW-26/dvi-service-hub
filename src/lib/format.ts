@@ -1,9 +1,9 @@
 import { LOCALE, interpolate, useI18n, type Lang, type Messages } from '../i18n'
-import { fromIso } from './calendar'
+import { dtf, fromIso } from './calendar'
 
 // 날짜 · 시각 표기. 말마다 순서 · 요일 · 오전/오후가 달라서 Intl 로 만들고, 짧은 표기만 직접 짠다.
 
-const weekday = (date: Date, lang: Lang) => new Intl.DateTimeFormat(LOCALE[lang], { weekday: 'short' }).format(date)
+const weekday = (date: Date, lang: Lang) => dtf(LOCALE[lang], { weekday: 'short' }).format(date)
 
 /** 2026-11-13 → ko 11.13 (금) · en Nov 13 (Fri) */
 export function shortDate(iso: string, lang: Lang) {
@@ -13,21 +13,21 @@ export function shortDate(iso: string, lang: Lang) {
 /** 2026-11-13 → ko 2026.11.13 · en Nov 13, 2026 */
 export function formatDate(iso: string, lang: Lang) {
   if (lang === 'ko') return iso.replaceAll('-', '.')
-  return new Intl.DateTimeFormat(LOCALE[lang], { dateStyle: 'medium' }).format(fromIso(iso))
+  return dtf(LOCALE[lang], { dateStyle: 'medium' }).format(fromIso(iso))
 }
 
 /** 2026-09-30 + 08:31 → ko 2026년 9월 30일 오전 8:31 · en September 30, 2026 at 8:31 AM. 시각이 없으면 날짜만 */
 export function dateTime(iso: string, hhmm: string | undefined, lang: Lang) {
   const date = fromIso(iso)
-  if (!hhmm) return new Intl.DateTimeFormat(LOCALE[lang], { dateStyle: 'long' }).format(date)
+  if (!hhmm) return dtf(LOCALE[lang], { dateStyle: 'long' }).format(date)
   const [h, m] = hhmm.split(':').map(Number)
   date.setHours(h, m)
-  return new Intl.DateTimeFormat(LOCALE[lang], { dateStyle: 'long', timeStyle: 'short' }).format(date)
+  return dtf(LOCALE[lang], { dateStyle: 'long', timeStyle: 'short' }).format(date)
 }
 
 /** 오늘 → ko 2026년 11월 13일 금요일 · en Friday, November 13, 2026 */
 export function longToday(now: Date, lang: Lang) {
-  return new Intl.DateTimeFormat(LOCALE[lang], { dateStyle: 'full' }).format(now)
+  return dtf(LOCALE[lang], { dateStyle: 'full' }).format(now)
 }
 
 /** 'HH:mm' → 하루 중 몇 분째 */
@@ -48,7 +48,7 @@ export function duration(minutes: number, forms: Messages['common']['duration'])
 /** 14:00 → ko 오후 2:00 · en 2:00 PM — 24시간제보다 한눈에 읽힌다 */
 export function clockTime(hhmm: string, lang: Lang) {
   const [h, m] = hhmm.split(':').map(Number)
-  return new Intl.DateTimeFormat(LOCALE[lang], { hour: 'numeric', minute: '2-digit' }).format(new Date(2000, 0, 1, h, m))
+  return dtf(LOCALE[lang], { hour: 'numeric', minute: '2-digit' }).format(new Date(2000, 0, 1, h, m))
 }
 
 /**
@@ -64,7 +64,7 @@ export function dateTimeRange(iso: string, start: string | undefined, end: strin
 export function monthDay(iso: string, lang: Lang) {
   const date = fromIso(iso)
   if (lang === 'ko') return `${date.getMonth() + 1}.${String(date.getDate()).padStart(2, '0')}`
-  return new Intl.DateTimeFormat(LOCALE[lang], { month: 'short', day: 'numeric' }).format(date)
+  return dtf(LOCALE[lang], { month: 'short', day: 'numeric' }).format(date)
 }
 
 /**

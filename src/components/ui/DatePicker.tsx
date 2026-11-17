@@ -1,7 +1,7 @@
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { useI18n } from '../../i18n'
-import { addMonths, fromIso, inMonth, monthOf, monthTitle, monthWeeks, toIso, weekdayNames } from '../../lib/calendar'
+import { addMonths, fromIso, inMonth, monthOf, monthTitle, monthWeeks, toIso, weekdayNames, dtf } from '../../lib/calendar'
 import { controlClass } from './Field'
 import { PickerPopover } from './PickerPopover'
 
@@ -65,7 +65,7 @@ export function DatePicker({ value, onChange, label, invalid = false }: DatePick
   }
 
   const format = (iso: string) =>
-    new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }).format(fromIso(iso))
+    dtf(locale, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }).format(fromIso(iso))
   const arrow = 'grid size-9 cursor-pointer place-items-center rounded-xl text-muted transition-[background-color,color,scale] duration-150 hover:bg-subtle hover:text-fg active:scale-90'
 
   return (

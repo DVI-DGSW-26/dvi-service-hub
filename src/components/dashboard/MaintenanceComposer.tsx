@@ -41,7 +41,7 @@ export function MaintenanceComposer({ open, onClose, items }: MaintenanceCompose
   const { t, lang } = useI18n()
   const c = t.compose.maintenance
   // serviceId 는 서버 목록의 id 와 글자 그대로 같아야 한다 (명세 3.2) — 서버 목록을 쓰고, 못 받으면 내장 목록
-  const serverServices = useQuery(serviceQueries.list())
+  const serverServices = useQuery({ ...serviceQueries.list(), enabled: open })
   const services = serverServices.data ?? bundledServices
   const firstId = services[0]?.id ?? OTHER
   const [form, setForm] = useState(() => blank(firstId))

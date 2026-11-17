@@ -8,6 +8,16 @@ export interface Month {
   m: number
 }
 
+const formatters = new Map<string, Intl.DateTimeFormat>()
+
+/** Intl.DateTimeFormat 은 만들기가 비싸다 — 달력 한 장에 수십 번 부르므로 (로캘, 옵션)마다 하나만 만든다 */
+export function dtf(locale: string, opts: Intl.DateTimeFormatOptions) {
+  const key = locale + JSON.stringify(opts)
+  let f = formatters.get(key)
+  if (!f) formatters.set(key, (f = new Intl.DateTimeFormat(locale, opts)))
+  return f
+}
+
 export const pad = (n: number) => String(n).padStart(2, '0')
 
 export const monthOf = (d: Date): Month => ({ y: d.getFullYear(), m: d.getMonth() })
@@ -39,9 +49,9 @@ export const eventsOn = (events: CalendarEvent[], iso: string) => events.filter(
 
 /** ko 2026년 11월 · en November 2026 */
 export const monthTitle = ({ y, m }: Month, locale: string) =>
-  new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'long' }).format(new Date(y, m, 1))
+  dtf(locale, { year: 'numeric', month: 'long' }).format(new Date(y, m, 1))
 
 /** 일 ~ 토 짧은 요일 이름 */
 export const weekdayNames = (locale: string) =>
   // 2023-01-01 은 일요일
-  Array.from({ length: 7 }, (_, i) => new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(new Date(2023, 0, 1 + i)))
+  Array.from({ length: 7 }, (_, i) => dtf(locale, { weekday: 'short' }).format(new Date(2023, 0, 1 + i)))
