@@ -30,23 +30,55 @@ interface DetailModalProps<T> {
   list?: { label: string; row: (item: T) => ReactNode }
 }
 
+/** 닫히는 애니메이션 동안에도 내용이 남아 있도록 마지막으로 본 글의 자리. 목록이 줄었으면 끝으로 */
+export function useLastIndex(index: number | null, length: number) {
+  const last = useRef(0)
+  if (index !== null) last.current = index
+  return Math.min(index ?? last.current, length - 1)
+}
+
+/** 원문 · 바로가기 — 새 탭으로 */
+export function OpenLink({ href, label }: { href: string; label: string }) {
+  const { t } = useI18n()
+  return (
+    <a href={href} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-accent-fill px-5 text-[15px] font-semibold text-white transition-[filter,scale] duration-150 hover:brightness-110 active:scale-[0.97]">
+      {label}
+      <ExternalLink className="size-4" aria-hidden="true" />
+      <span className="sr-only">{t.common.newTab}</span>
+    </a>
+  )
+}
+
+const NAV = 'grid size-11 cursor-pointer place-items-center rounded-full bg-subtle text-fg ring-1 ring-line transition-[background-color,scale] duration-150 hover:bg-raised active:scale-90'
+
+/** 이전 · n / m · 다음 — 끝에서 넘기면 처음으로 돈다 */
+export function Pager({ index, count, onChange, prevLabel, nextLabel }: { index: number; count: number; onChange: (i: number) => void; prevLabel: string; nextLabel: string }) {
+  const step = (d: number) => onChange((index + d + count) % count)
+  return (
+    <div className="flex items-center gap-2">
+      <button type="button" onClick={() => step(-1)} aria-label={prevLabel} className={NAV}>
+        <ChevronLeft className="size-5" aria-hidden="true" />
+      </button>
+      <span className="w-12 text-center text-[15px] font-medium text-muted tabular-nums">
+        {index + 1} / {count}
+      </span>
+      <button type="button" onClick={() => step(1)} aria-label={nextLabel} className={NAV}>
+        <ChevronRight className="size-5" aria-hidden="true" />
+      </button>
+    </div>
+  )
+}
+
 /**
  * 공지 · 점검 안내 펼쳐 보기. 홈에서는 한 줄로 잘리므로, 누르면 제목 · 본문 전체와 원문 링크를 보여준다.
  * 이전 · 다음으로 같은 목록의 다른 글로 넘긴다. list 를 주면 오늘의 일정 창처럼 왼쪽 목록 + 오른쪽 본문.
  */
 export function DetailModal<T>({ items, index, onIndexChange, content, prevLabel, nextLabel, list }: DetailModalProps<T>) {
   const titleId = useId()
-  const { t } = useI18n()
   const listRef = useRef<HTMLUListElement>(null)
-  // 닫히는 애니메이션 동안에도 내용이 남아 있도록 마지막으로 본 글을 기억해 그린다
-  const last = useRef(0)
-  if (index !== null) last.current = index
-  const shown = Math.min(index ?? last.current, items.length - 1)
+  const shown = useLastIndex(index, items.length)
   const item = items[shown]
   const c = item === undefined ? null : content(item)
-  const step = (d: number) => onIndexChange((shown + d + items.length) % items.length)
-  const nav =
-    'grid size-11 cursor-pointer place-items-center rounded-full bg-subtle text-fg ring-1 ring-line transition-[background-color,scale] duration-150 hover:bg-raised active:scale-90'
 
   // 넘기거나 아래쪽 글로 열면 목록에서도 그 줄이 보이게
   useEffect(() => {
@@ -67,33 +99,8 @@ export function DetailModal<T>({ items, index, onIndexChange, content, prevLabel
 
       {(c.link || items.length > 1) && (
         <div className="flex flex-none flex-wrap items-center justify-between gap-3 border-t border-line px-6 py-4 sm:px-8">
-          {c.link ? (
-            <a
-              href={c.link.url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-accent-fill px-5 text-[15px] font-semibold text-white transition-[filter,scale] duration-150 hover:brightness-110 active:scale-[0.97]"
-            >
-              {c.link.label}
-              <ExternalLink className="size-4" aria-hidden="true" />
-              <span className="sr-only">{t.common.newTab}</span>
-            </a>
-          ) : (
-            <span />
-          )}
-          {items.length > 1 && (
-            <div className="flex items-center gap-2">
-              <button type="button" onClick={() => step(-1)} aria-label={prevLabel} className={nav}>
-                <ChevronLeft className="size-5" aria-hidden="true" />
-              </button>
-              <span className="w-12 text-center text-[15px] font-medium text-muted tabular-nums">
-                {shown + 1} / {items.length}
-              </span>
-              <button type="button" onClick={() => step(1)} aria-label={nextLabel} className={nav}>
-                <ChevronRight className="size-5" aria-hidden="true" />
-              </button>
-            </div>
-          )}
+          {c.link ? <OpenLink href={c.link.url} label={c.link.label} /> : <span />}
+          {items.length > 1 && <Pager index={shown} count={items.length} onChange={onIndexChange} prevLabel={prevLabel} nextLabel={nextLabel} />}
         </div>
       )}
     </>

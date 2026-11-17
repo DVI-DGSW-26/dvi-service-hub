@@ -1,9 +1,10 @@
-import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
-import { useId, useRef } from 'react'
+import { ChevronRight } from 'lucide-react'
+import { useId } from 'react'
 import { useI18n } from '../../i18n'
 import { formatDate, useTitle } from '../../lib/format'
 import type { NewsItem } from '../../types/portal'
 import { Modal } from '../ui/Modal'
+import { OpenLink, Pager, useLastIndex } from './DetailModal'
 import { NewsThumb } from './NewsPanel'
 
 interface NewsModalProps {
@@ -23,14 +24,8 @@ export function NewsModal({ news, index, onIndexChange, viewAll }: NewsModalProp
   const titleId = useId()
   const { t, f, lang } = useI18n()
   const title = useTitle()
-  // 닫히는 애니메이션 동안에도 내용이 남아 있도록 마지막으로 본 소식을 기억해 그린다
-  const last = useRef(0)
-  if (index !== null) last.current = index
-  const shown = index ?? last.current
+  const shown = useLastIndex(index, news.length)
   const item = news[shown]
-  const step = (d: number) => onIndexChange((shown + d + news.length) % news.length)
-  const nav =
-    'grid size-11 cursor-pointer place-items-center rounded-full bg-subtle text-fg ring-1 ring-line transition-[background-color,scale] duration-150 hover:bg-raised active:scale-90 disabled:opacity-40'
 
   return (
     <Modal open={index !== null} onClose={() => onIndexChange(null)} labelledBy={titleId} wide className="lg:h-[min(720px,calc(100dvh-32px))]">
@@ -47,29 +42,8 @@ export function NewsModal({ news, index, onIndexChange, viewAll }: NewsModalProp
             <p className="mt-4 text-[17px]/[1.75] whitespace-pre-line text-fg/90">{item.body || item.summary}</p>
 
             <div className="mt-7 flex flex-wrap items-center justify-between gap-3">
-              <a
-                href={item.url}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-accent-fill px-5 text-[15px] font-semibold text-white transition-[filter,scale] duration-150 hover:brightness-110 active:scale-[0.97]"
-              >
-                {t.home.news.original}
-                <ExternalLink className="size-4" aria-hidden="true" />
-                <span className="sr-only">{t.common.newTab}</span>
-              </a>
-              {news.length > 1 && (
-                <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => step(-1)} aria-label={t.home.news.prev} className={nav}>
-                    <ChevronLeft className="size-5" aria-hidden="true" />
-                  </button>
-                  <span className="w-12 text-center text-[15px] font-medium text-muted tabular-nums">
-                    {shown + 1} / {news.length}
-                  </span>
-                  <button type="button" onClick={() => step(1)} aria-label={t.home.news.next} className={nav}>
-                    <ChevronRight className="size-5" aria-hidden="true" />
-                  </button>
-                </div>
-              )}
+              <OpenLink href={item.url} label={t.home.news.original} />
+              {news.length > 1 && <Pager index={shown} count={news.length} onChange={onIndexChange} prevLabel={t.home.news.prev} nextLabel={t.home.news.next} />}
             </div>
 
             {news.length > 1 && (
