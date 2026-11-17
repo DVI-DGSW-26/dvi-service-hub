@@ -1,0 +1,59 @@
+{
+  "edit": "Edit widgets",
+  "done": "Done",
+  "editHint": "Drop a widget into a row and its neighbors shrink; drop it above or below a row to start a new row. Hold it at the right edge to go to the next page (or a new one). Press Esc to cancel.",
+  "galleryTitle": "Add widgets",
+  "galleryHint": "Drag onto Home or press + to add to the current page. Drag to the right edge to put it on a new page.",
+  "search": "Search widgets",
+  "noResults": "No widgets found.",
+  "added": "Added",
+  "add": "Add {name}",
+  "remove": "Remove {name}",
+  "reset": "Reset to default layout",
+  "portal": "Portal",
+  "empty": "There are no widgets on Home.",
+  "emptyHint": "Add the widgets you need from Edit widgets.",
+  "position": "{name}, {index} of {total}. Use arrows to move, Page Up / Page Down to change page, Delete to remove.",
+  "open": "Open {name}",
+  "editCard": "Edit business card",
+  "recent": "Recent searches",
+  "state": {
+    "run": "Running",
+    "idle": "Idle",
+    "alarm": "Alarm",
+    "off": "Stopped"
+  },
+  "builtin": {
+    "hero": {
+      "title": "Greeting · Notices",
+      "description": "Today's date, greeting and company notices"
+    },
+    "quickLinks": "Frequently used company links",
+    "systems": "Systems you can use and your favorites",
+    "today": "Today's schedule from the Flow room",
+    "maintenance": "System maintenance and incident notices",
+    "news": "Company news from the event archive",
+    "calendar": "This month's events and occasions"
+  },
+  "noRoom": "No room left on this page — drag to the right edge to start a new page",
+  "full": "This page is full (up to {max} per page) — drag to the right edge to start a new page",
+  "resizeCol": "Resize {a} and {b}",
+  "resizeRow": "Edge below row {row}",
+  "header": {
+    "title": "Top bar",
+    "hint": "Drag to reorder, use the eye to hide",
+    "items": {
+      "search": "Search",
+      "theme": "Theme",
+      "user": "User menu"
+    },
+    "show": "Show {name}",
+    "hide": "Hide {name}",
+    "locked": "The user menu holds sign-out and cannot be hidden",
+    "move": "{name}, position {index}. Use left and right arrows to reorder"
+  },
+  "pages": "Home pages",
+  "page": "Page {page} of {total}",
+  "perPage": "This page {n} / {max}",
+  "resizeEnd": "Right edge of {name} — grows into the empty columns"
+}

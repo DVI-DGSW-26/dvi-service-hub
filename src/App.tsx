@@ -6,9 +6,12 @@ import { GooFilter } from './components/layout/LiquidParts'
 import { Sidebar } from './components/layout/Sidebar'
 import { TabBar } from './components/layout/TabBar'
 import { TopBar } from './components/layout/TopBar'
+import { WidgetEditBar } from './components/widgets/WidgetGallery'
+import { visibleWidgets } from './components/widgets/registry'
 import { useFavorites } from './hooks/useFavorites'
 import { hrefOf, useHashRoute } from './hooks/useHashRoute'
 import { usePortalTheme } from './hooks/usePortalTheme'
+import { useWidgetLayout } from './hooks/useWidgetLayout'
 import { useI18n } from './i18n'
 import { canSee, sortByFavorite } from './lib/access'
 import { KEYS, motionOff, readPref, writePref } from './lib/theme'
@@ -44,6 +47,12 @@ export default function App() {
   }
 
   const home = route.page === 'home'
+  const visible = visibleWidgets(me)
+  const widgets = useWidgetLayout(visible)
+  // 홈을 떠나면 편집도 끝난다
+  const [editingHome, setEditing] = useState(false)
+  const editing = editingHome && home
+  const stopEditing = () => setEditing(false)
 
   const shellRef = useRef<HTMLDivElement>(null)
   // 본문 여백은 한 번에 바꾸고, 밀려나는 모습은 transform 으로만 그린다(FLIP).
@@ -70,20 +79,42 @@ export default function App() {
         {t.layout.skipToContent}
       </button>
 
-      <Sidebar page={route.page} collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
+      {/* 위젯 편집 중에는 사이드바 자리에 위젯 갤러리가, 탭 바 자리에 편집 막대가 들어온다 */}
+      {editing ? (
+        <WidgetEditBar layout={widgets} defs={visible} onDone={stopEditing} />
+      ) : (
+        <Sidebar page={route.page} collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
+      )}
 
       {/* 사이드바(왼쪽 12px + 너비) 만큼 비우고 나머지 폭을 모두 쓴다 */}
-      {/* 홈은 넓은 화면에서 화면 높이에 딱 맞춘다(fit) — 스크롤 없이 한눈에 */}
       <div
         ref={shellRef}
-        className={`flex min-h-dvh flex-col px-3 pt-3 pb-24 sm:px-4 lg:pr-4 lg:pb-4 ${collapsed ? 'lg:pl-[104px]' : 'lg:pl-[276px]'} ${home ? 'fit:h-dvh' : ''}`}
+        // 홈은 넓고 높은 화면에서 화면 높이에 딱 맞춘다 — 위젯 한 페이지가 스크롤 없이 한 장
+        className={`flex min-h-dvh flex-col px-3 pt-3 pb-24 sm:px-4 lg:pr-4 lg:pb-4 ${editing ? 'lg:pl-[408px]' : collapsed ? 'lg:pl-[104px]' : 'lg:pl-[276px]'} ${home ? 'board-fit:h-dvh' : ''}`}
       >
-        <TopBar me={me} meLoading={meLoading} page={route.page} query={query} onQueryChange={onQueryChange} theme={theme} />
+        {/* 편집 중에는 상단 바도 고칠 수 있고, 끝에 '완료'가 들어온다 */}
+        <TopBar
+          me={me}
+          meLoading={meLoading}
+          page={route.page}
+          query={query}
+          onQueryChange={onQueryChange}
+          theme={theme}
+          onEditWidgets={home ? () => setEditing(true) : undefined}
+          editing={editing}
+          onDone={stopEditing}
+        />
 
-        <main id="main" tabIndex={-1} className={`flex-1 pt-5 outline-none ${home ? 'fit:min-h-0 fit:pt-4' : ''}`}>
+        <main id="main" tabIndex={-1} className={`flex-1 pt-5 outline-none ${home ? 'flex flex-col board-fit:min-h-0' : ''}`}>
           <Suspense>
             {home && (
-              <HomePage me={me} meLoading={meLoading} services={mine} allServices={all} favorites={favorites} onToggleFavorite={toggleFavorite} />
+              <HomePage
+                ctx={{ me, meLoading, services: mine, allServices: all, favorites, onToggleFavorite: toggleFavorite }}
+                layout={widgets}
+                defs={visible}
+                editing={editing}
+                onEdit={() => setEditing(true)}
+              />
             )}
             {route.page === 'systems' && (
               <SystemsPage
@@ -101,10 +132,10 @@ export default function App() {
           </Suspense>
         </main>
 
-        <footer className={`px-1 pt-8 text-xs text-muted ${home ? 'fit:hidden' : ''}`}>© DVISION · DVI Portal</footer>
+        <footer className={`px-1 pt-8 text-xs text-muted ${home ? 'board-fit:hidden' : ''}`}>© DVISION · DVI Portal</footer>
       </div>
 
-      <TabBar page={route.page} />
+      {!editing && <TabBar page={route.page} />}
       <GooFilter />
     </>
   )

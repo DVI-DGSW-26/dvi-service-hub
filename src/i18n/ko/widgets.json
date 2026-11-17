@@ -1,0 +1,59 @@
+{
+  "edit": "위젯 편집",
+  "done": "완료",
+  "editHint": "위젯을 줄 안에 넣으면 옆 위젯이 좁아지고, 줄 위·아래에 놓으면 새 줄이 생깁니다. 오른쪽 끝에 잠시 두면 다음 페이지(없으면 새 페이지)로 넘어가고, Esc 로 취소합니다.",
+  "galleryTitle": "위젯 추가",
+  "galleryHint": "홈으로 끌어 놓거나 + 를 누르면 보고 있는 페이지에 붙습니다. 오른쪽 끝으로 끌면 새 페이지에 넣을 수 있습니다.",
+  "search": "위젯 검색",
+  "noResults": "찾는 위젯이 없습니다.",
+  "added": "추가됨",
+  "add": "{name} 추가",
+  "remove": "{name} 빼기",
+  "reset": "기본 배치로 되돌리기",
+  "portal": "포털",
+  "empty": "홈에 위젯이 없습니다.",
+  "emptyHint": "위젯 편집에서 필요한 위젯을 추가하세요.",
+  "position": "{name}, {total}개 중 {index}번째. 화살표로 옮기고, PageUp · PageDown 으로 페이지를 옮기고, Delete 로 뺍니다.",
+  "open": "{name} 열기",
+  "editCard": "명함 수정",
+  "recent": "최근 검색",
+  "state": {
+    "run": "가동",
+    "idle": "대기",
+    "alarm": "경보",
+    "off": "정지"
+  },
+  "builtin": {
+    "hero": {
+      "title": "인사 · 전사 공지",
+      "description": "오늘 날짜 · 인사와 전사 공지"
+    },
+    "quickLinks": "자주 쓰는 사내 링크",
+    "systems": "내가 쓸 수 있는 업무시스템과 즐겨찾기",
+    "today": "플로우 대외업무 공유방의 오늘 일정",
+    "maintenance": "업무시스템 점검 · 장애 안내",
+    "news": "행사 아카이브의 사내 소식",
+    "calendar": "이번 달 경조사 · 행사"
+  },
+  "noRoom": "이 페이지에 남는 자리가 없습니다 — 오른쪽 끝으로 끌어 새 페이지에 넣으세요",
+  "full": "이 페이지가 가득 찼습니다 (페이지마다 최대 {max}개) — 오른쪽 끝으로 끌어 새 페이지에 넣으세요",
+  "resizeCol": "{a} · {b} 폭 조절",
+  "resizeRow": "{row}번째 줄 아래 경계",
+  "header": {
+    "title": "상단 바",
+    "hint": "끌어서 순서를 바꾸고 눈 단추로 숨깁니다",
+    "items": {
+      "search": "검색칸",
+      "theme": "테마",
+      "user": "사용자 메뉴"
+    },
+    "show": "{name} 보이기",
+    "hide": "{name} 숨기기",
+    "locked": "사용자 메뉴는 로그아웃이 있어 숨길 수 없습니다",
+    "move": "{name}, {index}번째. 좌우 화살표로 순서를 바꿉니다"
+  },
+  "pages": "홈 페이지",
+  "page": "{total}쪽 중 {page}쪽",
+  "perPage": "이 페이지 {n} / {max}",
+  "resizeEnd": "{name} 오른쪽 끝 — 남은 칸까지 키웁니다"
+}

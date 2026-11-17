@@ -33,6 +33,8 @@ export const KEYS = {
   sidebar: 'portal-sidebar',
   systemsView: 'portal-systems-view',
   favorites: 'favorites',
+  widgets: 'portal-widgets',
+  header: 'portal-header',
   apiLog: 'portal-api-log',
 } as const
 

@@ -9,8 +9,9 @@ import layout from './layout.json'
 import schedule from './schedule.json'
 import systems from './systems.json'
 import theme from './theme.json'
+import widgets from './widgets.json'
 
 /** 기준 사전. 문구는 JSON 이 원본이고, en 은 이 모양을 그대로 따른다 (i18n/index.tsx) */
-export const ko = { common, layout, theme, home, schedule, calendar, greetings, systems, info, account, compose }
+export const ko = { common, layout, theme, home, schedule, calendar, greetings, systems, info, account, compose, widgets }
 
 export type Messages = typeof ko
