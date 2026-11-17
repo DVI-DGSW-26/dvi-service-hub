@@ -3,7 +3,7 @@
 import { mockMe } from '../mocks/info'
 import type { Me } from '../types/portal'
 import { isApiError } from './errors'
-import { auth } from './http'
+import { auth, toLogin } from './http'
 import { apiLog } from './logger'
 
 /**
@@ -19,7 +19,7 @@ export async function fetchMe({ signal }: { signal?: AbortSignal } = {}): Promis
     if (isJson) return res.data
   } catch (e) {
     if (isApiError(e) && e.status === 401) {
-      window.location.href = '/api/auth/login?next=' + encodeURIComponent(location.pathname + location.hash)
+      toLogin()
       return null
     }
     // 그 밖의 실패는 로그만 남기고(인터셉터) 로그인 정보 없이 연다 — 권한으로 거르는 목록은 모두 보인다

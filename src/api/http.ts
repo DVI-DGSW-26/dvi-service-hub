@@ -57,6 +57,11 @@ let redirecting = false
  * 허브 로그인(/api/auth/me)은 살아 있는데 서버만 401 이면 다시 로그인해도 똑같다 — 그때 보내면
  * Keycloak 이 곧장 돌려보내 화면과 로그인을 끝없이 오간다. 그래서 보내기 전에 허브 로그인을 확인한다.
  */
+/** 허브 로그인으로 보낸다. 돌아오면 지금 보던 화면(주소 · 쿼리 · 해시)으로 */
+export function toLogin() {
+  window.location.href = '/api/auth/login?next=' + encodeURIComponent(location.pathname + location.search + location.hash)
+}
+
 function onUnauthorized() {
   // 패널마다 401 이 오므로 한 번만
   if (redirecting) return
@@ -69,7 +74,7 @@ function onUnauthorized() {
     () => apiLog.hint('401 — 허브 로그인은 살아 있는데 허브 서버가 쿠키를 받지 않습니다. 서버의 SESSION_SECRET 이 Vercel 과 같은지 확인하세요.'),
     (e: ApiError) => {
       if (e.status !== 401) return
-      window.location.href = '/api/auth/login?next=' + encodeURIComponent(location.pathname + location.search + location.hash)
+      toLogin()
     },
   )
 }
