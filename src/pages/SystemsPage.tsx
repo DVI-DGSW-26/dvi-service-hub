@@ -10,11 +10,10 @@ import { Segmented } from '../components/ui/Segmented'
 import type { Category, Service } from '../services'
 import { useI18n } from '../i18n'
 import { hasNoDepartment, matchesQuery } from '../lib/access'
-import { readPref, writePref } from '../lib/theme'
+import { KEYS, readPref, writePref } from '../lib/theme'
 import type { Me } from '../types/portal'
 
 const CATEGORIES: ('전체' | Category)[] = ['전체', '업무', '인사', '정보', '사내문화']
-const VIEW_KEY = 'portal-systems-view'
 const SKELETON_COUNT = 9
 
 type View = 'card' | 'list'
@@ -35,10 +34,10 @@ export function SystemsPage({ me, loading = false, services, query, onQueryChang
   const { t, f } = useI18n()
   const [category, setCategory] = useState<(typeof CATEGORIES)[number]>('전체')
   // 마지막으로 고른 보기 방식을 기억한다
-  const [view, setView] = useState<View>(() => (readPref(VIEW_KEY) === 'list' ? 'list' : 'card'))
+  const [view, setView] = useState<View>(() => (readPref(KEYS.systemsView) === 'list' ? 'list' : 'card'))
   const changeView = (v: View) => {
     setView(v)
-    writePref(VIEW_KEY, v === 'card' ? null : v)
+    writePref(KEYS.systemsView, v === 'card' ? null : v)
   }
   const visible = services.filter((s) => (category === '전체' || s.category === category) && matchesQuery(s, query))
 

@@ -5,18 +5,18 @@
 //   빌드 때 고정: VITE_API_LOG=info
 //   운영 화면에서 잠깐 자세히: 콘솔에 portalApiLog.set('debug') — 이 브라우저에만 남는다(localStorage)
 
+import { KEYS } from '../lib/theme'
 import type { ApiError } from './errors'
 
 type LogLevel = 'silent' | 'error' | 'info' | 'debug'
 
 const RANK: Record<LogLevel, number> = { silent: 0, error: 1, info: 2, debug: 3 }
-const KEY = 'portal-api-log'
 
 const isLevel = (v: unknown): v is LogLevel => typeof v === 'string' && v in RANK
 
 function initialLevel(): LogLevel {
   try {
-    const saved = localStorage.getItem(KEY)
+    const saved = localStorage.getItem(KEYS.apiLog)
     if (isLevel(saved)) return saved
   } catch {
     /* 저장소가 막혀 있으면 아래 기본값 */
@@ -60,7 +60,7 @@ export const apiLog = {
   set(next: LogLevel, remember = true) {
     level = next
     try {
-      if (remember) localStorage.setItem(KEY, next)
+      if (remember) localStorage.setItem(KEYS.apiLog, next)
     } catch {
       /* 이번 화면에서만 */
     }
@@ -69,7 +69,7 @@ export const apiLog = {
   /** 저장한 단계를 지우고 기본값으로 */
   reset() {
     try {
-      localStorage.removeItem(KEY)
+      localStorage.removeItem(KEYS.apiLog)
     } catch {
       /* 무시 */
     }

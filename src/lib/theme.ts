@@ -23,8 +23,18 @@ export const ACCENTS: AccentPreset[] = [
   { id: 'teal', h: 200, c: 0.13 },
 ]
 
-/** 기존 화면(src/App.tsx)과 같은 키를 써서 모드 선택이 두 화면 사이에 이어진다 */
-export const KEYS = { mode: 'theme', accent: 'portal-accent', glass: 'portal-glass', motion: 'portal-motion' } as const
+/** 이 브라우저에 저장하는 키 전부 — 이름이 겹치면 서로 덮어쓰므로 여기서만 정한다. mode 는 index.html 인라인 스크립트도 읽는다 */
+export const KEYS = {
+  mode: 'theme',
+  accent: 'portal-accent',
+  glass: 'portal-glass',
+  motion: 'portal-motion',
+  lang: 'portal-lang',
+  sidebar: 'portal-sidebar',
+  systemsView: 'portal-systems-view',
+  favorites: 'favorites',
+  apiLog: 'portal-api-log',
+} as const
 
 export function readPref(key: string): string | null {
   try { return localStorage.getItem(key) } catch { return null }

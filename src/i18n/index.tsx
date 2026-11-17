@@ -1,5 +1,5 @@
 import { Fragment, createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { readPref, writePref } from '../lib/theme'
+import { KEYS, readPref, writePref } from '../lib/theme'
 import { en } from './en'
 import { ko, type Messages } from './ko'
 
@@ -53,7 +53,6 @@ export const LANGS: { value: Lang; label: string }[] = [
 
 const MESSAGES: Record<Lang, Messages> = { ko, en }
 export const LOCALE: Record<Lang, string> = { ko: 'ko-KR', en: 'en-US' }
-const KEY = 'portal-lang'
 
 interface I18n {
   lang: Lang
@@ -73,7 +72,7 @@ const I18nContext = createContext<I18n | null>(null)
 if (import.meta.env.DEV) void import('./check').then((m) => m.checkMessages(ko, en))
 
 function initialLang(): Lang {
-  const saved = readPref(KEY)
+  const saved = readPref(KEYS.lang)
   return saved === 'en' || saved === 'ko' ? saved : 'ko'
 }
 
@@ -95,7 +94,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     f: (entry, vars) => interpolate(pick(entry, Number(vars?.count ?? 0)), vars),
     rich: (entry, vars, count) => interpolateNodes(pick(entry, count), vars),
     setLang: (next) => {
-      writePref(KEY, next === 'ko' ? null : next)
+      writePref(KEYS.lang, next === 'ko' ? null : next)
       setLangState(next)
     },
   }

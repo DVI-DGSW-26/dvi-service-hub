@@ -1,11 +1,9 @@
 import { useState } from 'react'
-import { readPref, writePref } from '../lib/theme'
-
-const KEY = 'favorites'
+import { KEYS, readPref, writePref } from '../lib/theme'
 
 function load(): string[] {
   try {
-    const parsed: unknown = JSON.parse(readPref(KEY) ?? '[]')
+    const parsed: unknown = JSON.parse(readPref(KEYS.favorites) ?? '[]')
     return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : []
   } catch {
     return []
@@ -19,7 +17,7 @@ export function useFavorites() {
   const toggle = (id: string) => {
     setIds((prev) => {
       const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-      writePref(KEY, JSON.stringify(next))
+      writePref(KEYS.favorites, JSON.stringify(next))
       return next
     })
   }
