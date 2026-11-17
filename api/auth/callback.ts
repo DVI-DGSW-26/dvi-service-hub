@@ -12,9 +12,9 @@
  * 입사자도 허브에는 들어와서 "부서가 지정되지 않았다"는 안내를 봐야 한다.
  * 빈 화면이나 403 은 본인에게 고장으로 보인다.
  */
-import { IDTOKEN_COOKIE, SESSION_COOKIE, SESSION_HOURS, buildCookie, readCookie, signSession, verifySession,
-  type Session } from '../../lib/session.js';
-import { AUTH_COOKIE, configError, decodeJwt, discover, htmlError, safePath,
+import { AUTH_COOKIE, IDTOKEN_COOKIE, SESSION_COOKIE, SESSION_HOURS, buildCookie, readCookie, signSession,
+  verifySession, type Session } from '../../lib/session.js';
+import { configError, decodeJwt, discover, htmlError, safePath,
   type JwtClaims, type OidcMetadata, type PendingLogin } from '../../lib/oidc.js';
 
 export const config = { runtime: 'edge' };
@@ -103,11 +103,14 @@ export default async function handler(req: Request): Promise<Response> {
   });
   if (clientSecret) form.set('client_secret', clientSecret);
 
-  const res = await fetch(meta.token_endpoint, {
-    method: 'POST',
-    headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
-    body: form,
-  });
+  let res: Response;
+  try {
+    res = await fetch(meta.token_endpoint, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
+      body: form,
+    });
+  } catch { return htmlError('로그인하지 못했습니다', '통합 로그인 서버에 연결하지 못했습니다.', 502); }
   if (!res.ok) {
     let detail = '';
     try {
@@ -116,13 +119,13 @@ export default async function handler(req: Request): Promise<Response> {
     } catch { /* 본문이 JSON 이 아니면 상태코드만 쓴다 */ }
     // 미리보기 배포는 주소가 매번 달라 redirect_uri 를 등록할 수 없다
     const hint = /redirect/i.test(detail)
-      ? '<br><br>미리보기(Preview) 배포에서는 로그인할 수 없습니다. 운영 주소로 접속해 주세요.'
+      ? ' 미리보기(Preview) 배포에서는 로그인할 수 없습니다. 운영 주소로 접속해 주세요.'
       : '';
     return htmlError('로그인하지 못했습니다',
       `통합 로그인 서버가 토큰 발급을 거절했습니다. (${res.status}${detail ? ` · ${detail}` : ''})${hint}`, 502);
   }
 
-  const token = (await res.json()) as { id_token?: string; access_token?: string };
+  const token = (await res.json().catch(() => ({}))) as { id_token?: string; access_token?: string };
   if (!token.id_token) return htmlError('로그인하지 못했습니다', '계정 정보를 받지 못했습니다.', 502);
 
   let claims: JwtClaims, access: JwtClaims | null = null;

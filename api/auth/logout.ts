@@ -20,6 +20,7 @@ export default async function handler(req: Request): Promise<Response> {
   let meta;
   try { meta = await discover(issuer); }
   catch (e) { return configError((e as Error).message); }
+  if (!meta.end_session_endpoint) return configError('통합 로그인 설정에 로그아웃 주소가 없습니다.');
 
   const url = new URL(req.url);
   const end = new URL(meta.end_session_endpoint);

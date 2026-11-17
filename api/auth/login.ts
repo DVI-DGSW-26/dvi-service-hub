@@ -7,8 +7,8 @@
  * ?action= 이 있으면 Keycloak 에 kc_action 으로 넘긴다 (Application Initiated Action) — 설정 화면의
  * 비밀번호 변경 · OTP 등록 · 패스키 등록 · 삭제. 이미 로그인돼 있으면 Keycloak 이 그 화면만 띄우고 돌려보낸다.
  */
-import { buildCookie, signSession } from '../../lib/session.js';
-import { AUTH_COOKIE, configError, discover, pkceChallenge, randomString, safePath, type PendingLogin }
+import { AUTH_COOKIE, buildCookie, signSession } from '../../lib/session.js';
+import { configError, discover, pkceChallenge, randomString, safePath, type PendingLogin }
   from '../../lib/oidc.js';
 
 export const config = { runtime: 'edge' };
@@ -27,7 +27,7 @@ export default async function handler(req: Request): Promise<Response> {
       !clientId && 'OIDC_CLIENT_ID',
       !secret && 'SESSION_SECRET',
     ].filter(Boolean).join(', ');
-    return configError(`환경변수가 설정되지 않았습니다: <code>${missing}</code><br>관리자에게 문의해 주세요.`);
+    return configError(`환경변수가 설정되지 않았습니다: ${missing}. 관리자에게 문의해 주세요.`);
   }
 
   let meta;

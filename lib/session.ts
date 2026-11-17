@@ -12,7 +12,14 @@ const dec = new TextDecoder();
 
 export const SESSION_COOKIE = 'hub_session';
 export const IDTOKEN_COOKIE = 'hub_idt'; // 전체 로그아웃(id_token_hint)에만 쓴다
+export const AUTH_COOKIE = 'hub_auth'; // 로그인 진행 중에만 쓰는 임시 쿠키
 export const SESSION_HOURS = 12;
+
+// 쓰는 경로에만 실어 보낸다 — Path=/ 이면 /api/hub 프록시를 거쳐 백엔드까지 토큰이 간다
+const COOKIE_PATH: Record<string, string> = {
+  [IDTOKEN_COOKIE]: '/api/auth/logout',
+  [AUTH_COOKIE]: '/api/auth/callback',
+};
 
 /** 서명해 쿠키에 담는 값은 모두 만료 시각(초)을 가진다 */
 export interface Signed {
@@ -79,7 +86,9 @@ export function readCookie(req: Request, name: string): string | null {
   for (const part of raw.split(';')) {
     const i = part.indexOf('=');
     if (i < 0) continue;
-    if (part.slice(0, i).trim() === name) return decodeURIComponent(part.slice(i + 1).trim());
+    if (part.slice(0, i).trim() !== name) continue;
+    try { return decodeURIComponent(part.slice(i + 1).trim()); }
+    catch { return null; } // 깨진 쿠키 하나로 middleware 가 모든 페이지를 500 으로 만들지 않게
   }
   return null;
 }
@@ -88,7 +97,7 @@ export function readCookie(req: Request, name: string): string | null {
 export function buildCookie(name: string, value: string, maxAge: number): string {
   const bits = [
     `${name}=${encodeURIComponent(value)}`,
-    'Path=/',
+    `Path=${COOKIE_PATH[name] ?? '/'}`,
     'HttpOnly',
     'Secure',
     'SameSite=Lax',

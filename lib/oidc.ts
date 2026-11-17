@@ -9,8 +9,6 @@
  */
 import { toB64url, fromB64url, type Signed } from './session.js';
 
-export const AUTH_COOKIE = 'hub_auth'; // 로그인 진행 중에만 쓰는 임시 쿠키
-
 /** 로그인 진행 상태 (hub_auth 쿠키). callback 에서 대조한다 */
 export interface PendingLogin extends Signed {
   state: string;
@@ -81,15 +79,21 @@ export function decodeJwt(token: string): JwtClaims {
 
 /** 같은 사이트 안의 경로만 허용한다 (열린 리다이렉트 방지) */
 export function safePath(p: unknown): string {
-  return typeof p === 'string' && p.startsWith('/') && !p.startsWith('//') ? p : '/';
+  // URL 파서는 `\` 를 `/` 로 읽고 탭 · 줄바꿈을 지워서 "/\evil.com" 도 //evil.com 이 된다
+  return typeof p === 'string' && p.startsWith('/') && !p.startsWith('//') && !/[\\\x00-\x1f\x7f]/.test(p) ? p : '/';
 }
+
+const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 /** 설정이 빠졌을 때 사람이 읽을 수 있는 화면을 돌려준다 */
 export function configError(msg: string): Response {
   return htmlError('설정이 필요합니다', msg, 500);
 }
 
+/** title · msg 는 평문이다 — 쿼리값(error_description)이 들어오므로 반드시 이스케이프한다 */
 export function htmlError(title: string, msg: string, status = 400): Response {
+  title = esc(title);
+  msg = esc(msg);
   return new Response(
     `<!doctype html><html lang="ko"><meta charset="utf-8"><title>${title}</title>` +
     `<div style="font:15px/1.7 system-ui,'Malgun Gothic',sans-serif;max-width:34rem;margin:12vh auto;padding:0 1.5rem;color:#1B2428">` +
