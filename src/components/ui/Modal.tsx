@@ -1,6 +1,7 @@
 import { X } from 'lucide-react'
 import { useEffect, useId, useRef, type ReactNode, type RefObject } from 'react'
 import { useI18n } from '../../i18n'
+import { project, rubberband } from '../../lib/spring'
 import { motionOff } from '../../lib/theme'
 
 interface ModalProps {
@@ -21,11 +22,6 @@ const CLOSE_MS = 170
 const SHEET_MS = 240
 /** 휴대폰 — styles.css 의 시트 규칙과 같은 폭 */
 const SHEET_QUERY = '(max-width: 639.98px)'
-
-/** 놓는 속도(px/s)로 더 미끄러질 거리 — 스크롤 감속과 같은 식 */
-const project = (v: number, rate = 0.998) => ((v / 1000) * rate) / (1 - rate)
-/** 위로 끌면 갈수록 덜 따라온다 — 더 올라갈 곳이 없다는 신호 */
-const rubberband = (d: number, dim: number) => (d * dim * 0.55) / (dim + 0.55 * d)
 
 /**
  * 휴대폰 시트를 끌어 내려 닫기. 손잡이뿐 아니라 시트 어디서든 — 누른 곳이 맨 위까지 스크롤된 상태에서
@@ -100,7 +96,7 @@ function useSheetDrag(panel: RefObject<HTMLDivElement | null>, dialog: RefObject
       const v = e.timeStamp - g.t > 80 ? 0 : g.v
       const dy = Math.max(0, g.last - g.y0)
       const h = el.offsetHeight
-      if (dy + project(v) > h / 3) {
+      if (dy + project(v, 0.998) > h / 3) { // 시트는 스크롤처럼 길게 미끄러진다
         // 손 속도를 이어받아 남은 거리를 내려간다 (느리게 놓아도 SHEET_MS 안에)
         const ms = Math.min(SHEET_MS, Math.max(120, ((h - dy) / Math.max(v, 1)) * 1000))
         d.dataset.dragged = ''

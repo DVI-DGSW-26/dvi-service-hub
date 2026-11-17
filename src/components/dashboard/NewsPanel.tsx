@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { ChevronRight, Newspaper, Presentation } from 'lucide-react'
+import { Newspaper, Presentation } from 'lucide-react'
 import { useState } from 'react'
 import { hrefOf } from '../../hooks/useHashRoute'
 import { useI18n } from '../../i18n'
@@ -48,18 +48,8 @@ export function NewsPanel({ className = '' }: { className?: string }) {
     <Panel
       title={t.home.news.title}
       icon={Newspaper}
-      toolbar={
-        // 전체 소식은 사내정보 페이지에서 — 소식이 많아도 그림과 함께 훑어보고 더 불러온다
-        news.length > 0 && (
-          <a
-            href={hrefOf('info')}
-            className="flex items-center gap-0.5 rounded-lg px-2 py-1 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft"
-          >
-            {f(t.home.news.viewAll, { count: total })}
-            <ChevronRight className="size-4" aria-hidden="true" />
-          </a>
-        )
-      }
+      // 전체 소식은 사내정보 페이지에서 — 소식이 많아도 그림과 함께 훑어보고 더 불러온다
+      action={news.length > 0 ? { label: f(t.home.news.viewAll, { count: total }), href: hrefOf('info') } : undefined}
       className={`fit:overflow-hidden ${className}`}
     >
       {loading ? (

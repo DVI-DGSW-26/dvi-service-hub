@@ -14,7 +14,7 @@
  */
 import { AUTH_COOKIE, IDTOKEN_COOKIE, SESSION_COOKIE, SESSION_HOURS, buildCookie, readCookie, signSession,
   verifySession, type Session } from '../../lib/session.js';
-import { configError, decodeJwt, discover, htmlError, safePath,
+import { configError, decodeJwt, discover, htmlError, redirect, safePath,
   type JwtClaims, type OidcMetadata, type PendingLogin } from '../../lib/oidc.js';
 
 export const config = { runtime: 'edge' };
@@ -70,9 +70,7 @@ export default async function handler(req: Request): Promise<Response> {
     const status = url.searchParams.get('kc_action_status');
     const back = status ? await verifySession<PendingLogin>(readCookie(req, AUTH_COOKIE), secret) : null;
     if (back?.action && back.state === url.searchParams.get('state')) {
-      const headers = new Headers({ Location: withActionResult(back, status, url.origin), 'cache-control': 'no-store' });
-      headers.append('Set-Cookie', buildCookie(AUTH_COOKIE, '', 0));
-      return new Response(null, { status: 302, headers });
+      return redirect(withActionResult(back, status, url.origin), buildCookie(AUTH_COOKIE, '', 0));
     }
     const desc = url.searchParams.get('error_description') || url.searchParams.get('error');
     return htmlError('로그인하지 못했습니다', `통합 로그인에서 거절되었습니다. (${desc})`);
@@ -153,14 +151,11 @@ export default async function handler(req: Request): Promise<Response> {
     exp: Math.floor(Date.now() / 1000) + SESSION_HOURS * 3600,
   };
 
-  const headers = new Headers({
-    Location: withActionResult(pending, url.searchParams.get('kc_action_status'), url.origin),
-    'cache-control': 'no-store',
-  });
-  headers.append('Set-Cookie', buildCookie(SESSION_COOKIE, await signSession(session, secret), SESSION_HOURS * 3600));
-  headers.append('Set-Cookie', buildCookie(AUTH_COOKIE, '', 0));
-  // 전체 로그아웃 때 id_token_hint 로 쓴다. 화면 스크립트는 읽지 못한다.
-  headers.append('Set-Cookie', buildCookie(IDTOKEN_COOKIE, token.id_token, SESSION_HOURS * 3600));
-
-  return new Response(null, { status: 302, headers });
+  return redirect(
+    withActionResult(pending, url.searchParams.get('kc_action_status'), url.origin),
+    buildCookie(SESSION_COOKIE, await signSession(session, secret), SESSION_HOURS * 3600),
+    buildCookie(AUTH_COOKIE, '', 0),
+    // 전체 로그아웃 때 id_token_hint 로 쓴다. 화면 스크립트는 읽지 못한다.
+    buildCookie(IDTOKEN_COOKIE, token.id_token, SESSION_HOURS * 3600),
+  );
 }

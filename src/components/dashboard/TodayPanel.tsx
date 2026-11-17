@@ -6,7 +6,7 @@ import { useI18n } from '../../i18n'
 import { toIso } from '../../lib/calendar'
 import { nowMinutes } from '../../lib/format'
 import { scheduleQueries } from '../../queries/dashboard'
-import { Panel, SourceTag } from '../ui/Panel'
+import { PANEL_LINK, Panel, SourceTag } from '../ui/Panel'
 import { LoadError, SkeletonList } from '../ui/Skeleton'
 import { NowGuide, ScheduleRow, statusOf } from './ScheduleRow'
 import { TodayModal } from './TodayModal'
@@ -51,7 +51,7 @@ export function TodayPanel({ className = '' }: { className?: string }) {
               setOpen(true)
             }}
             aria-haspopup="dialog"
-            className="flex cursor-pointer items-center gap-0.5 rounded-lg px-2 py-1 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft"
+            className={PANEL_LINK}
           >
             {f(t.schedule.viewAll, { count: items.length })}
             <ChevronRight className="size-4" aria-hidden="true" />

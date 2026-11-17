@@ -41,8 +41,14 @@ export interface JwtClaims {
   resource_access?: Record<string, { roles?: string[] } | undefined>;
 }
 
-/** discovery 문서에서 엔드포인트를 읽는다 */
-export async function discover(issuer: string): Promise<OidcMetadata> {
+let cached: Promise<OidcMetadata> | undefined;
+
+/** discovery 문서에서 엔드포인트를 읽는다. 같은 인스턴스 안에서는 한 번만 받고, 실패는 기억하지 않는다 */
+export function discover(issuer: string): Promise<OidcMetadata> {
+  return (cached ??= fetchMetadata(issuer).catch((e) => { cached = undefined; throw e; }));
+}
+
+async function fetchMetadata(issuer: string): Promise<OidcMetadata> {
   const url = `${issuer.replace(/\/+$/, '')}/.well-known/openid-configuration`;
   const res = await fetch(url, { headers: { accept: 'application/json' } });
   if (!res.ok) throw new Error(`통합 로그인 설정을 읽지 못했습니다 (${res.status})`);
@@ -84,6 +90,13 @@ export function safePath(p: unknown): string {
 }
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
+/** 302 이동. 로그인 응답은 캐시하지 않는다 */
+export function redirect(location: string, ...cookies: string[]): Response {
+  const headers = new Headers({ Location: location, 'cache-control': 'no-store' });
+  for (const c of cookies) headers.append('Set-Cookie', c);
+  return new Response(null, { status: 302, headers });
+}
 
 /** 설정이 빠졌을 때 사람이 읽을 수 있는 화면을 돌려준다 */
 export function configError(msg: string): Response {

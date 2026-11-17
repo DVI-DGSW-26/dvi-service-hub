@@ -7,7 +7,7 @@ import { ServiceLogo } from '../components/services/ServiceCard'
 import { Badge } from '../components/ui/Badge'
 import { ComingSoon } from '../components/ui/ComingSoon'
 import { PageTitle } from '../components/ui/PageTitle'
-import { CountTag, Panel } from '../components/ui/Panel'
+import { CountTag, PANEL_LINK, Panel } from '../components/ui/Panel'
 import { LoadError, Skeleton, SkeletonText } from '../components/ui/Skeleton'
 import { hrefOf } from '../hooks/useHashRoute'
 import type { PortalTheme } from '../hooks/usePortalTheme'
@@ -49,7 +49,7 @@ export function AccountPage({ me, loading, services, theme }: AccountPageProps) 
             icon={ShieldCheck}
             description={t.account.signIn.description}
             toolbar={
-              <a href={ACCOUNT_URL} className="flex items-center gap-0.5 rounded-lg px-2 py-1 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft">
+              <a href={ACCOUNT_URL} className={PANEL_LINK}>
                 {t.account.signIn.manage}
                 <ArrowUpRight className="size-4" aria-hidden="true" />
               </a>

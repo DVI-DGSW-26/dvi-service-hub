@@ -15,6 +15,9 @@ interface PanelProps {
   children: ReactNode
 }
 
+/** 패널 오른쪽 위 글자 단추 · 링크 */
+export const PANEL_LINK = 'flex cursor-pointer items-center gap-0.5 rounded-lg px-2 py-1 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft'
+
 /** 대시보드의 모든 상자가 쓰는 유리 겉틀 */
 export function Panel({ title, icon: IconC, meta, description, toolbar, action, className = '', children }: PanelProps) {
   const headingId = useId()
@@ -42,7 +45,7 @@ export function Panel({ title, icon: IconC, meta, description, toolbar, action, 
             {action && (
               <a
                 href={action.href}
-                className="flex items-center gap-0.5 rounded-lg px-2 py-1 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft"
+                className={PANEL_LINK}
               >
                 {action.label}
                 <ChevronRight className="size-4" aria-hidden="true" />

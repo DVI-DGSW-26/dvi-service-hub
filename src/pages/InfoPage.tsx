@@ -5,7 +5,7 @@ import { NewsModal } from '../components/dashboard/NewsModal'
 import { NewsThumb } from '../components/dashboard/NewsPanel'
 import { OrgChartModal } from '../components/info/OrgChartModal'
 import { unitCount } from '../components/info/OrgChartView'
-import { Panel } from '../components/ui/Panel'
+import { PANEL_LINK, Panel } from '../components/ui/Panel'
 import { LoadError, SkeletonList } from '../components/ui/Skeleton'
 import { orgChart } from '../data/orgChart'
 import { hrefOf } from '../hooks/useHashRoute'
@@ -124,7 +124,7 @@ function OrgPanel({ onOpen, className = '' }: { onOpen: (team?: string) => void;
           type="button"
           onClick={() => onOpen()}
           aria-haspopup="dialog"
-          className="flex cursor-pointer items-center gap-0.5 rounded-lg px-2 py-1 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft"
+          className={PANEL_LINK}
         >
           {t.info.org.open}
           <ChevronRight className="size-4" aria-hidden="true" />

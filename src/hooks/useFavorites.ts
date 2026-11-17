@@ -1,11 +1,11 @@
 import { useCallback, useState } from 'react'
+import { readPref, writePref } from '../lib/theme'
 
 const KEY = 'favorites'
 
 function load(): string[] {
   try {
-    const raw = localStorage.getItem(KEY)
-    const parsed: unknown = raw ? JSON.parse(raw) : []
+    const parsed: unknown = JSON.parse(readPref(KEY) ?? '[]')
     return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : []
   } catch {
     return []
@@ -19,7 +19,7 @@ export function useFavorites() {
   const toggle = useCallback((id: string) => {
     setIds((prev) => {
       const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-      try { localStorage.setItem(KEY, JSON.stringify(next)) } catch {}
+      writePref(KEY, JSON.stringify(next))
       return next
     })
   }, [])

@@ -8,7 +8,7 @@
  * 비밀번호 변경 · OTP 등록 · 패스키 등록 · 삭제. 이미 로그인돼 있으면 Keycloak 이 그 화면만 띄우고 돌려보낸다.
  */
 import { AUTH_COOKIE, buildCookie, signSession } from '../../lib/session.js';
-import { configError, discover, pkceChallenge, randomString, safePath, type PendingLogin }
+import { configError, discover, pkceChallenge, randomString, redirect, safePath, type PendingLogin }
   from '../../lib/oidc.js';
 
 export const config = { runtime: 'edge' };
@@ -60,7 +60,5 @@ export default async function handler(req: Request): Promise<Response> {
   auth.searchParams.set('code_challenge_method', 'S256');
   if (action) auth.searchParams.set('kc_action', action);
 
-  const headers = new Headers({ Location: auth.toString(), 'cache-control': 'no-store' });
-  headers.append('Set-Cookie', buildCookie(AUTH_COOKIE, pending, 600));
-  return new Response(null, { status: 302, headers });
+  return redirect(auth.toString(), buildCookie(AUTH_COOKIE, pending, 600));
 }
