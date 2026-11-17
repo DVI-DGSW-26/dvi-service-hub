@@ -3,7 +3,6 @@
   "expand": "캘린더 크게 보기",
   "prev": "이전 달",
   "next": "다음 달",
-  "source": "From 플로우",
   "eventCount": { "one": "일정 {count}건", "other": "일정 {count}건" },
   "dayCount": { "one": "{count}건", "other": "{count}건" },
   "more": { "one": "+{count}", "other": "+{count}" },

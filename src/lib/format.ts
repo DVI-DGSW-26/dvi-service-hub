@@ -46,11 +46,6 @@ export function toMinutes(hhmm: string) {
 
 export const nowMinutes = (now = new Date()) => now.getHours() * 60 + now.getMinutes()
 
-/** 'HH:mm' 이 지금보다 이른가 */
-export function isPast(hhmm: string, now = new Date()) {
-  return toMinutes(hhmm) <= nowMinutes(now)
-}
-
 /** 133 → ko 2시간 13분 · en 2h 13m — 단위 문구는 사전(common.duration)에서 */
 export function duration(minutes: number, forms: Messages['common']['duration']) {
   const h = Math.floor(minutes / 60)

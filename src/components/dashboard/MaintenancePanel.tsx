@@ -20,8 +20,8 @@ export const maintenanceWhen = (m: Maintenance, lang: Lang) => dateTimeRange(m.d
 /** 홈 패널에 보여줄 안내 수 — 옆 패널과 높이를 맞추려 고정하고, 나머지는 '외 n건' 에서 */
 const LISTED = 3
 
-/** 패널 오른쪽 위 글쓰기 단추 — 전사 공지 줄에서도 같은 모양을 쓴다 */
-export const composeButton =
+/** 패널 오른쪽 위 글쓰기 단추 */
+const composeButton =
   'flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft'
 
 /** 시스템 점검 · 안내. maintenance:write · admin 이면 오른쪽 위에 작성 단추가 붙는다 */

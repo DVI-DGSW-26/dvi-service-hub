@@ -3,7 +3,6 @@
   "expand": "Expand calendar",
   "prev": "Previous month",
   "next": "Next month",
-  "source": "From Flow",
   "eventCount": { "one": "{count} event", "other": "{count} events" },
   "dayCount": { "one": "{count} item", "other": "{count} items" },
   "more": { "one": "+{count} more", "other": "+{count} more" },

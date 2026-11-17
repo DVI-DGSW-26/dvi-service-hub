@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-export type BadgeTone = 'accent' | 'ok' | 'warn' | 'danger' | 'neutral' | 'solid-danger'
+export type BadgeTone = 'accent' | 'ok' | 'warn' | 'danger' | 'neutral'
 
 const TONE: Record<BadgeTone, string> = {
   accent: 'bg-accent-soft text-accent',
@@ -8,7 +8,6 @@ const TONE: Record<BadgeTone, string> = {
   warn: 'bg-warn-soft text-warn',
   danger: 'bg-danger-soft text-danger',
   neutral: 'bg-line text-muted',
-  'solid-danger': 'bg-danger-fill text-white',
 }
 
 export function Badge({ tone, children }: { tone: BadgeTone; children: ReactNode }) {

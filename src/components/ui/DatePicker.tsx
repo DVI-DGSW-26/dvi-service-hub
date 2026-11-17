@@ -12,8 +12,6 @@ interface DatePickerProps {
   /** 화면낭독기용 이름 (Field 의 이름과 같게) */
   label: string
   invalid?: boolean
-  /** 아래에 '지우기' 를 둔다 (끝나는 날처럼 비워도 되는 칸) */
-  clearable?: boolean
 }
 
 /** 날짜를 하루 · 한 주 · 한 달씩 옮기는 키 */
@@ -23,7 +21,7 @@ const STEP: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7
  * 날짜 고르기 — 브라우저 기본 달력 대신 회사 캘린더와 같은 모양의 달력.
  * 화살표로 하루 · 한 주, PageUp/PageDown 으로 한 달씩 옮기고 Enter 로 고른다.
  */
-export function DatePicker({ value, onChange, label, invalid = false, clearable = false }: DatePickerProps) {
+export function DatePicker({ value, onChange, label, invalid = false }: DatePickerProps) {
   const { t, locale } = useI18n()
   const anchor = useRef<HTMLButtonElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
@@ -138,15 +136,6 @@ export function DatePicker({ value, onChange, label, invalid = false, clearable 
         </div>
 
         <div className="mt-2 flex justify-end gap-1 border-t border-line pt-2">
-          {clearable && value && (
-            <button
-              type="button"
-              onClick={() => pick('')}
-              className="mr-auto cursor-pointer rounded-lg px-2.5 py-1 text-sm font-semibold text-muted transition-colors hover:bg-subtle hover:text-fg"
-            >
-              {t.common.picker.clear}
-            </button>
-          )}
           <button
             type="button"
             onClick={() => pick(today)}

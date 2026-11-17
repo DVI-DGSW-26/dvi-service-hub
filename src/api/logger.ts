@@ -7,7 +7,7 @@
 
 import type { ApiError } from './errors'
 
-export type LogLevel = 'silent' | 'error' | 'info' | 'debug'
+type LogLevel = 'silent' | 'error' | 'info' | 'debug'
 
 const RANK: Record<LogLevel, number> = { silent: 0, error: 1, info: 2, debug: 3 }
 const KEY = 'portal-api-log'

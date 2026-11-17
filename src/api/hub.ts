@@ -12,7 +12,7 @@ type Opts = { signal?: AbortSignal }
  * 화면이 links[0] 을 바로 읽기 때문에, 잘못된 항목 하나가 전체를 깨뜨리면 안 된다.
  * 쓸 수 있는 항목이 하나도 없으면 null.
  */
-export function parseServices(data: unknown): Service[] | null {
+function parseServices(data: unknown): Service[] | null {
   if (!Array.isArray(data)) return null
   const out = data.filter(isService)
   return out.length > 0 ? out : null

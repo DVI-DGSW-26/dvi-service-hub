@@ -23,7 +23,7 @@ declare module 'axios' {
 }
 
 /** 서버 성공 응답의 겉모양 */
-export interface Envelope<T> {
+interface Envelope<T> {
   status: number
   message: string
   data: T
@@ -131,8 +131,6 @@ export const auth = withInterceptors(
   }),
   { redirectOn401: false },
 )
-
-export { ApiError }
 
 /** 경로 조각 — id 에 / · ? 가 섞여도 경로가 깨지지 않게 */
 export const seg = encodeURIComponent

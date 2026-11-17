@@ -3,7 +3,7 @@ import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { useI18n } from '../../i18n'
 import { Modal } from '../ui/Modal'
 
-export interface DetailContent {
+interface DetailContent {
   /** 제목 위 — 날짜 · 종류 · 중요 표시 등 */
   eyebrow: ReactNode
   title: string

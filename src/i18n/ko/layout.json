@@ -18,12 +18,6 @@
     "label": "업무시스템 검색",
     "placeholder": "업무시스템 이름이나 기능으로 검색"
   },
-  "notifications": {
-    "title": "알림",
-    "unread": "알림 {count}건 안 읽음",
-    "loading": "알림 불러오는 중",
-    "empty": "새 알림이 없어요."
-  },
   "user": {
     "loading": "사용자 정보 불러오는 중",
     "menuButton": "{name} 님 메뉴",

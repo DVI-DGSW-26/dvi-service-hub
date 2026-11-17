@@ -55,9 +55,7 @@
   /* 흰 글자를 얹는 빨강 (중요 · 알림 수) — 어두운 테마의 danger 는 글자용이라 밝아서 따로 둔다 */
   --color-danger-fill: oklch(0.55 0.21 25);
 
-  --color-violet: oklch(0.62 0.2 295);
   --color-amber: oklch(0.78 0.16 75);
-  --color-teal: oklch(0.72 0.12 200);
 
   --animate-materialize: materialize 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
   --animate-greet: greet 600ms cubic-bezier(0.2, 0.8, 0.2, 1);

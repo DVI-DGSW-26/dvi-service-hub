@@ -12,7 +12,7 @@ const TIMES = Array.from({ length: 48 }, (_, i) => `${pad(Math.floor(i / 2))}:${
  * 적은 글을 HH:mm 으로. 비우면 '', 못 읽으면 null.
  * '9' → 09:00, '930' → 09:30, '2230' · '22:30' → 22:30, '오후 3' · '3pm' → 15:00
  */
-export function parseTime(text: string): string | null {
+function parseTime(text: string): string | null {
   const s = text.trim().toLowerCase()
   if (!s) return ''
   const m = s.match(/^(오전|오후|am|pm)?\s*(\d{1,2})(?::?(\d{2}))?\s*(오전|오후|am|pm)?$/)

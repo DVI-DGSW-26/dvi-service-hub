@@ -18,12 +18,6 @@
     "label": "Search systems",
     "placeholder": "Search systems by name or feature"
   },
-  "notifications": {
-    "title": "Notifications",
-    "unread": "Notifications, {count} unread",
-    "loading": "Loading notifications",
-    "empty": "No new notifications."
-  },
   "user": {
     "loading": "Loading your profile",
     "menuButton": "Menu for {name}",
