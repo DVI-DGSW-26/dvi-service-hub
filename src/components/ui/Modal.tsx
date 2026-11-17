@@ -2,7 +2,6 @@ import { X } from 'lucide-react'
 import { useEffect, useId, useRef, type ReactNode, type RefObject } from 'react'
 import { useI18n } from '../../i18n'
 import { project, rubberband } from '../../lib/spring'
-import { motionOff } from '../../lib/theme'
 
 interface ModalProps {
   open: boolean
@@ -17,7 +16,6 @@ interface ModalProps {
   children: ReactNode
 }
 
-const CLOSE_MS = 170
 /** 끌어 내려 닫을 때 남은 거리를 내려가는 최대 시간 */
 const SHEET_MS = 240
 /** 휴대폰 — styles.css 의 시트 규칙과 같은 폭 */
@@ -232,7 +230,7 @@ export function Modal({ open, onClose, labelledBy, wide = false, full = false, c
     const d = ref.current
     if (!d) return
     if (open) {
-      // 닫히는 애니메이션 도중 다시 열면(close 타이머는 정리 함수가 취소했다) 마저 닫고 처음처럼 연다
+      // 닫히는 애니메이션 도중 다시 열면(닫기 대기는 정리 함수가 취소했다) 마저 닫고 처음처럼 연다
       // — 닫힘 표시만 떼면 맺히는 애니메이션이 첫 프레임(투명)에 멈춘 채 남는다
       if ('closing' in d.dataset) {
         delete d.dataset.closing
@@ -241,20 +239,23 @@ export function Modal({ open, onClose, labelledBy, wide = false, full = false, c
       if (!d.open) d.showModal()
     } else if (d.open) {
       d.dataset.closing = ''
-      // 끌어 내려 닫으면 손 속도로 내려가는 중이라 그 시간만큼 기다린다. 애니메이션을 껐으면 기다리지 않는다
-      const t = window.setTimeout(
-        () => {
-          d.close()
-          delete d.dataset.closing
-          delete d.dataset.dragged
-          panelRef.current?.style.removeProperty('transform')
-          panelRef.current?.style.removeProperty('transition')
-          d.style.removeProperty('--sheet-drag')
-          d.style.removeProperty('transition')
-        },
-        motionOff() ? 0 : 'dragged' in d.dataset ? SHEET_MS : CLOSE_MS,
-      )
-      return () => window.clearTimeout(t)
+      // 닫히는 애니메이션(styles.css) · 끌어 내린 시트의 transition 이 끝나면 닫는다 — 길이를 JS 에 따로 적지 않는다.
+      // 애니메이션을 껐으면 길이가 0 이라 바로 닫힌다
+      let cancelled = false
+      const running = [...d.getAnimations(), ...(panelRef.current?.getAnimations() ?? [])]
+      Promise.allSettled(running.map((a) => a.finished)).then(() => {
+        if (cancelled) return
+        d.close()
+        delete d.dataset.closing
+        delete d.dataset.dragged
+        panelRef.current?.style.removeProperty('transform')
+        panelRef.current?.style.removeProperty('transition')
+        d.style.removeProperty('--sheet-drag')
+        d.style.removeProperty('transition')
+      })
+      return () => {
+        cancelled = true
+      }
     }
   }, [open])
 

@@ -14,7 +14,7 @@ interface LiquidBlobsProps {
 /** 선택 표시 물방울 — 메뉴 글자 아래 한 겹에 goo 필터로 그린다 (useLiquidNav 가 매 프레임 움직인다) */
 export function LiquidBlobs({ dropRef, anchorRefs, rounded }: LiquidBlobsProps) {
   return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 [filter:url(#portal-goo)_drop-shadow(0_6px_14px_oklch(0_0_0/0.22))]">
+    <div aria-hidden="true" className="liquid-blobs pointer-events-none absolute inset-0">
       {anchorRefs.map((ref, i) => (
         <div key={i} ref={ref} className={`${BLOB} ${rounded}`} />
       ))}

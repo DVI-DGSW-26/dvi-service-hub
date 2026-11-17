@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { Suspense, lazy, useState } from 'react'
+import { Suspense, lazy, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { services } from './services'
 import { GooFilter } from './components/layout/LiquidParts'
 import { Sidebar } from './components/layout/Sidebar'
@@ -10,7 +11,7 @@ import { hrefOf, useHashRoute } from './hooks/useHashRoute'
 import { usePortalTheme } from './hooks/usePortalTheme'
 import { useI18n } from './i18n'
 import { canSee, sortByFavorite } from './lib/access'
-import { readPref, writePref } from './lib/theme'
+import { KEYS, motionOff, readPref, writePref } from './lib/theme'
 import { HomePage } from './pages/HomePage'
 import { accountQueries } from './queries/account'
 
@@ -29,7 +30,7 @@ export default function App() {
   const meLoading = meQuery.isPending
   const [query, setQuery] = useState('')
   const { favorites, toggleFavorite } = useFavorites()
-  const [collapsed, setCollapsed] = useState(() => readPref('portal-sidebar') === 'collapsed')
+  const [collapsed, setCollapsed] = useState(() => readPref(KEYS.sidebar) === 'collapsed')
 
   // 권한으로 거르고 즐겨찾기를 앞으로 — 홈과 업무시스템 화면이 같은 목록을 쓴다
   const mine = sortByFavorite(services.filter((s) => canSee(s, me)), favorites)
@@ -44,11 +45,18 @@ export default function App() {
 
   const home = route.page === 'home'
 
+  const shellRef = useRef<HTMLDivElement>(null)
+  // 본문 여백은 한 번에 바꾸고, 밀려나는 모습은 transform 으로만 그린다(FLIP).
+  // padding 을 애니메이션하면 300ms 동안 매 프레임 대시보드 전체를 다시 배치한다
   const toggleCollapsed = () => {
-    setCollapsed((c) => {
-      writePref('portal-sidebar', c ? null : 'collapsed')
-      return !c
-    })
+    const el = shellRef.current
+    const from = el ? parseFloat(getComputedStyle(el).paddingLeft) : 0
+    writePref(KEYS.sidebar, collapsed ? null : 'collapsed')
+    flushSync(() => setCollapsed(!collapsed))
+    const dx = el ? from - parseFloat(getComputedStyle(el).paddingLeft) : 0
+    if (el && dx && !motionOff()) {
+      el.animate([{ transform: `translateX(${dx}px)` }, { transform: 'none' }], { duration: 300, easing: 'cubic-bezier(0.32, 0.72, 0, 1)' })
+    }
   }
 
   return (
@@ -67,7 +75,8 @@ export default function App() {
       {/* 사이드바(왼쪽 12px + 너비) 만큼 비우고 나머지 폭을 모두 쓴다 */}
       {/* 홈은 넓은 화면에서 화면 높이에 딱 맞춘다(fit) — 스크롤 없이 한눈에 */}
       <div
-        className={`flex min-h-dvh flex-col px-3 pt-3 pb-24 sm:px-4 lg:pr-4 lg:pb-4 lg:transition-[padding-left] lg:duration-300 lg:ease-[cubic-bezier(0.32,0.72,0,1)] ${collapsed ? 'lg:pl-[104px]' : 'lg:pl-[276px]'} ${home ? 'fit:h-dvh' : ''}`}
+        ref={shellRef}
+        className={`flex min-h-dvh flex-col px-3 pt-3 pb-24 sm:px-4 lg:pr-4 lg:pb-4 ${collapsed ? 'lg:pl-[104px]' : 'lg:pl-[276px]'} ${home ? 'fit:h-dvh' : ''}`}
       >
         <TopBar me={me} meLoading={meLoading} page={route.page} query={query} onQueryChange={onQueryChange} theme={theme} />
 
