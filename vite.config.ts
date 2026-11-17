@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite'
-import react from '@vitejs/plugin-react'
+import react, { reactCompilerPreset } from '@vitejs/plugin-react'
+import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 
 /**
@@ -20,7 +21,8 @@ export default defineConfig(({ mode }) => {
   const mock = mode === 'mock' || process.env.VERCEL_ENV === 'preview'
 
   return {
-    plugins: [react(), tailwindcss()],
+    // React Compiler 가 컴포넌트 · 값을 알아서 메모한다 — 새 코드에 useMemo · useCallback · memo 를 손으로 쓰지 않는다
+    plugins: [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss()],
     define: { 'import.meta.env.VITE_MOCK': JSON.stringify(mock) },
     server: {
       proxy: {

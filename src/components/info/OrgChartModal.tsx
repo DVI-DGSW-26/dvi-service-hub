@@ -34,8 +34,7 @@ export function OrgChartModal({ open, onClose, team }: { open: boolean; onClose:
     if (!team) return
     const id = requestAnimationFrame(() => focusTeam(team))
     return () => cancelAnimationFrame(id)
-    // focusTeam 은 매번 새로 만들어지지만 여는 순간에만 부른다
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // focusTeam 은 여는 순간의 것만 쓴다 — deps 에 넣지 않는다
   }, [open, team])
 
   return (

@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
-import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { useI18n } from '../../i18n'
 import { Modal } from '../ui/Modal'
 
@@ -32,9 +32,9 @@ interface DetailModalProps<T> {
 
 /** 닫히는 애니메이션 동안에도 내용이 남아 있도록 마지막으로 본 글의 자리. 목록이 줄었으면 끝으로 */
 export function useLastIndex(index: number | null, length: number) {
-  const last = useRef(0)
-  if (index !== null) last.current = index
-  return Math.min(index ?? last.current, length - 1)
+  const [last, setLast] = useState(0)
+  if (index !== null && index !== last) setLast(index)
+  return Math.min(index ?? last, length - 1)
 }
 
 /** 원문 · 바로가기 — 새 탭으로 */

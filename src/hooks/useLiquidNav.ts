@@ -78,7 +78,10 @@ export function useLiquidNav({ axis = 'y', active, onCommit }: Options) {
   const anchorB = useRef<HTMLDivElement>(null)
   const chipRef = useRef<HTMLDivElement>(null)
   const commitRef = useRef(onCommit)
-  commitRef.current = onCommit
+  // 그리는 중에는 ref 를 쓰지 않는다 — CalendarModal 과 같은 방식
+  useLayoutEffect(() => {
+    commitRef.current = onCommit
+  })
   const [lit, setLit] = useState(active)
   const [dragging, setDragging] = useState(false)
   /** 메뉴 판 밖으로 들고 나간 메뉴 — 링크 칩에 보여준다 */
@@ -147,7 +150,10 @@ export function useLiquidNav({ axis = 'y', active, onCommit }: Options) {
       let best = Infinity
       sim.starts.forEach((start, i) => {
         const d = Math.abs(start + size / 2 - center)
-        if (d < best) [best, near] = [d, i]
+        if (d < best) {
+          best = d
+          near = i
+        }
       })
       if (best > size * 0.6) near = -1
     }

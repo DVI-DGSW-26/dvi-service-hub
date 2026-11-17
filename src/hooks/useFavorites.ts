@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { readPref, writePref } from '../lib/theme'
 
 const KEY = 'favorites'
@@ -16,13 +16,13 @@ function load(): string[] {
 export function useFavorites() {
   const [ids, setIds] = useState<string[]>(load)
 
-  const toggle = useCallback((id: string) => {
+  const toggle = (id: string) => {
     setIds((prev) => {
       const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
       writePref(KEY, JSON.stringify(next))
       return next
     })
-  }, [])
+  }
 
   return { favorites: ids, toggleFavorite: toggle }
 }

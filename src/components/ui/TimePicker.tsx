@@ -1,5 +1,5 @@
 import { Check, Clock } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useI18n } from '../../i18n'
 import { pad } from '../../lib/calendar'
 import { clockTime } from '../../lib/format'
@@ -54,7 +54,7 @@ export function TimePicker({ value, onChange, onInvalidChange, label, invalid = 
   const [editing, setEditing] = useState(false)
   const [text, setText] = useState(value)
   const [bad, setBad] = useState(false)
-  const close = useCallback(() => setOpen(false), [])
+  const close = () => setOpen(false)
 
   // 바깥에서 값이 바뀌면(폼 비우기 등) 적던 글도 맞춘다 — 칸을 벗어날 때가 아니라 값이 바뀔 때만
   const [synced, setSynced] = useState(value)

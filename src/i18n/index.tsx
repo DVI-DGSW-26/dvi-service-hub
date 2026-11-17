@@ -1,4 +1,4 @@
-import { Fragment, createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { Fragment, createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { readPref, writePref } from '../lib/theme'
 import { en } from './en'
 import { ko, type Messages } from './ko'
@@ -85,22 +85,20 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = lang
   }, [lang])
 
-  const value = useMemo<I18n>(() => {
-    const plurals = new Intl.PluralRules(LOCALE[lang])
-    const pick = (entry: string | Plural, count = 0) =>
-      typeof entry === 'string' ? entry : entry[plurals.select(count) === 'one' ? 'one' : 'other']
-    return {
-      lang,
-      locale: LOCALE[lang],
-      t: MESSAGES[lang],
-      f: (entry, vars) => interpolate(pick(entry, Number(vars?.count ?? 0)), vars),
-      rich: (entry, vars, count) => interpolateNodes(pick(entry, count), vars),
-      setLang: (next) => {
-        writePref(KEY, next === 'ko' ? null : next)
-        setLangState(next)
-      },
-    }
-  }, [lang])
+  const plurals = new Intl.PluralRules(LOCALE[lang])
+  const pick = (entry: string | Plural, count = 0) =>
+    typeof entry === 'string' ? entry : entry[plurals.select(count) === 'one' ? 'one' : 'other']
+  const value: I18n = {
+    lang,
+    locale: LOCALE[lang],
+    t: MESSAGES[lang],
+    f: (entry, vars) => interpolate(pick(entry, Number(vars?.count ?? 0)), vars),
+    rich: (entry, vars, count) => interpolateNodes(pick(entry, count), vars),
+    setLang: (next) => {
+      writePref(KEY, next === 'ko' ? null : next)
+      setLangState(next)
+    },
+  }
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
 }

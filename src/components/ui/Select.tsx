@@ -1,5 +1,5 @@
 import { Check, ChevronDown } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { controlClass } from './Field'
 import { PickerPopover, moveOption } from './PickerPopover'
 
@@ -28,7 +28,7 @@ export function Select<T extends string>({ value, onChange, options, label }: Se
   const anchor = useRef<HTMLButtonElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
-  const close = useCallback(() => setOpen(false), [])
+  const close = () => setOpen(false)
   const current = options.find((o) => o.value === value)
 
   // 펼치면 고른 항목에 초점 — 목록이 길면 그 자리가 보이게

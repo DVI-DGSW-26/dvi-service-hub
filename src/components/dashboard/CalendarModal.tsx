@@ -213,7 +213,7 @@ export function CalendarModal({ open, start, today, onClose }: CalendarModalProp
   const events = data ?? []
   const dayItems = eventsOn(events, selected)
 
-  const swipe = useMonthSwipe((dir) => {
+  const { go, viewportRef, trackRef, bind } = useMonthSwipe((dir) => {
     const next = addMonths(month, dir)
     setMonth(next)
     // 고른 날이 새 달에 없으면 — 오늘이 그 달이면 오늘, 아니면 1일
@@ -223,13 +223,13 @@ export function CalendarModal({ open, start, today, onClose }: CalendarModalProp
   const select = (iso: string) => {
     setSelected(iso)
     // 앞뒤 달 칸을 누르면 그 달로 넘긴다
-    if (!inMonth(iso, month)) swipe.go(iso < monthKey(month) ? -1 : 1)
+    if (!inMonth(iso, month)) go(iso < monthKey(month) ? -1 : 1)
   }
 
   const goToday = () => {
     const target = monthOf(fromIso(today))
     const diff = (target.y - month.y) * 12 + (target.m - month.m)
-    if (Math.abs(diff) === 1) swipe.go(diff as Dir)
+    if (Math.abs(diff) === 1) go(diff as Dir)
     else if (diff) setMonth(target)
     setSelected(today)
   }
@@ -260,10 +260,10 @@ export function CalendarModal({ open, start, today, onClose }: CalendarModalProp
             >
               {t.calendar.today}
             </button>
-            <button type="button" onClick={() => swipe.go(-1)} aria-label={t.calendar.prev} className={arrow}>
+            <button type="button" onClick={() => go(-1)} aria-label={t.calendar.prev} className={arrow}>
               <ChevronLeft className="size-5" aria-hidden="true" />
             </button>
-            <button type="button" onClick={() => swipe.go(1)} aria-label={t.calendar.next} className={arrow}>
+            <button type="button" onClick={() => go(1)} aria-label={t.calendar.next} className={arrow}>
               <ChevronRight className="size-5" aria-hidden="true" />
             </button>
           </div>
@@ -273,8 +273,8 @@ export function CalendarModal({ open, start, today, onClose }: CalendarModalProp
           <div className="flex h-[58%] flex-none flex-col px-2 pt-3 pb-2 sm:px-5 lg:h-auto lg:flex-1">
             <WeekdayRow className="mb-2" />
             {/* 세로 스크롤은 브라우저에, 가로 밀기는 여기서 */}
-            <div ref={swipe.viewportRef} className="min-h-0 flex-1 touch-pan-y overflow-hidden select-none" {...swipe.bind}>
-              <div ref={swipe.trackRef} className="flex h-full" style={{ transform: 'translate3d(-100%,0,0)' }}>
+            <div ref={viewportRef} className="min-h-0 flex-1 touch-pan-y overflow-hidden select-none" {...bind}>
+              <div ref={trackRef} className="flex h-full" style={{ transform: 'translate3d(-100%,0,0)' }}>
                 {([-1, 0, 1] as const).map((offset) => {
                   const m = addMonths(month, offset)
                   return (

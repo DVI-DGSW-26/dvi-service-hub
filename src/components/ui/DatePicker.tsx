@@ -1,5 +1,5 @@
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { useI18n } from '../../i18n'
 import { addMonths, fromIso, inMonth, monthOf, monthTitle, monthWeeks, toIso, weekdayNames, dtf } from '../../lib/calendar'
 import { controlClass } from './Field'
@@ -30,7 +30,7 @@ export function DatePicker({ value, onChange, label, invalid = false }: DatePick
   /** 키보드로 옮겨 다니는 날 — 보이는 달은 늘 이 날의 달 */
   const [focus, setFocus] = useState(value || today)
   const view = monthOf(fromIso(focus))
-  const close = useCallback(() => setOpen(false), [])
+  const close = () => setOpen(false)
 
   // 펼치거나 날을 옮길 때마다 그 칸에 초점
   useEffect(() => {

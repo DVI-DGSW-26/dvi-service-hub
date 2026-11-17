@@ -46,7 +46,7 @@ export function InfoPage({ categoryId }: { categoryId?: string }) {
     if (categoryId !== 'org' || location.hash === hrefOf('info')) return
     history.replaceState(history.state, '', hrefOf('info'))
     openOrg()
-  })
+  }, [categoryId])
 
   return (
     <>
