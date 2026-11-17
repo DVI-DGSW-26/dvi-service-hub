@@ -8,7 +8,7 @@
 import { infiniteQueryOptions, queryOptions, useMutation, useQueryClient } from '@tanstack/react-query'
 import { calendarApi, maintenanceApi, newsApi, noticesApi, scheduleApi } from '../api/dashboard'
 import { isApiError } from '../api/errors'
-import { fromIso, toIso } from '../lib/calendar'
+import { addDays } from '../lib/calendar'
 import type { MaintenanceInput, NoticeInput } from '../types/portal'
 
 /** 오늘의 일정 창에서 넘겨 보는 지난 날 수 (오늘 포함 15일 — 서버 한도 31일) */
@@ -25,12 +25,6 @@ export const dashboardKeys = {
   schedule: (from: string, to: string) => ['schedule', from, to] as const,
   calendar: (month: string) => ['calendar', month] as const,
   news: ['news'] as const,
-}
-
-const addDays = (iso: string, n: number) => {
-  const d = fromIso(iso)
-  d.setDate(d.getDate() + n)
-  return toIso(d)
 }
 
 export const noticeQueries = {

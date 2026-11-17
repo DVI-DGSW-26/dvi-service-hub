@@ -52,7 +52,7 @@ export const LANGS: { value: Lang; label: string }[] = [
 ]
 
 const MESSAGES: Record<Lang, Messages> = { ko, en }
-const LOCALE: Record<Lang, string> = { ko: 'ko-KR', en: 'en-US' }
+export const LOCALE: Record<Lang, string> = { ko: 'ko-KR', en: 'en-US' }
 const KEY = 'portal-lang'
 
 interface I18n {

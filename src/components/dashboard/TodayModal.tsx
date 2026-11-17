@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { useI18n } from '../../i18n'
-import { toIso } from '../../lib/calendar'
+import { fromIso, toIso } from '../../lib/calendar'
 import { longToday, shortDate, toMinutes } from '../../lib/format'
 import { scheduleQueries } from '../../queries/dashboard'
 import type { ScheduleItem } from '../../types/portal'
@@ -21,10 +21,6 @@ interface TodayModalProps {
 }
 
 const END_OF_DAY = 24 * 60
-const parse = (iso: string) => {
-  const [y, m, d] = iso.split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
 const matches = (s: ScheduleItem, q: string) => s.title.toLowerCase().includes(q)
 const timed = (s: ScheduleItem) => !s.allDay && !!s.start
 /** 종일 → 오전 → 오후 묶음 (서버도 종일을 먼저 준다) */
@@ -90,7 +86,7 @@ export function TodayModal({ items, now, date, open, onClose }: TodayModalProps)
     <Modal open={open} onClose={onClose} labelledBy={titleId} wide className="lg:h-[min(800px,calc(100dvh-32px))]">
       <div className="flex flex-none flex-wrap items-end justify-between gap-4 border-b border-line p-6 pr-16 sm:p-8 sm:pr-20">
         <div className="min-w-0">
-          <p className="text-[15px] font-semibold text-accent">{longToday(isToday || q ? date : parse(selected.date), lang)}</p>
+          <p className="text-[15px] font-semibold text-accent">{longToday(isToday || q ? date : fromIso(selected.date), lang)}</p>
           <div className="mt-2 flex flex-wrap items-center gap-2.5">
             <h2 id={titleId} className="text-[clamp(22px,2.4vw,28px)]/[1.3] font-bold tracking-[-0.025em]">
               {heading}

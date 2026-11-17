@@ -2,19 +2,9 @@
 // 모양은 포털 대시보드 API 명세 v0.5 를 따른다 (빈 칸은 null 이 아니라 뺀다).
 
 import type { AccountCredentials, Maintenance, NewsItem, Notice } from '../types/portal'
+import { addDays, fromIso, pad, toIso } from '../lib/calendar'
 
-const pad = (n: number) => String(n).padStart(2, '0')
-export const iso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-export const parseIso = (s: string) => {
-  const [y, m, d] = s.split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
-export const addDays = (s: string, n: number) => {
-  const d = parseIso(s)
-  d.setDate(d.getDate() + n)
-  return iso(d)
-}
-export const today = () => iso(new Date())
+export const today = () => toIso(new Date())
 
 /** 날짜 씨앗으로 매번 같은 순서를 내는 난수 — 같은 날은 언제 열어도 같은 일정 */
 function seeded(seed: number) {
@@ -158,7 +148,7 @@ function todayEvents(t: string): FlowEvent[] {
 /** 하루에 시작하는 일정들. 여러 날 일정은 시작하는 날에만 만든다 */
 function dayEvents(date: string, t: string): FlowEvent[] {
   if (date === t) return todayEvents(t)
-  const d = parseIso(date)
+  const d = fromIso(date)
   const ymd = date.replaceAll('-', '')
   const rand = seeded(Number(ymd))
   const weekend = d.getDay() === 0 || d.getDay() === 6

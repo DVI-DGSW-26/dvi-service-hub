@@ -1,10 +1,10 @@
 import { Check, Clock } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useI18n } from '../../i18n'
+import { pad } from '../../lib/calendar'
 import { clockTime } from '../../lib/format'
 import { PickerPopover, moveOption } from './PickerPopover'
 
-const pad = (n: number) => String(n).padStart(2, '0')
 /** 30분 간격 — 점검 일정은 정각 · 30분이면 충분하다. 다른 시각은 직접 적는다 */
 const TIMES = Array.from({ length: 48 }, (_, i) => `${pad(Math.floor(i / 2))}:${i % 2 ? '30' : '00'}`)
 

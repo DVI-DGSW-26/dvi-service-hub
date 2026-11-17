@@ -1,32 +1,24 @@
-import { interpolate, useI18n, type Lang, type Messages } from '../i18n'
+import { LOCALE, interpolate, useI18n, type Lang, type Messages } from '../i18n'
+import { fromIso } from './calendar'
 
 // 날짜 · 시각 표기. 말마다 순서 · 요일 · 오전/오후가 달라서 Intl 로 만들고, 짧은 표기만 직접 짠다.
-
-const LOCALE: Record<Lang, string> = { ko: 'ko-KR', en: 'en-US' }
-
-const parse = (iso: string) => {
-  const [y, m, d] = iso.split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
 
 const weekday = (date: Date, lang: Lang) => new Intl.DateTimeFormat(LOCALE[lang], { weekday: 'short' }).format(date)
 
 /** 2026-11-13 → ko 11.13 (금) · en Nov 13 (Fri) */
 export function shortDate(iso: string, lang: Lang) {
-  const date = parse(iso)
-  if (lang === 'ko') return `${date.getMonth() + 1}.${String(date.getDate()).padStart(2, '0')} (${weekday(date, lang)})`
-  return `${new Intl.DateTimeFormat(LOCALE[lang], { month: 'short', day: 'numeric' }).format(date)} (${weekday(date, lang)})`
+  return `${monthDay(iso, lang)} (${weekday(fromIso(iso), lang)})`
 }
 
 /** 2026-11-13 → ko 2026.11.13 · en Nov 13, 2026 */
 export function formatDate(iso: string, lang: Lang) {
   if (lang === 'ko') return iso.replaceAll('-', '.')
-  return new Intl.DateTimeFormat(LOCALE[lang], { dateStyle: 'medium' }).format(parse(iso))
+  return new Intl.DateTimeFormat(LOCALE[lang], { dateStyle: 'medium' }).format(fromIso(iso))
 }
 
 /** 2026-09-30 + 08:31 → ko 2026년 9월 30일 오전 8:31 · en September 30, 2026 at 8:31 AM. 시각이 없으면 날짜만 */
 export function dateTime(iso: string, hhmm: string | undefined, lang: Lang) {
-  const date = parse(iso)
+  const date = fromIso(iso)
   if (!hhmm) return new Intl.DateTimeFormat(LOCALE[lang], { dateStyle: 'long' }).format(date)
   const [h, m] = hhmm.split(':').map(Number)
   date.setHours(h, m)
@@ -70,7 +62,7 @@ export function dateTimeRange(iso: string, start: string | undefined, end: strin
 
 /** 2026-11-18 → ko 11.18 · en Nov 18 — 좁은 칸에 쓰는 요일 없는 날짜 */
 export function monthDay(iso: string, lang: Lang) {
-  const date = parse(iso)
+  const date = fromIso(iso)
   if (lang === 'ko') return `${date.getMonth() + 1}.${String(date.getDate()).padStart(2, '0')}`
   return new Intl.DateTimeFormat(LOCALE[lang], { month: 'short', day: 'numeric' }).format(date)
 }

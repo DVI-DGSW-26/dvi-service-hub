@@ -17,7 +17,8 @@ import { auth, hub } from '../api/http'
 import { apiLog } from '../api/logger'
 import { services } from '../services'
 import type { CalendarEvent, Maintenance, MaintenanceInput, MaintenanceKind, NewsPage, Notice, NoticeInput, ScheduleDay, ScheduleItem } from '../types/portal'
-import { addDays, flowEvents, parseIso, seedCredentials, seedMaintenance, seedNews, seedNotices, today, type FlowEvent } from './data'
+import { addDays, fromIso } from '../lib/calendar'
+import { flowEvents, seedCredentials, seedMaintenance, seedNews, seedNotices, today, type FlowEvent } from './data'
 import { mockMe } from './info'
 
 type Scenario = 'empty' | 'error' | 'forbidden' | 'slow' | 'readonly'
@@ -141,7 +142,7 @@ function toScheduleItem(e: FlowEvent): ScheduleItem {
 
 function calendarMonth(month: string): CalendarEvent[] {
   const first = `${month}-01`
-  const next = parseIso(first)
+  const next = fromIso(first)
   next.setMonth(next.getMonth() + 1, 0)
   const last = `${month}-${String(next.getDate()).padStart(2, '0')}`
   return flowEvents(first, last)

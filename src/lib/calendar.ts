@@ -8,7 +8,7 @@ export interface Month {
   m: number
 }
 
-const pad = (n: number) => String(n).padStart(2, '0')
+export const pad = (n: number) => String(n).padStart(2, '0')
 
 export const monthOf = (d: Date): Month => ({ y: d.getFullYear(), m: d.getMonth() })
 export const addMonths = ({ y, m }: Month, n: number) => monthOf(new Date(y, m + n, 1))
@@ -18,6 +18,11 @@ export const toIso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-$
 export const fromIso = (iso: string) => {
   const [y, m, d] = iso.split('-').map(Number)
   return new Date(y, m - 1, d)
+}
+export const addDays = (iso: string, n: number) => {
+  const d = fromIso(iso)
+  d.setDate(d.getDate() + n)
+  return toIso(d)
 }
 export const inMonth = (iso: string, month: Month) => iso.startsWith(monthKey(month))
 
