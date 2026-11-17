@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Globe } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { services as bundledServices } from '../../services'
 import { useI18n } from '../../i18n'
 import { toIso } from '../../lib/calendar'
@@ -10,11 +10,11 @@ import type { Maintenance, MaintenanceKind } from '../../types/portal'
 import { ServiceLogo } from '../services/ServiceCard'
 import { Badge } from '../ui/Badge'
 import { DatePicker } from '../ui/DatePicker'
-import { Field, controlClass } from '../ui/Field'
+import { Field } from '../ui/Field'
 import { Segmented } from '../ui/Segmented'
 import { Select, type SelectOption } from '../ui/Select'
 import { TimePicker } from '../ui/TimePicker'
-import { ComposeModal, DeletableItem, isHttpUrl, useSubmitError } from './ComposeModal'
+import { ComposeModal, DeletableItem, TextField, isHttpUrl, useComposeForm } from './ComposeModal'
 import { MAINTENANCE_TONE, maintenanceWhen } from './MaintenancePanel'
 
 const KINDS: MaintenanceKind[] = ['MAINTENANCE', 'NOTICE', 'INCIDENT']
@@ -44,34 +44,16 @@ export function MaintenanceComposer({ open, onClose, items }: MaintenanceCompose
   const serverServices = useQuery({ ...serviceQueries.list(), enabled: open })
   const services = serverServices.data ?? bundledServices
   const firstId = services[0]?.id ?? OTHER
-  const [form, setForm] = useState(() => blank(firstId))
-  // 한 번 등록을 눌러 본 뒤에만 빠진 칸을 빨갛게 — 열자마자 혼내지 않는다
-  const [tried, setTried] = useState(false)
+  const { form, set, error, shown, submit } = useComposeForm(() => blank(firstId))
   const create = useCreateMaintenance()
   const remove = useDeleteMaintenance()
-  const submitError = useSubmitError()
   // 시각 칸에 읽을 수 없는 글을 적어 둔 상태
   const [badStart, setBadStart] = useState(false)
   const [badEnd, setBadEnd] = useState(false)
-  // 열 때마다 늘려 시각 칸을 새로 그린다 — 적다 만 글이 남지 않게
-  const [round, setRound] = useState(0)
-
-  // 열 때마다 빈 폼으로
-  useEffect(() => {
-    if (!open) return
-    setForm(blank(firstId))
-    setTried(false)
-    submitError.reset()
-    setRound((r) => r + 1)
-  }, [open])
 
   // 창을 연 뒤에 서버 목록이 와서 고른 시스템이 목록에 없으면 첫 시스템으로
-  useEffect(() => {
-    setForm((f) => (f.serviceId === OTHER || services.some((s) => s.id === f.serviceId) ? f : { ...f, serviceId: firstId }))
-  }, [services, firstId])
-
-  const set = <K extends keyof ReturnType<typeof blank>>(key: K, value: ReturnType<typeof blank>[K]) => setForm((f) => ({ ...f, [key]: value }))
-  const service = services.find((s) => s.id === form.serviceId)
+  const serviceId = form.serviceId === OTHER || services.some((s) => s.id === form.serviceId) ? form.serviceId : firstId
+  const service = services.find((s) => s.id === serviceId)
   const serviceOptions: SelectOption<string>[] = [
     ...services.map((s) => ({ value: s.id, label: s.name, description: host(s.links[0].url), icon: <ServiceLogo service={s} size="sm" /> })),
     {
@@ -94,14 +76,10 @@ export function MaintenanceComposer({ open, onClose, items }: MaintenanceCompose
     body: form.body.trim() ? undefined : t.compose.required,
     url: service || !form.url.trim() || isHttpUrl(form.url.trim()) ? undefined : t.compose.urlInvalid,
   }
-  // 칸 검사를 지나 서버가 거절한 칸이 있으면(field) 그 칸 아래에 서버 문구를
-  const shown = (key: string) => (tried ? errors[key] : undefined) ?? submitError.field(key)
+  const err = (key: string) => shown(errors, key)
 
-  const submit = async () => {
-    setTried(true)
-    if (badStart || badEnd || Object.values(errors).some(Boolean)) return
-    submitError.reset()
-    try {
+  const onSubmit = () =>
+    submit(badStart || badEnd || Object.values(errors).some(Boolean), async () => {
       await create.mutateAsync({
         kind: form.kind,
         serviceId: service?.id ?? null,
@@ -116,10 +94,7 @@ export function MaintenanceComposer({ open, onClose, items }: MaintenanceCompose
         url: service ? null : form.url.trim() || null,
       })
       onClose()
-    } catch (e) {
-      submitError.set(e)
-    }
-  }
+    })
 
   return (
     <ComposeModal
@@ -149,9 +124,9 @@ export function MaintenanceComposer({ open, onClose, items }: MaintenanceCompose
           <p className="px-2 text-sm text-muted">{c.listEmpty}</p>
         )
       }
-      onSubmit={submit}
+      onSubmit={onSubmit}
       submitting={create.isPending}
-      error={submitError.message}
+      error={error}
     >
       <Field label={c.kind} group>
         <Segmented<MaintenanceKind>
@@ -162,59 +137,30 @@ export function MaintenanceComposer({ open, onClose, items }: MaintenanceCompose
         />
       </Field>
 
-      <Field label={c.service} error={shown('serviceId')} group>
-        <Select value={form.serviceId} onChange={(v) => set('serviceId', v)} options={serviceOptions} label={c.service} />
+      <Field label={c.service} error={err('serviceId')} group>
+        <Select value={serviceId} onChange={(v) => set('serviceId', v)} options={serviceOptions} label={c.service} />
       </Field>
 
       {!service && (
-        <Field label={c.url} hint={c.urlHint} error={shown('url')}>
-          <input
-            type="url"
-            value={form.url}
-            onChange={(e) => set('url', e.target.value)}
-            placeholder="https://"
-            maxLength={MAX.url}
-            aria-invalid={!!shown('url')}
-            className={controlClass}
-          />
-        </Field>
+        <TextField label={c.url} hint={c.urlHint} error={err('url')} type="url" value={form.url} onChange={(v) => set('url', v)} placeholder="https://" max={MAX.url} />
       )}
 
-      <Field label={c.subject} required error={shown('title')}>
-        <input
-          value={form.title}
-          onChange={(e) => set('title', e.target.value)}
-          placeholder={c.subjectPlaceholder}
-          maxLength={MAX.title}
-          aria-invalid={!!shown('title')}
-          className={controlClass}
-        />
-      </Field>
+      <TextField label={c.subject} required error={err('title')} value={form.title} onChange={(v) => set('title', v)} placeholder={c.subjectPlaceholder} max={MAX.title} />
 
-      <div key={round} className="grid gap-4 sm:grid-cols-[1.4fr_1fr_1fr]">
-        <Field label={c.date} required error={shown('date')} group>
-          <DatePicker value={form.date} onChange={(v) => set('date', v)} label={c.date} invalid={!!shown('date')} />
+      <div className="grid gap-4 sm:grid-cols-[1.4fr_1fr_1fr]">
+        <Field label={c.date} required error={err('date')} group>
+          <DatePicker value={form.date} onChange={(v) => set('date', v)} label={c.date} invalid={!!err('date')} />
         </Field>
-        <Field label={c.start} error={timeErrors.start ?? shown('start')} group>
+        <Field label={c.start} error={timeErrors.start ?? err('start')} group>
           <TimePicker value={form.start} onChange={(v) => set('start', v)} onInvalidChange={setBadStart} label={c.start} clearable />
         </Field>
-        <Field label={c.end} error={timeErrors.end ?? shown('end')} group>
-          <TimePicker value={form.end} onChange={(v) => set('end', v)} onInvalidChange={setBadEnd} label={c.end} invalid={!!shown('end')} clearable />
+        <Field label={c.end} error={timeErrors.end ?? err('end')} group>
+          <TimePicker value={form.end} onChange={(v) => set('end', v)} onInvalidChange={setBadEnd} label={c.end} invalid={!!err('end')} clearable />
         </Field>
       </div>
       <p className="-mt-2 text-[13px] text-muted">{c.timeHint}</p>
 
-      <Field label={c.body} required error={shown('body')}>
-        <textarea
-          value={form.body}
-          onChange={(e) => set('body', e.target.value)}
-          placeholder={c.bodyPlaceholder}
-          maxLength={MAX.body}
-          aria-invalid={!!shown('body')}
-          rows={4}
-          className={`${controlClass} min-h-24 resize-y leading-relaxed`}
-        />
-      </Field>
+      <TextField label={c.body} required error={err('body')} value={form.body} onChange={(v) => set('body', v)} placeholder={c.bodyPlaceholder} max={MAX.body} rows={4} />
     </ComposeModal>
   )
 }

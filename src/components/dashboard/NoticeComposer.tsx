@@ -1,12 +1,10 @@
-import { useEffect, useState } from 'react'
 import { useI18n } from '../../i18n'
 import { shortDate } from '../../lib/format'
 import { useCreateNotice, useDeleteNotice } from '../../queries/dashboard'
 import type { Notice } from '../../types/portal'
-import { Field, controlClass } from '../ui/Field'
-import { ComposeModal, DeletableItem, isHttpUrl, useSubmitError } from './ComposeModal'
+import { ComposeModal, DeletableItem, TextField, isHttpUrl, useComposeForm } from './ComposeModal'
 
-/** 서버 한도 (명세 2.2) — 넘기면 서버가 400 으로 거절하므로 칸에서 먼저 막는다 */
+/** 서버 한도 (명세 2.2) */
 const MAX = { title: 100, summary: 150, body: 5000, url: 500 }
 
 const blank = () => ({ title: '', summary: '', body: '', important: false, url: '' })
@@ -22,36 +20,20 @@ interface NoticeComposerProps {
 export function NoticeComposer({ open, onClose, items }: NoticeComposerProps) {
   const { t, lang } = useI18n()
   const c = t.compose.notice
-  const [form, setForm] = useState(blank)
-  // 한 번 등록을 눌러 본 뒤에만 빠진 칸을 빨갛게
-  const [tried, setTried] = useState(false)
+  const { form, set, error, shown, submit } = useComposeForm(blank)
   const create = useCreateNotice()
   const remove = useDeleteNotice()
-  const submitError = useSubmitError()
 
-  // 열 때마다 빈 폼으로
-  useEffect(() => {
-    if (!open) return
-    setForm(blank())
-    setTried(false)
-    submitError.reset()
-  }, [open])
-
-  const set = <K extends keyof ReturnType<typeof blank>>(key: K, value: ReturnType<typeof blank>[K]) => setForm((f) => ({ ...f, [key]: value }))
   const errors = {
     title: form.title.trim() ? undefined : t.compose.required,
     summary: form.summary.trim() ? undefined : t.compose.required,
     body: form.body.trim() ? undefined : t.compose.required,
     url: !form.url.trim() || isHttpUrl(form.url.trim()) ? undefined : t.compose.urlInvalid,
   }
-  // 칸 검사를 지나 서버가 거절한 칸이 있으면 그 칸 아래에 서버 문구를
-  const shown = (key: keyof typeof errors) => (tried ? errors[key] : undefined) ?? submitError.field(key)
+  const err = (key: keyof typeof errors) => shown(errors, key)
 
-  const submit = async () => {
-    setTried(true)
-    if (Object.values(errors).some(Boolean)) return
-    submitError.reset()
-    try {
+  const onSubmit = () =>
+    submit(Object.values(errors).some(Boolean), async () => {
       await create.mutateAsync({
         title: form.title.trim(),
         summary: form.summary.trim(),
@@ -61,10 +43,7 @@ export function NoticeComposer({ open, onClose, items }: NoticeComposerProps) {
         url: form.url.trim() || null,
       })
       onClose()
-    } catch (e) {
-      submitError.set(e)
-    }
-  }
+    })
 
   return (
     <ComposeModal
@@ -92,43 +71,13 @@ export function NoticeComposer({ open, onClose, items }: NoticeComposerProps) {
           <p className="px-2 text-sm text-muted">{c.listEmpty}</p>
         )
       }
-      onSubmit={submit}
+      onSubmit={onSubmit}
       submitting={create.isPending}
-      error={submitError.message}
+      error={error}
     >
-      <Field label={c.subject} required error={shown('title')}>
-        <input
-          value={form.title}
-          onChange={(e) => set('title', e.target.value)}
-          placeholder={c.subjectPlaceholder}
-          maxLength={MAX.title}
-          aria-invalid={!!shown('title')}
-          className={controlClass}
-        />
-      </Field>
-
-      <Field label={c.summary} required hint={c.summaryHint} error={shown('summary')}>
-        <input
-          value={form.summary}
-          onChange={(e) => set('summary', e.target.value)}
-          placeholder={c.summaryPlaceholder}
-          maxLength={MAX.summary}
-          aria-invalid={!!shown('summary')}
-          className={controlClass}
-        />
-      </Field>
-
-      <Field label={c.body} required error={shown('body')}>
-        <textarea
-          value={form.body}
-          onChange={(e) => set('body', e.target.value)}
-          placeholder={c.bodyPlaceholder}
-          maxLength={MAX.body}
-          aria-invalid={!!shown('body')}
-          rows={6}
-          className={`${controlClass} min-h-32 resize-y leading-relaxed`}
-        />
-      </Field>
+      <TextField label={c.subject} required error={err('title')} value={form.title} onChange={(v) => set('title', v)} placeholder={c.subjectPlaceholder} max={MAX.title} />
+      <TextField label={c.summary} required hint={c.summaryHint} error={err('summary')} value={form.summary} onChange={(v) => set('summary', v)} placeholder={c.summaryPlaceholder} max={MAX.summary} />
+      <TextField label={c.body} required error={err('body')} value={form.body} onChange={(v) => set('body', v)} placeholder={c.bodyPlaceholder} max={MAX.body} rows={6} />
 
       <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-subtle p-3.5 ring-1 ring-line transition-colors hover:bg-raised">
         <input
@@ -143,17 +92,7 @@ export function NoticeComposer({ open, onClose, items }: NoticeComposerProps) {
         </span>
       </label>
 
-      <Field label={c.url} hint={c.urlHint} error={shown('url')}>
-        <input
-          type="url"
-          value={form.url}
-          onChange={(e) => set('url', e.target.value)}
-          placeholder="https://"
-          maxLength={MAX.url}
-          aria-invalid={!!shown('url')}
-          className={controlClass}
-        />
-      </Field>
+      <TextField label={c.url} hint={c.urlHint} error={err('url')} type="url" value={form.url} onChange={(v) => set('url', v)} placeholder="https://" max={MAX.url} />
     </ComposeModal>
   )
 }

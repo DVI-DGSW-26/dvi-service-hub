@@ -56,13 +56,6 @@ export function TodayModal({ items, now, date, open, onClose }: TodayModalProps)
   const count = (n: number) => f(t.schedule.count, { count: n })
   const left = items.filter((s) => statusOf(s, now) !== 'done').length
 
-  // 열 때마다 오늘 · 빈 검색으로
-  useEffect(() => {
-    if (!open) return
-    setDay(0)
-    setQuery('')
-  }, [open])
-
   // 오늘이면 지금 하는 일로, 다른 날이면 맨 위로
   useEffect(() => {
     if (!open || q) return

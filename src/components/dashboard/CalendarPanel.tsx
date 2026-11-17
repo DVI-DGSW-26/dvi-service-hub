@@ -10,6 +10,7 @@ import { CountTag, Panel, SourceTag } from '../ui/Panel'
 import { LoadError, Skeleton } from '../ui/Skeleton'
 import { CalendarModal } from './CalendarModal'
 import { EventDot, MonthGrid, WeekdayRow } from './MonthGrid'
+import { useLazyModal } from '../../hooks/useLazyModal'
 
 /**
  * 회사 캘린더 — 플로우 "대외업무 공유방"의 이번 달 일정을 점으로 보여준다(조회만, 등록 · 수정은 플로우에서).
@@ -23,9 +24,7 @@ export function CalendarPanel({ className = '' }: { className?: string }) {
   const month = monthOf(now)
   const today = toIso(now)
   const { data, isPending: loading, error } = useQuery(calendarQueries.month(monthKey(month)))
-  const [open, setOpen] = useState(false)
-  // 모달은 처음 열 때 붙이고, 닫는 애니메이션을 위해 그 뒤로는 붙여 둔다
-  const [mounted, setMounted] = useState(false)
+  const modal = useLazyModal()
   const [start, setStart] = useState(today)
   const events = data ?? []
   // 오늘부터 이달 끝까지. 아래 줄은 높이가 늘 같도록 가장 가까운 하나만 쓰고 나머지는 '외 n건' 으로 — 전체는 크게 보기에서
@@ -33,8 +32,7 @@ export function CalendarPanel({ className = '' }: { className?: string }) {
 
   const openAt = (iso: string) => {
     setStart(iso)
-    setMounted(true)
-    setOpen(true)
+    modal.show()
   }
   const iconButton =
     'grid size-9 cursor-pointer place-items-center rounded-xl text-muted transition-[background-color,color,scale] duration-150 hover:bg-subtle hover:text-fg active:scale-90'
@@ -97,7 +95,7 @@ export function CalendarPanel({ className = '' }: { className?: string }) {
           <p className="sr-only">{f(t.calendar.eventCount, { count: events.length })}</p>
         </div>
       )}
-      {mounted && <CalendarModal open={open} start={start} today={today} onClose={() => setOpen(false)} />}
+      {modal.mounted && <CalendarModal key={modal.key} open={modal.open} start={start} today={today} onClose={modal.close} />}
     </Panel>
   )
 }

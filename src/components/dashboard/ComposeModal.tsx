@@ -2,6 +2,7 @@ import { Trash2 } from 'lucide-react'
 import { useId, useState, type FormEvent, type ReactNode } from 'react'
 import { isApiError } from '../../api/errors'
 import { useI18n } from '../../i18n'
+import { Field, controlClass } from '../ui/Field'
 import { Modal } from '../ui/Modal'
 
 interface ComposeModalProps {
@@ -171,4 +172,67 @@ export function useSubmitError() {
     set: setError,
     reset: () => setError(undefined),
   }
+}
+
+/** 작성 폼 상태. 새로 열 때마다 처음 값 — 부르는 쪽이 key 로 다시 그린다(useLazyModal) */
+export function useComposeForm<F extends object>(initial: () => F) {
+  const [form, setForm] = useState(initial)
+  // 한 번 등록을 눌러 본 뒤에만 빠진 칸을 빨갛게 — 열자마자 혼내지 않는다
+  const [tried, setTried] = useState(false)
+  const submitError = useSubmitError()
+  return {
+    form,
+    set: <K extends keyof F>(key: K, value: F[K]) => setForm((f) => ({ ...f, [key]: value })),
+    /** 등록 실패 문구 (ComposeModal error) */
+    error: submitError.message,
+    /** 칸 아래 문구 — 칸 검사를 지나 서버가 거절한 칸이면(field) 서버 문구 */
+    shown: (errors: Partial<Record<string, string>>, key: string) => (tried ? errors[key] : undefined) ?? submitError.field(key),
+    /** 칸 검사에 걸렸으면 멈추고, 아니면 보낸다 */
+    async submit(invalid: boolean, send: () => Promise<unknown>) {
+      setTried(true)
+      if (invalid) return
+      submitError.reset()
+      try {
+        await send()
+      } catch (e) {
+        submitError.set(e)
+      }
+    },
+  }
+}
+
+interface TextFieldProps {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  error?: string
+  hint?: string
+  required?: boolean
+  placeholder?: string
+  /** 서버 한도 — 넘기면 서버가 400 으로 거절하므로 칸에서 먼저 막는다 */
+  max: number
+  type?: 'text' | 'url'
+  /** 있으면 여러 줄 (본문) */
+  rows?: number
+}
+
+/** 이름 + 글 칸. 잘못 적은 칸은 빨갛게 */
+export function TextField({ label, value, onChange, error, hint, required, placeholder, max, type = 'text', rows }: TextFieldProps) {
+  const control = { value, placeholder, maxLength: max, 'aria-invalid': !!error }
+  return (
+    <Field label={label} required={required} hint={hint} error={error}>
+      {rows ? (
+        <textarea
+          {...control}
+          onChange={(e) => onChange(e.target.value)}
+          rows={rows}
+          // 끌어서 줄여도 몇 줄은 보이게 (6줄 → 8rem, 4줄 → 6rem)
+          style={{ minHeight: `${rows + 2}rem` }}
+          className={`${controlClass} resize-y leading-relaxed`}
+        />
+      ) : (
+        <input {...control} type={type} onChange={(e) => onChange(e.target.value)} className={controlClass} />
+      )}
+    </Field>
+  )
 }

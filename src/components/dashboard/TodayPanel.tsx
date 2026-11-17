@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { CalendarDays, ChevronRight } from 'lucide-react'
-import { useState } from 'react'
 import { useNow } from '../../hooks/useNow'
 import { useI18n } from '../../i18n'
 import { toIso } from '../../lib/calendar'
@@ -10,6 +9,7 @@ import { PANEL_LINK, Panel, SourceTag } from '../ui/Panel'
 import { LoadError, SkeletonList } from '../ui/Skeleton'
 import { NowGuide, ScheduleRow, statusOf } from './ScheduleRow'
 import { TodayModal } from './TodayModal'
+import { useLazyModal } from '../../hooks/useLazyModal'
 
 /** 패널에 보여줄 일정 수 — 나머지는 전체 일정 모달에서 */
 const VISIBLE = 3
@@ -21,10 +21,8 @@ const VISIBLE = 3
  * 전체 · 지난 일정 · 검색은 '전체 N건' 버튼의 모달에서.
  */
 export function TodayPanel({ className = '' }: { className?: string }) {
-  const [open, setOpen] = useState(false)
+  const modal = useLazyModal()
   const { t, f } = useI18n()
-  // 모달은 처음 열 때 붙이고, 닫는 애니메이션을 위해 그 뒤로는 붙여 둔다
-  const [mounted, setMounted] = useState(false)
   const date = useNow()
   const now = nowMinutes(date)
   // 오늘 + 지난 2주를 한 번에 받는다 — 마지막 날이 오늘, 앞의 날들은 전체 일정 창에서 넘겨 본다
@@ -47,8 +45,7 @@ export function TodayPanel({ className = '' }: { className?: string }) {
           <button
             type="button"
             onClick={() => {
-              setMounted(true)
-              setOpen(true)
+              modal.show()
             }}
             aria-haspopup="dialog"
             className={PANEL_LINK}
@@ -77,7 +74,7 @@ export function TodayPanel({ className = '' }: { className?: string }) {
         <p className="py-4 text-base text-muted">{t.schedule.empty}</p>
       )}
       {/* 오늘 일정이 없어도 지난 일정 · 검색은 볼 수 있게 목록 밖에 둔다 */}
-      {mounted && <TodayModal items={items} now={now} date={date} open={open} onClose={() => setOpen(false)} />}
+      {modal.mounted && <TodayModal key={modal.key} items={items} now={now} date={date} open={modal.open} onClose={modal.close} />}
     </Panel>
   )
 }

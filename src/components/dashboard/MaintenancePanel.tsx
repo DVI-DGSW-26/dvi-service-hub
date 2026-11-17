@@ -11,6 +11,7 @@ import { Panel } from '../ui/Panel'
 import { LoadError, SkeletonList } from '../ui/Skeleton'
 import { DetailModal } from './DetailModal'
 import { MaintenanceComposer } from './MaintenanceComposer'
+import { useLazyModal } from '../../hooks/useLazyModal'
 
 export const MAINTENANCE_TONE: Record<MaintenanceKind, BadgeTone> = { NOTICE: 'accent', MAINTENANCE: 'warn', INCIDENT: 'danger' }
 
@@ -28,9 +29,7 @@ const composeButton =
 export function MaintenancePanel({ me, className = '' }: { me: Me | null; className?: string }) {
   const { data, isPending: loading, error } = useQuery(maintenanceQueries.list())
   const { t, f, lang } = useI18n()
-  const [open, setOpen] = useState(false)
-  // 모달은 처음 열 때 붙이고, 닫는 애니메이션을 위해 그 뒤로는 붙여 둔다
-  const [mounted, setMounted] = useState(false)
+  const composer = useLazyModal()
   const [detail, setDetail] = useState<number | null>(null)
   const items = data ?? []
   const hidden = items.length - LISTED
@@ -44,8 +43,7 @@ export function MaintenancePanel({ me, className = '' }: { me: Me | null; classN
           <button
             type="button"
             onClick={() => {
-              setMounted(true)
-              setOpen(true)
+              composer.show()
             }}
             aria-haspopup="dialog"
             title={t.compose.maintenance.open}
@@ -128,7 +126,7 @@ export function MaintenancePanel({ me, className = '' }: { me: Me | null; classN
           link: m.url ? { label: t.home.maintenance.open, url: m.url } : undefined,
         })}
       />
-      {mounted && <MaintenanceComposer open={open} onClose={() => setOpen(false)} items={items} />}
+      {composer.mounted && <MaintenanceComposer key={composer.key} open={composer.open} onClose={composer.close} items={items} />}
     </Panel>
   )
 }

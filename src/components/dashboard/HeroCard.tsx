@@ -13,6 +13,7 @@ import { LoadError, SkeletonText } from '../ui/Skeleton'
 import { DetailModal } from './DetailModal'
 import { HeroIllustration } from './HeroIllustration'
 import { NoticeComposer } from './NoticeComposer'
+import { useLazyModal } from '../../hooks/useLazyModal'
 
 interface HeroCardProps {
   me: Me | null
@@ -124,9 +125,7 @@ function NoticeTicker({ canWrite, surface = 'hero', className = '' }: { canWrite
   const { data, isPending: loading, error } = useQuery(noticeQueries.list())
   const { t, lang } = useI18n()
   const [index, setIndex] = useState(0)
-  const [open, setOpen] = useState(false)
-  // 모달은 처음 열 때 붙이고, 닫는 애니메이션을 위해 그 뒤로는 붙여 둔다
-  const [mounted, setMounted] = useState(false)
+  const composer = useLazyModal()
   const [detail, setDetail] = useState<number | null>(null)
   const notices = data ?? []
   const n = notices[index]
@@ -179,8 +178,7 @@ function NoticeTicker({ canWrite, surface = 'hero', className = '' }: { canWrite
           <button
             type="button"
             onClick={() => {
-              setMounted(true)
-              setOpen(true)
+              composer.show()
             }}
             aria-haspopup="dialog"
             aria-label={t.compose.notice.open}
@@ -214,7 +212,7 @@ function NoticeTicker({ canWrite, surface = 'hero', className = '' }: { canWrite
           link: x.url ? { label: t.home.notice.original, url: x.url } : undefined,
         })}
       />
-      {mounted && <NoticeComposer open={open} onClose={() => setOpen(false)} items={notices} />}
+      {composer.mounted && <NoticeComposer key={composer.key} open={composer.open} onClose={composer.close} items={notices} />}
     </div>
   )
 }

@@ -213,13 +213,6 @@ export function CalendarModal({ open, start, today, onClose }: CalendarModalProp
   const events = data ?? []
   const dayItems = eventsOn(events, selected)
 
-  // 열 때마다 누른 날짜의 달로
-  useEffect(() => {
-    if (!open) return
-    setMonth(monthOf(fromIso(start)))
-    setSelected(start)
-  }, [open, start])
-
   const swipe = useMonthSwipe((dir) => {
     const next = addMonths(month, dir)
     setMonth(next)

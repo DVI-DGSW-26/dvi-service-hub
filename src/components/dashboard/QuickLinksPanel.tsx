@@ -1,11 +1,11 @@
 import { Zap } from 'lucide-react'
-import { useState } from 'react'
 import { quickLinks } from '../../data/quickLinks'
 import { useI18n } from '../../i18n'
 import { openApp } from '../../lib/openApp'
 import { OrgChartModal } from '../info/OrgChartModal'
 import { Icon } from '../ui/Icon'
 import { Panel } from '../ui/Panel'
+import { useLazyModal } from '../../hooks/useLazyModal'
 
 const isExternal = (url: string) => /^https?:/.test(url)
 // 앱 스킴은 PC 앱 것만 안다 — 휴대폰에서 모르는 스킴을 부르면 Safari 가 오류 창을 띄우므로 웹으로만 연다
@@ -13,9 +13,7 @@ const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (/Maci
 
 export function QuickLinksPanel({ className = '' }: { className?: string }) {
   const { t } = useI18n()
-  const [org, setOrg] = useState(false)
-  // 창은 처음 열 때 붙이고, 닫는 애니메이션을 위해 그 뒤로는 붙여 둔다
-  const [orgMounted, setOrgMounted] = useState(false)
+  const org = useLazyModal()
 
   return (
     <Panel title={t.home.quickLinks.title} icon={Zap} className={className}>
@@ -31,8 +29,7 @@ export function QuickLinksPanel({ className = '' }: { className?: string }) {
                 if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return
                 if (q.modal === 'org') {
                   e.preventDefault()
-                  setOrgMounted(true)
-                  setOrg(true)
+                  org.show()
                 } else if (q.appUrl && !isMobile) {
                   e.preventDefault()
                   openApp(q.appUrl, q.url)
@@ -51,7 +48,7 @@ export function QuickLinksPanel({ className = '' }: { className?: string }) {
           </li>
         ))}
       </ul>
-      {orgMounted && <OrgChartModal open={org} onClose={() => setOrg(false)} />}
+      {org.mounted && <OrgChartModal key={org.key} open={org.open} onClose={org.close} />}
     </Panel>
   )
 }
