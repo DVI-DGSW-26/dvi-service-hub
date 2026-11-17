@@ -14,11 +14,19 @@ export const SESSION_COOKIE = 'hub_session';
 export const IDTOKEN_COOKIE = 'hub_idt'; // 전체 로그아웃(id_token_hint)에만 쓴다
 export const AUTH_COOKIE = 'hub_auth'; // 로그인 진행 중에만 쓰는 임시 쿠키
 export const SESSION_HOURS = 12;
+/**
+ * 역할만 담은 쿠키 — 서비스 이동 버튼(switcher.js)이 다른 사이트 화면에서 /api/switcher/access 로 묻는다.
+ * 그 요청에는 로그인 쿠키(SameSite=Lax)가 따라오지 않아 이것만 SameSite=None 으로 둔다.
+ * 세션 쿠키를 None 으로 바꾸지 않는다(허브 전체가 다른 사이트 요청에 열린다). 이 쿠키로는 로그인이 되지 않는다.
+ * 다른 사이트 쿠키를 막는 브라우저에서는 안 실려 가고, 그때 switcher 는 전체 목록을 보여준다.
+ */
+export const ACCESS_COOKIE = 'hub_access';
 
 // 쓰는 경로에만 실어 보낸다 — Path=/ 이면 /api/hub 프록시를 거쳐 백엔드까지 토큰이 간다
 const COOKIE_PATH: Record<string, string> = {
   [IDTOKEN_COOKIE]: '/api/auth/logout',
   [AUTH_COOKIE]: '/api/auth/callback',
+  [ACCESS_COOKIE]: '/api/switcher',
 };
 
 /** 서명해 쿠키에 담는 값은 모두 만료 시각(초)을 가진다 */
@@ -100,8 +108,14 @@ export function buildCookie(name: string, value: string, maxAge: number): string
     `Path=${COOKIE_PATH[name] ?? '/'}`,
     'HttpOnly',
     'Secure',
-    'SameSite=Lax',
+    `SameSite=${name === ACCESS_COOKIE ? 'None' : 'Lax'}`,
     `Max-Age=${maxAge}`,
   ];
   return bits.join('; ');
+}
+
+/** 세션에서 역할만 떼어 서명한 쿠키. 세션과 같은 시각에 끝난다 */
+export async function buildAccessCookie(session: Session, secret: string): Promise<string> {
+  const maxAge = Math.max(0, session.exp - Math.floor(Date.now() / 1000));
+  return buildCookie(ACCESS_COOKIE, await signSession({ realm: session.realm, svc: session.svc, exp: session.exp }, secret), maxAge);
 }

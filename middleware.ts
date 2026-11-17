@@ -9,8 +9,10 @@ import { next } from '@vercel/edge';
 import { SESSION_COOKIE, readCookie, verifySession } from './lib/session.js';
 
 export const config = {
-  // 인증 API 와 Vercel 내부 경로만 제외하고 전부 검사한다
-  matcher: ['/((?!api/auth|_vercel|favicon\\.svg).*)'],
+  // 인증 API 와 Vercel 내부 경로, 다른 서비스가 불러가는 파일은 제외하고 전부 검사한다.
+  // switcher.js 와 로고는 띵동 · 하이요 등 다른 사이트 화면에서 불러간다 — 허브 로그인 쿠키가 따라오지 않아 막으면 버튼이 안 뜬다.
+  // api/switcher 는 그 버튼이 역할을 묻는 곳으로, 역할 쿠키와 출처(CORS)를 스스로 검사한다
+  matcher: ['/((?!api/auth|api/switcher|_vercel|favicon\\.svg|switcher\\.js|logos/).*)'],
 };
 
 /** 로컬에서 띄운 것(vercel dev). 배포는 *.vercel.app · 회사 도메인으로만 들어와 이 이름이 될 수 없다 */

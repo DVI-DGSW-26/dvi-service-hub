@@ -2,7 +2,7 @@ import type { Service } from '../services'
 import type { Me } from '../types/portal'
 
 /** 링크를 숨기는 것은 안내이고 차단이 아니다. 실제 차단은 각 서비스가 한다. */
-export function canSee(s: Service, me: Me | null): boolean {
+export function canSee(s: Service, me: Pick<Me, 'realm' | 'svc'> | null): boolean {
   // 로그인 정보를 아직 못 받았으면 일단 모두 보여준다
   if (!me) return true
   switch (s.access.type) {
