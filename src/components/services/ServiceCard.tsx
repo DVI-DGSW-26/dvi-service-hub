@@ -54,10 +54,11 @@ export function ServiceCard({ service: s, favorite, onToggleFavorite, variant = 
     <li
       className={`group relative flex flex-col rounded-2xl ring-1 ring-line transition-[background-color,box-shadow,translate,scale] duration-200 hover:-translate-y-0.5 hover:bg-raised hover:shadow-[0_12px_28px_-14px_oklch(0_0_0/0.22)] hover:ring-fg/15 active:scale-[0.985] has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-accent ${
         detailed ? 'glass' : 'bg-subtle'
-      } ${locked ? 'opacity-60 hover:opacity-100' : ''}`}
+      } ${locked ? 'opacity-60 hover:opacity-100' : ''} ${detailed ? '' : '@container'}`}
       title={locked ? t.home.systems.lockedHint : undefined}
     >
-      <div className={`flex items-start gap-3 p-4 ${detailed ? '' : 'max-sm:p-3 fit:p-3 tall:p-4'}`}>
+      {/* 홈 카드가 좁으면(위젯을 줄였을 때) 로고를 위로 올리고 별은 모서리로 — 이름 · 설명이 카드 폭을 다 쓴다 */}
+      <div className={`flex items-start gap-3 p-4 ${detailed ? '' : 'max-sm:p-3 fit:p-3 tall:p-4 @max-[14rem]:flex-col @max-[14rem]:gap-2'}`}>
         <ServiceLogo service={s} size={detailed ? 'lg' : 'md'} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -86,7 +87,7 @@ export function ServiceCard({ service: s, favorite, onToggleFavorite, variant = 
           <p className={`mt-1 text-sm/normal text-muted ${detailed ? '' : 'line-clamp-2 max-sm:line-clamp-1 fit:line-clamp-1 tall:line-clamp-2'}`}>{s.description}</p>
           {detailed && <p className="mt-1.5 text-xs text-muted">{new URL(primary.url).host}</p>}
         </div>
-        <div className="relative z-10 -mt-1.5 -mr-2 flex flex-none flex-col items-center">
+        <div className="relative z-10 -mt-1.5 -mr-2 flex flex-none flex-col items-center @max-[14rem]:absolute @max-[14rem]:top-2 @max-[14rem]:right-2 @max-[14rem]:m-0">
           {/* 즐겨찾기는 권한 있는 서비스에서만 모은다 — 권한 없는 카드에는 숨긴다 */}
           <button
             type="button"

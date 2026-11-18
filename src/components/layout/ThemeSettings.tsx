@@ -1,8 +1,8 @@
-import { Check, Monitor, Moon, Sun } from 'lucide-react'
+import { Check, ChevronRight, Image, Monitor, Moon, Sun } from 'lucide-react'
 import { useId } from 'react'
 import type { PortalTheme } from '../../hooks/usePortalTheme'
 import { LANGS, useI18n } from '../../i18n'
-import { ACCENTS, type ThemeMode } from '../../lib/theme'
+import { ACCENTS, MOTIONS, type ThemeMode } from '../../lib/theme'
 import { Segmented } from '../ui/Segmented'
 
 const MODES: { value: ThemeMode; icon: typeof Sun }[] = [
@@ -11,8 +11,8 @@ const MODES: { value: ThemeMode; icon: typeof Sun }[] = [
   { value: 'system', icon: Monitor },
 ]
 
-/** 화면 모드 · 언어 · 강조 색 · 유리 효과 · 애니메이션. 상단 바의 테마 메뉴와 설정 화면이 같이 쓴다. */
-export function ThemeSettings({ theme }: { theme: PortalTheme }) {
+/** 화면 모드 · 언어 · 강조 색 · 유리 효과 · 애니메이션 · 홈 배경 바로가기. 상단 바의 테마 메뉴와 설정 화면이 같이 쓴다. */
+export function ThemeSettings({ theme, onCustomize }: { theme: PortalTheme; onCustomize: () => void }) {
   const { t, lang, setLang } = useI18n()
   const modes = MODES.map((m) => ({ ...m, label: t.theme.modes[m.value] }))
 
@@ -51,8 +51,28 @@ export function ThemeSettings({ theme }: { theme: PortalTheme }) {
 
       <div className="mt-5 space-y-4 border-t border-line pt-4">
         <SwitchRow label={t.theme.glass.label} hint={t.theme.glass.hint} on={theme.glass} onChange={theme.setGlass} />
-        <SwitchRow label={t.theme.motion.label} hint={t.theme.motion.hint} on={theme.motion} onChange={theme.setMotion} />
+        <div>
+          <span className="block text-sm font-semibold">{t.theme.motion.label}</span>
+          <span className="mb-2 block text-xs text-muted">{t.theme.motion.hint}</span>
+          <Segmented
+            label={t.theme.motion.label}
+            value={theme.motion}
+            onChange={theme.setMotion}
+            options={MOTIONS.map((m) => ({ value: m, label: t.theme.motion.levels[m] }))}
+            className="w-full"
+          />
+        </div>
       </div>
+      {/* 배경 · 인사 카드 그림은 홈 편집에서 바꾼다 — '모양 바꾸기'를 찾아 여기 온 사람도 길을 찾게 */}
+      <button
+        type="button"
+        onClick={onCustomize}
+        className="mt-4 flex w-full cursor-pointer items-center gap-2.5 rounded-xl bg-subtle px-3.5 py-2.5 text-left text-sm font-semibold ring-1 ring-line transition-colors hover:bg-raised"
+      >
+        <Image className="size-[18px] text-accent" aria-hidden="true" />
+        <span className="flex-1">{t.theme.customize}</span>
+        <ChevronRight className="size-4 text-muted" aria-hidden="true" />
+      </button>
       <p className="mt-3 text-[11px] text-muted">{t.theme.savedLocally}</p>
     </>
   )

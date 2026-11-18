@@ -13,5 +13,6 @@ export const mockMe: Me = {
   department: '연구개발팀',
   realm: ['employee'],
   // service-hub admin — 전사 공지 · 점검 안내 작성 버튼까지 보이도록. 하이요(hi-yo) 권한은 없다 — '권한별' 과 '전체' 가 다르게 보이도록
-  svc: { 'service-hub': ['admin'], jagigo: ['user'] },
+  // 연구노트는 연구원 · 과제 책임자 — 관리자(admin) 위젯은 갤러리에 안 나온다
+  svc: { 'service-hub': ['admin'], jagigo: ['user'], 'research-note': ['researcher', 'manager'] },
 }

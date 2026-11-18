@@ -6,6 +6,7 @@ import { useI18n, type Plural } from '../../i18n'
 import { formatDate, longToday, shortDate } from '../../lib/format'
 import { canWriteNotice } from '../../lib/access'
 import { toIso } from '../../lib/calendar'
+import { placeStyle, type DecorPos } from '../../lib/wallpaper'
 import { greetings, plainGreeting } from '../../lib/greetings'
 import { maintenanceQueries, noticeQueries, scheduleQueries } from '../../queries/dashboard'
 import type { Me, Notice } from '../../types/portal'
@@ -22,6 +23,8 @@ interface HeroCardProps {
   /** 로그인 정보를 받는 중 — 인사 · 즐겨찾기 수는 자리만 잡아 둔다 */
   loading?: boolean
   favoriteCount: number
+  /** 카드 배경 그림과 자리 — 사용자가 고른 그림(data URL), 없으면 오른쪽에 건물 그림 */
+  image?: { src: string; pos: DecorPos } | null
   className?: string
 }
 
@@ -35,10 +38,10 @@ function Pill({ icon, children }: { icon: ReactNode; children: ReactNode }) {
 }
 
 /**
- * 인사 + 오늘 요약 + 전사 공지. 옅은 하늘색 배경, 오른쪽에 건물 그림.
+ * 인사 + 오늘 요약 + 전사 공지. 옅은 하늘색 배경, 오른쪽에 건물 그림 — 위젯 편집의 꾸미기에서 그림을 고르면 카드 전체에 깐다.
  * 카드가 옆 패널 높이에 맞춰 늘어나도 내용은 세로 가운데에 둔다.
  */
-export function HeroCard({ me, loading = false, favoriteCount, className = '' }: HeroCardProps) {
+export function HeroCard({ me, loading = false, favoriteCount, image, className = '' }: HeroCardProps) {
   // 자정을 넘겨 켜 두어도 날짜가 바뀌게
   const now = useNow()
   // 오늘 일정 수 — 오늘 패널과 같은 요청(오늘 + 지난 2주)의 마지막 날
@@ -47,16 +50,25 @@ export function HeroCard({ me, loading = false, favoriteCount, className = '' }:
   const { t, lang } = useI18n()
 
   return (
-    <section className={`hero relative flex flex-col justify-center gap-8 overflow-hidden rounded-3xl p-6 sm:p-10 fit:gap-5 fit:px-9 fit:py-6 ${className}`}>
+    <section className={`hero relative flex flex-col justify-center gap-6 overflow-hidden rounded-3xl p-6 sm:p-8 fit:gap-4 fit:px-8 fit:py-6 ${className}`}>
       {/* 카드 높이에 맞춰 잘리지 않게 그리고, 왼쪽으로 갈수록 배경에 녹인다 */}
-      <HeroIllustration className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-auto max-w-[62%] mask-[linear-gradient(to_right,transparent,black_45%)] sm:block dark:opacity-35 dark:saturate-50" />
+      {/* 고른 그림은 카드 전체를 덮고, 글자가 있는 왼쪽부터 바탕색으로 옅게 덮는다(styles.css 의 .hero-scrim) */}
+      {image ? (
+        <>
+          <img data-decor="hero" src={image.src} alt="" style={placeStyle(image.pos)} className="pointer-events-none absolute inset-0 size-full object-cover" />
+          <div aria-hidden="true" className="hero-scrim pointer-events-none absolute inset-0" />
+        </>
+      ) : (
+        <HeroIllustration className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-auto max-w-[62%] mask-[linear-gradient(to_right,transparent,black_45%)] sm:block dark:opacity-35 dark:saturate-50" />
+      )}
 
       <div className="relative sm:max-w-[60%]">
         <p className="text-[15px] font-semibold text-accent">{longToday(now, lang)}</p>
         <Greeting name={me?.name} loading={loading} />
-        <p className="mt-3 text-base/relaxed text-muted max-sm:mt-2 max-sm:text-[15px]/relaxed fit:hidden">{t.home.hero.lead}</p>
+        {/* 한 칸 높이에서는 안내 문구를 뺀다 — 큰 칸(L)에서만 */}
+        <p className="mt-3 text-base/relaxed text-muted max-sm:mt-2 max-sm:text-[15px]/relaxed fit:hidden tall:block">{t.home.hero.lead}</p>
 
-        {/* 휴대폰에서는 요약을 뺀다 — 바로 아래 일정 · 점검 패널이 같은 숫자를 보여준다 */}
+        {/* 휴대폰에서는 요약을 뺀다 — 일정 · 점검 위젯이 같은 숫자를 보여준다 */}
         <div className="mt-6 flex flex-wrap gap-2.5 max-sm:hidden fit:mt-4">
           <Pill icon={<CalendarDays className="size-[18px]" aria-hidden="true" />}>
             <Count entry={t.home.hero.schedule} value={schedule.data?.length} loading={schedule.isPending} />
@@ -70,8 +82,7 @@ export function HeroCard({ me, loading = false, favoriteCount, className = '' }:
         </div>
       </div>
 
-      {/* 한 줄 화면(xl 미만)에서는 일정 아래에 따로 둔다 (HomePage 의 NoticeBar) */}
-      <NoticeTicker canWrite={canWriteNotice(me)} className="max-xl:hidden" />
+      <NoticeTicker canWrite={canWriteNotice(me)} />
     </section>
   )
 }
@@ -114,16 +125,11 @@ function Greeting({ name, loading }: { name?: string; loading: boolean }) {
   )
 }
 
-/** 한 줄 화면(xl 미만)의 전사 공지 — 히어로 밖, 오늘 일정 아래에 유리 카드로 */
-export function NoticeBar({ me, className = '' }: { me: Me | null; className?: string }) {
-  return <NoticeTicker canWrite={canWriteNotice(me)} surface="panel" className={className} />
-}
-
 /**
  * 전사 공지 한 건씩. 날짜 · 넘김 버튼은 오른쪽에 모아 세로 가운데로 맞춘다. admin 이면 맨 오른쪽에 작성 단추.
  * 좁은 화면에서는 위 줄에 '전사 공지' · 넘김, 아래 줄에 공지 글을 폭 가득 — 글이 몇 글자로 잘리지 않게.
  */
-function NoticeTicker({ canWrite, surface = 'hero', className = '' }: { canWrite: boolean; surface?: 'hero' | 'panel'; className?: string }) {
+function NoticeTicker({ canWrite, className = '' }: { canWrite: boolean; className?: string }) {
   const { data, isPending: loading, error } = useQuery(noticeQueries.list())
   const { t, lang } = useI18n()
   const [index, setIndex] = useState(0)
@@ -144,9 +150,7 @@ function NoticeTicker({ canWrite, surface = 'hero', className = '' }: { canWrite
 
   return (
     <div
-      className={`relative flex flex-wrap items-center gap-x-4 gap-y-2.5 rounded-2xl py-3.5 pr-2.5 pl-4 sm:flex-nowrap ${
-        surface === 'hero' ? 'hero-glass sm:max-w-[min(100%,760px)]' : 'glass'
-      } ${className}`}
+      className={`hero-glass relative flex flex-wrap items-center gap-x-4 gap-y-2.5 rounded-2xl py-3.5 pr-2.5 pl-4 sm:max-w-[min(100%,760px)] sm:flex-nowrap ${className}`}
     >
       <span className="flex flex-none items-center gap-1.5 rounded-xl bg-accent-fill px-3 py-2 text-sm font-bold text-white max-sm:px-2.5 max-sm:py-1.5">
         <Megaphone className="size-4" aria-hidden="true" />
