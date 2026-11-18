@@ -67,7 +67,7 @@ export function SystemsPanel({ me, loading = false, services, allServices, favor
       <div className="mb-3 sm:hidden">{filterControl}</div>
       {loading ? (
         <ul
-          className="grid grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))] gap-3 fit:flex-1 fit:grid-cols-5 tall:auto-rows-fr fit:gap-2.5"
+          className="grid grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))] gap-3 fit:flex-1 fit:grid-cols-5 auto-rows-fr fit:gap-2.5"
           aria-busy="true"
           aria-label={t.home.systems.loading}
         >
@@ -94,7 +94,7 @@ export function SystemsPanel({ me, loading = false, services, allServices, favor
         </div>
       ) : (
         // 휴대폰은 앞의 MOBILE_SHOWN 개만 — 나머지는 아래 '모두 보기'(업무시스템 화면)에서
-        <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))] gap-3 max-sm:gap-2 max-sm:[&>li:nth-child(n+5)]:hidden fit:flex-1 fit:grid-cols-5 tall:auto-rows-fr fit:gap-2.5">
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))] gap-3 max-sm:gap-2 max-sm:[&>li:nth-child(n+5)]:hidden fit:flex-1 fit:grid-cols-5 auto-rows-fr fit:gap-2.5">
           {list.map((s) => (
             <ServiceCard
               key={s.id}

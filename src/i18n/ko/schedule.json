@@ -27,6 +27,6 @@
   "searchPlaceholder": "일정 이름으로 검색",
   "dates": "날짜",
   "noResults": "‘{query}’에 맞는 일정이 없어요",
-  "noResultsHint": "다른 낱말로 찾아보거나 왼쪽에서 날짜를 골라 보세요.",
+  "noResultsHint": "다른 검색어로 찾아보거나 왼쪽에서 날짜를 골라 보세요.",
   "emptyDay": "이날은 일정이 없었어요."
 }

@@ -6,6 +6,7 @@ import { useI18n, type Plural } from '../../i18n'
 import { formatDate, longToday, shortDate } from '../../lib/format'
 import { canWriteNotice } from '../../lib/access'
 import { toIso } from '../../lib/calendar'
+import { placeStyle, type DecorPos } from '../../lib/wallpaper'
 import { greetings, plainGreeting } from '../../lib/greetings'
 import { maintenanceQueries, noticeQueries, scheduleQueries } from '../../queries/dashboard'
 import type { Me, Notice } from '../../types/portal'
@@ -22,6 +23,8 @@ interface HeroCardProps {
   /** 로그인 정보를 받는 중 — 인사 · 즐겨찾기 수는 자리만 잡아 둔다 */
   loading?: boolean
   favoriteCount: number
+  /** 카드 배경 그림과 자리 — 사용자가 고른 그림(data URL), 없으면 오른쪽에 건물 그림 */
+  image?: { src: string; pos: DecorPos } | null
   className?: string
 }
 
@@ -35,10 +38,10 @@ function Pill({ icon, children }: { icon: ReactNode; children: ReactNode }) {
 }
 
 /**
- * 인사 + 오늘 요약 + 전사 공지. 옅은 하늘색 배경, 오른쪽에 건물 그림.
+ * 인사 + 오늘 요약 + 전사 공지. 옅은 하늘색 배경, 오른쪽에 건물 그림 — 위젯 편집의 꾸미기에서 그림을 고르면 카드 전체에 깐다.
  * 카드가 옆 패널 높이에 맞춰 늘어나도 내용은 세로 가운데에 둔다.
  */
-export function HeroCard({ me, loading = false, favoriteCount, className = '' }: HeroCardProps) {
+export function HeroCard({ me, loading = false, favoriteCount, image, className = '' }: HeroCardProps) {
   // 자정을 넘겨 켜 두어도 날짜가 바뀌게
   const now = useNow()
   // 오늘 일정 수 — 오늘 패널과 같은 요청(오늘 + 지난 2주)의 마지막 날
@@ -49,7 +52,15 @@ export function HeroCard({ me, loading = false, favoriteCount, className = '' }:
   return (
     <section className={`hero relative flex flex-col justify-center gap-6 overflow-hidden rounded-3xl p-6 sm:p-8 fit:gap-4 fit:px-8 fit:py-6 ${className}`}>
       {/* 카드 높이에 맞춰 잘리지 않게 그리고, 왼쪽으로 갈수록 배경에 녹인다 */}
-      <HeroIllustration className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-auto max-w-[62%] mask-[linear-gradient(to_right,transparent,black_45%)] sm:block dark:opacity-35 dark:saturate-50" />
+      {/* 고른 그림은 카드 전체를 덮고, 글자가 있는 왼쪽부터 바탕색으로 옅게 덮는다(styles.css 의 .hero-scrim) */}
+      {image ? (
+        <>
+          <img data-decor="hero" src={image.src} alt="" style={placeStyle(image.pos)} className="pointer-events-none absolute inset-0 size-full object-cover" />
+          <div aria-hidden="true" className="hero-scrim pointer-events-none absolute inset-0" />
+        </>
+      ) : (
+        <HeroIllustration className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-auto max-w-[62%] mask-[linear-gradient(to_right,transparent,black_45%)] sm:block dark:opacity-35 dark:saturate-50" />
+      )}
 
       <div className="relative sm:max-w-[60%]">
         <p className="text-[15px] font-semibold text-accent">{longToday(now, lang)}</p>

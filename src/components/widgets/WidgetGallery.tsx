@@ -1,17 +1,16 @@
 import { Check, GripVertical, Plus, RotateCcw, Search } from 'lucide-react'
-import { useEffect, useId, useState, type CSSProperties } from 'react'
+import { useId, useState, type CSSProperties } from 'react'
 import type { WidgetLayout } from '../../hooks/useWidgetLayout'
 import { useI18n } from '../../i18n'
-import { MAX_WIDGETS } from '../../lib/widgetLayout'
 import { services } from '../../services'
 import { ServiceLogo } from '../services/ServiceCard'
 import { Modal } from '../ui/Modal'
+import { MAX_PER_PAGE } from './constants'
 import { galleryDrag, text, type WidgetDef } from './registry'
 
 interface GalleryProps {
   layout: WidgetLayout
   defs: WidgetDef[]
-  onDone: () => void
 }
 
 /** 차례로 아래에서 올라오는 순서 — 많아도 마지막이 너무 늦지 않게 끊는다 */
@@ -19,20 +18,14 @@ const rise = (i: number) => ({ '--i': Math.min(i, 8) }) as CSSProperties
 
 /**
  * 편집 중 왼쪽 사이드바 자리에 들어오는 위젯 고르기 (iPadOS 위젯 갤러리). 빈 유리판이 먼저 뜨고 안의 것들이 아래에서 차례로 올라온다.
- * 위젯은 홈으로 끌어 놓거나(오른쪽 끝에 머물면 새 페이지) 눌러서(보고 있는 페이지의 남는 자리가 가장 큰 줄 끝에) 추가한다. '완료'는 상단 바에 있다(TopBar).
- * 좁은 화면은 사이드바가 없어 아래쪽 편집 막대의 '위젯 추가'가 같은 목록을 시트로 연다.
- * Esc 로도 편집을 마친다(열린 창이 있으면 창부터 닫힌다).
+ * 위젯은 홈으로 끌어 놓거나 눌러서(보고 있는 페이지의 처음 들어가는 자리, 없으면 새 페이지에) 추가한다. '완료'는 화면 아래 편집 독에 있다(EditDock).
+ * 좁은 화면은 사이드바가 없어 아래쪽 편집 막대의 '위젯 추가'가 같은 목록을 시트로 연다. Esc 로 편집을 마치는 것은 App 이 한다.
+ * 목업(GALLERY)에서만 쓴다.
  */
-export function WidgetEditBar({ layout, defs, onDone }: GalleryProps) {
+export function WidgetEditBar({ layout, defs }: GalleryProps) {
   const { t, f } = useI18n()
   const [sheet, setSheet] = useState(false)
   const titleId = useId()
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && !document.querySelector('dialog[open]') && onDone()
-    addEventListener('keydown', onKey)
-    return () => removeEventListener('keydown', onKey)
-  }, [onDone])
 
   const reset = (
     <button
@@ -60,7 +53,7 @@ export function WidgetEditBar({ layout, defs, onDone }: GalleryProps) {
         <div className="rise flex items-center justify-between border-t border-line p-3" style={rise(8)}>
           {reset}
           <span className="pr-2 text-[13px] text-muted tabular-nums">
-            {f(t.widgets.perPage, { n: layout.rows.reduce((n, r) => n + r.items.length, 0), max: MAX_WIDGETS })}
+            {f(t.widgets.perPage, { n: layout.items.length, max: MAX_PER_PAGE })}
           </span>
         </div>
       </aside>
@@ -106,8 +99,7 @@ function GalleryList({ layout, defs, onAdded, className = '' }: { layout: Widget
 
   // 좁은 화면은 한 줄로 쌓여 있으니 그 위젯까지 스크롤
   const add = (d: WidgetDef) => {
-    const target = layout.spot(d.type)
-    if (!target || !layout.put(d.type, target)) return
+    layout.add(d.type)
     onAdded?.()
     requestAnimationFrame(() => document.querySelector(`.widget-board > [data-type="${d.type}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }))
   }
@@ -138,9 +130,7 @@ function GalleryList({ layout, defs, onAdded, className = '' }: { layout: Widget
               {g.items.map((d) => {
                 const name = text(d.title, t)
                 const added = layout.has(d.type)
-                // 남는 자리가 없으면 누르기 · 끌기 둘 다 막는다 — 끌어서 넣을 자리도 같은 기준(최소 크기 · 개수 상한)으로 본다
-                const room = !added && layout.spot(d.type) !== null
-                const why = layout.full ? f(t.widgets.full, { max: MAX_WIDGETS }) : t.widgets.noRoom
+                const room = !added
                 return (
                   <li
                     key={d.type}
@@ -168,11 +158,10 @@ function GalleryList({ layout, defs, onAdded, className = '' }: { layout: Widget
                     ) : (
                       <button
                         type="button"
-                        disabled={!room}
                         onClick={() => add(d)}
-                        aria-label={room ? f(t.widgets.add, { name }) : `${f(t.widgets.add, { name })} · ${why}`}
-                        title={room ? f(t.widgets.add, { name }) : why}
-                        className="grid size-9 flex-none cursor-pointer place-items-center rounded-full bg-accent-fill text-white transition-[scale,opacity] enabled:hover:scale-105 enabled:active:scale-95 disabled:cursor-not-allowed disabled:bg-fg/15 disabled:text-muted"
+                        aria-label={f(t.widgets.add, { name })}
+                        title={f(t.widgets.add, { name })}
+                        className="grid size-9 flex-none cursor-pointer place-items-center rounded-full bg-accent-fill text-white transition-[scale] hover:scale-105 active:scale-95"
                       >
                         <Plus className="size-[18px]" strokeWidth={2.5} aria-hidden="true" />
                       </button>

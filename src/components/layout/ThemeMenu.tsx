@@ -5,8 +5,8 @@ import { useI18n } from '../../i18n'
 import { ICON_BUTTON, PopoverPanel } from '../ui/Popover'
 import { ThemeSettings } from './ThemeSettings'
 
-export function ThemeMenu({ theme }: { theme: PortalTheme }) {
-  const { open, toggle, ref } = usePopover()
+export function ThemeMenu({ theme, onCustomize }: { theme: PortalTheme; onCustomize: () => void }) {
+  const { open, toggle, close, ref } = usePopover()
   const { t } = useI18n()
 
   return (
@@ -17,7 +17,13 @@ export function ThemeMenu({ theme }: { theme: PortalTheme }) {
 
       {open && (
         <PopoverPanel label={t.theme.title} className="w-[min(312px,calc(100vw-24px))] p-4">
-          <ThemeSettings theme={theme} />
+          <ThemeSettings
+            theme={theme}
+            onCustomize={() => {
+              close()
+              onCustomize()
+            }}
+          />
         </PopoverPanel>
       )}
     </div>

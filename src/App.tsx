@@ -1,13 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
-import { Suspense, lazy, useRef, useState } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { services } from './services'
 import { GooFilter } from './components/layout/LiquidParts'
 import { Sidebar } from './components/layout/Sidebar'
 import { TabBar } from './components/layout/TabBar'
 import { TopBar } from './components/layout/TopBar'
+import { DecorAdjust, Wallpaper } from './components/layout/Wallpaper'
+import { EditDock } from './components/widgets/EditDock'
 import { WidgetEditBar } from './components/widgets/WidgetGallery'
-import { visibleWidgets } from './components/widgets/registry'
+import { GALLERY, visibleWidgets } from './components/widgets/registry'
+import { useDecor } from './hooks/useDecor'
 import { useFavorites } from './hooks/useFavorites'
 import { hrefOf, useHashRoute } from './hooks/useHashRoute'
 import { usePortalTheme } from './hooks/usePortalTheme'
@@ -33,6 +36,7 @@ export default function App() {
   const meLoading = meQuery.isPending
   const [query, setQuery] = useState('')
   const { favorites, toggleFavorite } = useFavorites()
+  const decor = useDecor()
   const [collapsed, setCollapsed] = useState(() => readPref(KEYS.sidebar) === 'collapsed')
 
   // 권한으로 거르고 즐겨찾기를 앞으로 — 홈과 업무시스템 화면이 같은 목록을 쓴다
@@ -53,6 +57,26 @@ export default function App() {
   const [editingHome, setEditing] = useState(false)
   const editing = editingHome && home
   const stopEditing = () => setEditing(false)
+  // 테마 메뉴 · 설정 화면의 '홈 배경 · 그림 바꾸기' — 어느 화면에서든 홈으로 가서 편집을 연다
+  const customize = () => {
+    location.hash = hrefOf('home')
+    setEditing(true)
+  }
+  // 갤러리는 목업에서만 — 운영 · dev 는 편집 중에도 사이드바 · 탭 바가 그대로다
+  const gallery = editing && GALLERY
+
+  // Esc 로도 편집을 마친다(열린 창이 있으면 창부터, 배경 위치 조정 중이면 조정부터 끝난다)
+  const adjusting = decor.adjusting
+  useEffect(() => {
+    if (!editing || adjusting) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && !document.querySelector('dialog[open]') && setEditing(false)
+    addEventListener('keydown', onKey)
+    return () => removeEventListener('keydown', onKey)
+  }, [editing, adjusting])
+  // 편집이 끝나면(완료 · 다른 화면으로) 위치 조정도 지금 자리로 마친다
+  useEffect(() => {
+    if (!editing && adjusting) decor.endAdjust(true)
+  })
 
   const shellRef = useRef<HTMLDivElement>(null)
   // 본문 여백은 한 번에 바꾸고, 밀려나는 모습은 transform 으로만 그린다(FLIP).
@@ -79,9 +103,24 @@ export default function App() {
         {t.layout.skipToContent}
       </button>
 
-      {/* 위젯 편집 중에는 사이드바 자리에 위젯 갤러리가, 탭 바 자리에 편집 막대가 들어온다 */}
-      {editing ? (
-        <WidgetEditBar layout={widgets} defs={visible} onDone={stopEditing} />
+      {/* 홈 배경 그림(위젯 편집의 꾸미기). 배경 위치 조정 중에는 위젯을 숨기고, 인사 카드 그림 조정 중에는 다른 위젯을 흐린다(아래 main) */}
+      {home && decor.wallpaper && <Wallpaper src={decor.wallpaper} pos={decor.pos.wallpaper} />}
+      {editing && adjusting && <DecorAdjust decor={decor} />}
+      {/* 편집 도구 · 완료는 화면 아래 독에 — 상단 바는 그 항목 고치기만 */}
+      {editing && (
+        <EditDock
+          decor={decor}
+          onTidy={widgets.tidy}
+          onUndo={widgets.canUndo ? widgets.undo : undefined}
+          onReset={GALLERY ? undefined : widgets.reset}
+          onDone={stopEditing}
+          side={gallery ? 408 : collapsed ? 104 : 276}
+        />
+      )}
+
+      {/* 위젯 편집 중에는(목업) 사이드바 자리에 위젯 갤러리가, 탭 바 자리에 편집 막대가 들어온다 */}
+      {gallery ? (
+        <WidgetEditBar layout={widgets} defs={visible} />
       ) : (
         <Sidebar page={route.page} collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
       )}
@@ -90,7 +129,7 @@ export default function App() {
       <div
         ref={shellRef}
         // 홈은 넓고 높은 화면에서 화면 높이에 딱 맞춘다 — 위젯 한 페이지가 스크롤 없이 한 장
-        className={`flex min-h-dvh flex-col px-3 pt-3 pb-24 sm:px-4 lg:pr-4 lg:pb-4 ${editing ? 'lg:pl-[408px]' : collapsed ? 'lg:pl-[104px]' : 'lg:pl-[276px]'} ${home ? 'board-fit:h-dvh' : ''}`}
+        className={`flex min-h-dvh flex-col px-3 pt-3 pb-24 sm:px-4 lg:pr-4 lg:pb-4 ${gallery ? 'lg:pl-[408px]' : collapsed ? 'lg:pl-[104px]' : 'lg:pl-[276px]'} ${home ? 'board-fit:h-dvh' : ''}`}
       >
         {/* 편집 중에는 상단 바도 고칠 수 있고, 끝에 '완료'가 들어온다 */}
         <TopBar
@@ -101,19 +140,22 @@ export default function App() {
           onQueryChange={onQueryChange}
           theme={theme}
           onEditWidgets={home ? () => setEditing(true) : undefined}
+          onCustomize={customize}
           editing={editing}
-          onDone={stopEditing}
         />
 
-        <main id="main" tabIndex={-1} className={`flex-1 pt-5 outline-none ${home ? 'flex flex-col board-fit:min-h-0' : ''}`}>
+        <main id="main" tabIndex={-1} className={`flex-1 pt-5 outline-none ${home ? 'flex flex-col board-fit:min-h-0' : ''} ${adjusting === 'wallpaper' ? 'invisible' : ''}`}
+          data-adjust={adjusting ?? undefined}
+        >
           <Suspense>
             {home && (
               <HomePage
-                ctx={{ me, meLoading, services: mine, allServices: all, favorites, onToggleFavorite: toggleFavorite }}
+                ctx={{ me, meLoading, services: mine, allServices: all, favorites, onToggleFavorite: toggleFavorite, hero: decor.hero ? { src: decor.hero, pos: decor.pos.hero } : null }}
                 layout={widgets}
                 defs={visible}
                 editing={editing}
                 onEdit={() => setEditing(true)}
+                decor={decor}
               />
             )}
             {route.page === 'systems' && (
@@ -128,14 +170,14 @@ export default function App() {
               />
             )}
             {route.page === 'info' && <InfoPage categoryId={route.param} />}
-            {route.page === 'account' && <AccountPage me={me} loading={meLoading} services={mine} theme={theme} />}
+            {route.page === 'account' && <AccountPage me={me} loading={meLoading} services={mine} theme={theme} onCustomize={customize} />}
           </Suspense>
         </main>
 
         <footer className={`px-1 pt-8 text-xs text-muted ${home ? 'board-fit:hidden' : ''}`}>© DVISION · DVI Portal</footer>
       </div>
 
-      {!editing && <TabBar page={route.page} />}
+      {!gallery && <TabBar page={route.page} />}
       <GooFilter />
     </>
   )

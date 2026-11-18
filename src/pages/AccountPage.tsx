@@ -23,6 +23,8 @@ interface AccountPageProps {
   /** 권한으로 거른 서비스 */
   services: Service[]
   theme: PortalTheme
+  /** 화면 설정의 '홈 배경 · 그림 바꾸기' */
+  onCustomize: () => void
 }
 
 /**
@@ -32,7 +34,7 @@ interface AccountPageProps {
  * 로그인 수단의 바꾸기 · 등록 · 삭제는 통합 로그인으로 보내 지금도 된다. 목록과 로그인한 기기는 API 가 아직 없다
  * (docs/adr/0001-unbacked-features-coming-soon.md).
  */
-export function AccountPage({ me, loading, services, theme }: AccountPageProps) {
+export function AccountPage({ me, loading, services, theme, onCustomize }: AccountPageProps) {
   const { t, rich } = useI18n()
   const soon = <Badge tone="neutral">{t.common.comingSoon}</Badge>
 
@@ -69,7 +71,7 @@ export function AccountPage({ me, loading, services, theme }: AccountPageProps) 
 
         <div className="min-w-0 space-y-5">
           <Panel title={t.account.display} icon={Palette}>
-            <ThemeSettings theme={theme} />
+            <ThemeSettings theme={theme} onCustomize={onCustomize} />
           </Panel>
 
           <Panel

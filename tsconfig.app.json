@@ -14,7 +14,11 @@
     "isolatedModules": true,
     "resolveJsonModule": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    // lib/widgetLayout.ts 는 Node 테스트에서도 돈다 — Node 는 확장자 없는 가져오기를 못 찾는다
+    "allowImportingTsExtensions": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  // 테스트는 Node 에서 돈다 — tsconfig.node.json
+  "exclude": ["src/**/*.test.ts"]
 }

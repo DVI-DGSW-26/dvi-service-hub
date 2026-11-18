@@ -262,18 +262,21 @@
   /*
    * 유리 끄기(저사양 기본) · 투명도 줄이기 — 뒤를 읽어 합성하는 일을 아예 하지 않는다.
    * blur(0px) 로 두면 saturate() 때문에 브라우저가 여전히 배경을 읽는다. 내비 방울의 goo 필터도 같이 끈다.
+   * 애니메이션 '가볍게'도 모달 뒤 어두운 막의 흐림(화면 전체) · goo 필터는 끈다.
    */
   :root[data-glass='off'] :is(.glass, .glass-chrome, .glass-strong)::before,
   :root[data-glass='off'] .hero-glass,
-  :root[data-glass='off'] .modal::backdrop {
+  :root[data-glass='off'] .modal::backdrop,
+  :root[data-motion='lite'] .modal::backdrop {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
-  /* 내비 방울 — 가까우면 이어 붙는 goo 필터(LiquidParts.tsx). 유리를 끄면 같이 끈다(움직일 때마다 CPU 로 다시 흐린다) */
+  /* 내비 방울 — 가까우면 이어 붙는 goo 필터(LiquidParts.tsx). 유리를 끄거나 애니메이션을 가볍게 하면 끈다(움직일 때마다 CPU 로 다시 흐린다) */
   .liquid-blobs {
     filter: url(#portal-goo) drop-shadow(0 6px 14px oklch(0 0 0 / 0.22));
   }
-  :root[data-glass='off'] .liquid-blobs {
+  :root[data-glass='off'] .liquid-blobs,
+  :root[data-motion='lite'] .liquid-blobs {
     filter: none;
   }
   @media (prefers-reduced-transparency: reduce) {
@@ -333,6 +336,49 @@
     mask:
       linear-gradient(#000 0 0) content-box exclude,
       linear-gradient(#000 0 0);
+  }
+
+  /*
+   * 홈 배경 그림(layout/Wallpaper.tsx, 위젯 편집의 꾸미기) — 화면에 고정해 깔고 바탕색을 반쯤 덮어 옅게. 위치 · 확대는 그림의 style 로.
+   * 패널(.glass)은 뒤를 흐리지 않으니(저사양) 배경이 있을 때만 패널을 조금 더 불투명하게 해 글자가 사진에 묻히지 않게 한다
+   */
+  .wallpaper {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .wallpaper > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .wallpaper::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: color-mix(in oklch, var(--color-bg) 55%, transparent);
+  }
+  /* 인사 카드 그림 위치 조정 중(layout/Wallpaper.tsx) — 다른 위젯은 흐려 카드만 보이게 */
+  [data-adjust='hero'] .widget-board > :not([data-type='hero']) {
+    opacity: 0.2;
+    transition: opacity 200ms;
+  }
+  /* 인사 카드에 고른 그림 — 글자가 있는 왼쪽은 진하게, 오른쪽으로 갈수록 그림이 드러난다 */
+  .hero-scrim {
+    background: linear-gradient(
+      90deg,
+      color-mix(in oklch, var(--color-bg) 88%, transparent) 0%,
+      color-mix(in oklch, var(--color-bg) 70%, transparent) 50%,
+      color-mix(in oklch, var(--color-bg) 25%, transparent) 100%
+    );
+  }
+  :root:not([data-glass='off']):has(.wallpaper) {
+    --glass-bg: oklch(1 0 0 / 0.8);
+  }
+  :root[data-theme='dark']:not([data-glass='off']):has(.wallpaper) {
+    --glass-bg: oklch(0.21 0.008 var(--accent-h) / 0.8);
   }
 
   /* 인사 카드: 옅은 하늘색에서 흰색으로 — 오른쪽 건물 그림이 배경에 녹아든다 */
@@ -395,6 +441,18 @@
     backdrop-filter: blur(6px);
     animation: backdrop-in 260ms ease;
   }
+  /*
+   * 나타나고 사라지는 동안은 유리 뒤를 흐리지 않는다 — 흐림 면이 움직이면(크기 · 투명도) 매 프레임 뒤를 다시 읽어 흐린다.
+   * 나타날 때는 step-end 로 애니메이션 내내 흐림 층을 숨겨 두었다가 끝나는 순간 한 번에 흐린다
+   */
+  .modal[open] > :is(.glass-chrome, .glass-strong)::before,
+  .animate-materialize:is(.glass-chrome, .glass-strong)::before {
+    animation: blur-hold 260ms step-end;
+  }
+  .modal[data-closing] > :is(.glass-chrome, .glass-strong)::before {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
   .modal[data-closing]::backdrop {
     animation: backdrop-out 170ms ease forwards;
   }
@@ -407,6 +465,9 @@
     }
     .modal[open] {
       animation: sheet-in 380ms cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    .modal[open] > :is(.glass-chrome, .glass-strong)::before {
+      animation-duration: 380ms;
     }
     .modal[data-closing] {
       animation: sheet-out 170ms cubic-bezier(0.4, 0, 1, 1) forwards;
@@ -423,6 +484,13 @@
   from {
     opacity: 0;
     transform: translateY(4px);
+  }
+}
+
+/* backdrop-filter: none 으로 쥐면 blur(0px) saturate(1) 로 보간돼 여전히 뒤를 읽는다 — 흐림 층(::before)을 숨긴다 */
+@keyframes blur-hold {
+  from {
+    visibility: hidden;
   }
 }
 
@@ -455,11 +523,9 @@
 }
 
 /*
- * 홈 위젯 판 (components/widgets/WidgetGrid.tsx).
- * 넓은 화면: 위젯이 모두 한 부모 아래 형제고(flex-wrap), 위젯마다 줄 안 몫(--basis)을 받아 줄을 꽉 채우면 다음 위젯이 다음 줄로 간다.
- * 넓고 높은 화면(board-fit)은 줄 높이도 비율(--h)로 화면 높이를 나눠 쓰고(스크롤 없음), 그보다 작으면 줄 높이가 내용만큼(최소 --min-h).
- * 위젯 수 · 크기의 한도는 lib/widgetLayout.ts 가 지금 판 크기로 본다(페이지마다).
- * 페이지(.widget-board)들은 트랙에 옆으로 이어 붙이고 보고 있는 페이지(--page)만큼 옮겨 보여준다.
+ * 홈 위젯 판 (components/widgets/WidgetGrid.tsx). 넓은 화면은 react-grid-layout 이 위젯을 칸 자리에 놓는다(transform) — 그 라이브러리 CSS 는
+ * 가져오지 않고 쓰는 것만 여기 둔다(가져오면 레이어 밖이라 여기 규칙을 모두 이긴다).
+ * 페이지(.widget-page)들은 트랙에 옆으로 이어 붙이고 보고 있는 페이지(--page)만큼 옮겨 보여준다.
  * 좁은 화면: 페이지를 위아래로 이어 읽는 순서로 쌓고 높이는 내용만큼. S 로 그려지는 것만 반 폭.
  */
 @layer components {
@@ -485,7 +551,7 @@
   @media (min-width: 64rem) {
     /* 옆 페이지는 잘라 숨긴다. 좌우로 조금 넓혀 둬 맨 끝 위젯의 − 단추(바깥으로 걸친다)는 잘리지 않게 */
     .widget-view {
-      --gap: 1.25rem;
+      position: relative;
       overflow-x: clip;
       margin-inline: -0.75rem;
       padding-inline: 0.75rem;
@@ -494,55 +560,216 @@
       height: 100%;
       grid-auto-flow: column;
       grid-auto-columns: 100%;
-      column-gap: var(--gap);
-      transform: translateX(calc(var(--page) * -1 * (100% + var(--gap))));
+      column-gap: 1.25rem;
+      /* --swipe — 빈 곳을 옆으로 미는 동안 손을 따라 옮긴 거리(WidgetGrid) */
+      transform: translateX(calc(var(--page) * -1 * (100% + 1.25rem) + var(--swipe, 0px)));
       transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
     }
+    .widget-track[data-swiping] {
+      transition: none;
+    }
+    /* 기준선 — 놓일 자리의 변과 나란한 다른 위젯 변을 잇는다. 칸 사이 틈(20px) 한가운데에 긋는다. --cw · --rh 는 칸 한 개 + 틈 */
+    .widget-guides {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+    }
+    .widget-guides > i {
+      position: absolute;
+      background: var(--color-accent);
+      box-shadow: 0 0 6px color-mix(in oklch, var(--color-accent) 60%, transparent);
+      animation: placeholder-in 160ms ease-out;
+    }
+    .widget-guides > [data-dir='v'] {
+      left: calc(var(--at) * var(--cw) - 10px - 1px);
+      top: calc(var(--from) * var(--rh) - 8px);
+      width: 2px;
+      height: calc((var(--to) - var(--from)) * var(--rh) - 20px + 16px);
+    }
+    .widget-guides > [data-dir='h'] {
+      top: calc(var(--at) * var(--rh) - 10px - 1px);
+      left: calc(var(--from) * var(--cw) - 8px);
+      height: 2px;
+      width: calc((var(--to) - var(--from)) * var(--cw) - 20px + 16px);
+    }
     .widget-board {
+      display: block;
       position: relative;
-      display: flex;
-      flex-wrap: wrap;
-      align-content: flex-start;
-      gap: var(--gap);
     }
     /*
-     * 더 넓은 화면에서 만든 배치라 최소 폭이 안 되면 다음 줄로 넘어간다 — 1px 은 최소 폭에 딱 맞춘 위젯이 넘어가지 않게.
-     * 화면에 맞추지 않는 크기는 패널이 내용 높이 배치로 바뀌어 좁아도 견디므로 공통 최소(320px)만, 맞추는 크기는 위젯마다의 최소(--min-w)
+     * 자리를 비켜 주는 위젯은 살짝 튕기는 스프링으로 미끄러지고(--spring, 넘침 2% 쯤), 크기는 튕기지 않는 감속 곡선으로.
+     * 끄는 위젯은 들려(커지고 그림자) 손을 따라오다 놓으면 스프링으로 제자리에 내려앉는다 — 내려앉는 동안은 다른 위젯 위에(z-index 를 늦게 내린다)
      */
-    .widget-board > [data-type] {
-      flex: var(--grow, 1) 1 var(--basis);
-      min-width: calc(min(var(--min-w), 320px) - 1px);
-      min-height: var(--min-h);
+    .widget-board > .react-grid-item {
+      --ease: cubic-bezier(0.32, 0.72, 0, 1);
+      --spring: linear(0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 85.9%, 1);
+      z-index: 1;
+      transition:
+        transform 460ms var(--spring),
+        width 380ms var(--ease),
+        height 380ms var(--ease),
+        z-index 0s 460ms;
     }
-  }
-  @media (min-width: 1880px) and (min-height: 900px) {
-    /* 트랙 칸 높이에 딱 — 격자 칸의 기본 최소 높이(auto)면 내용만큼 늘어 화면 밖으로 나간다 */
-    .widget-board {
-      height: 100%;
-      min-height: 0;
+    /* 애니메이션 '가볍게' — 크기는 바로 바꾼다(크기 애니메이션은 매 프레임 패널 안 내용을 다시 배치해 저사양에서 끊긴다). 끄는 · 조절하는 위젯은 아래 규칙대로 손을 따른다 */
+    :root[data-motion='lite'] .widget-board > .react-grid-item:not(.resizing, .react-draggable-dragging) {
+      transition:
+        transform 460ms var(--spring),
+        z-index 0s 460ms;
     }
-    .widget-board > [data-type] {
-      height: var(--h);
-      min-width: calc(var(--min-w) - 1px);
-      min-height: 0;
+    .widget-board > .react-grid-item > .widget-body {
+      border-radius: inherit;
+      transition:
+        scale 260ms var(--ease),
+        opacity 260ms var(--ease);
     }
-  }
-  /* 끄는 위젯 · 갤러리에서 끌어 오는 위젯이 놓일 자리 */
-  .widget-board > :is([data-dragging], [data-adding])::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    border: 2px dashed color-mix(in oklch, var(--color-accent) 70%, transparent);
-    background: var(--color-accent-soft);
-  }
-  .widget-board > [data-adding] > .widget-body {
-    opacity: 0.55;
-  }
-  .widget-board > [data-dragging][data-invalid] > .widget-body {
-    outline: 2px solid var(--color-danger);
-    outline-offset: 2px;
-    border-radius: 1.5rem;
+    /* 들린 그림자 — 미리 그려 두고 투명도만 바꾼다(filter: drop-shadow 는 바뀔 때마다 위젯 전체를 다시 그린다) */
+    .widget-board > .react-grid-item > .widget-body::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      box-shadow: 0 24px 40px oklch(0 0 0 / 0.28);
+      opacity: 0;
+      transition: opacity 260ms var(--ease);
+    }
+    .widget-board > :is(.resizing, .react-draggable-dragging) {
+      z-index: 3;
+      transition: none;
+    }
+    .widget-board > .react-draggable-dragging {
+      cursor: grabbing;
+    }
+    /* 위젯 위 메뉴(인사 카드의 그림 바꾸기)가 열려 있으면 뒤 위젯에 가리지 않게 */
+    .widget-board > .react-grid-item:has([data-open]) {
+      z-index: 5;
+      /* z-index 를 늦게 바꾸는 transition(위)을 끈다 — 메뉴가 열리는 순간 위로 */
+      transition: none;
+    }
+    .widget-board > .react-draggable-dragging > .widget-body {
+      scale: 1.04;
+    }
+    .widget-board > .react-draggable-dragging > .widget-body::after {
+      opacity: 1;
+    }
+    .widget-board > .dropping {
+      visibility: hidden;
+    }
+    /* 놓일 자리 — 흐린 강조색 판이 위젯보다 먼저 그 자리로 미끄러져 간다 */
+    .widget-board > .react-grid-placeholder {
+      z-index: 0;
+      border-radius: 1.5rem;
+      background: var(--color-accent-soft);
+      box-shadow: inset 0 0 0 2px color-mix(in oklch, var(--color-accent) 45%, transparent);
+      transition:
+        transform 220ms var(--ease),
+        width 220ms var(--ease),
+        height 220ms var(--ease);
+      user-select: none;
+      animation: placeholder-in 220ms var(--ease);
+    }
+    /*
+     * 크기 손잡이 — 네 변과 모서리(왼쪽 위는 빼기 단추 자리라 없다). 칸 사이 틈(20px)은 양쪽 위젯이 반씩 나눠 갖고 안쪽으로 6px 더 —
+     * 옆 위젯 손잡이와 겹치지 않아, 오른쪽 위젯의 왼쪽 변을 잡으면 오른쪽 위젯이 조절된다. 막대는 그 위젯에 올렸을 때만 보인다
+     */
+    .widget-board .react-resizable-handle {
+      position: absolute;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      touch-action: none;
+    }
+    .widget-board .react-resizable-handle::after {
+      content: '';
+      border-radius: 9999px;
+      background: color-mix(in oklch, var(--color-fg) 25%, transparent);
+      opacity: 0;
+      transition:
+        opacity 150ms,
+        background-color 150ms;
+    }
+    .widget-board > :is(:hover, .resizing) > .react-resizable-handle::after {
+      opacity: 1;
+    }
+    .widget-board .react-resizable-handle:hover::after,
+    .widget-board .resizing .react-resizable-handle::after {
+      background: var(--color-accent);
+    }
+    .widget-board :is(.react-resizable-handle-e, .react-resizable-handle-w) {
+      inset-block: 1.5rem;
+      width: 16px;
+      cursor: ew-resize;
+    }
+    .widget-board .react-resizable-handle-e {
+      right: -10px;
+    }
+    .widget-board .react-resizable-handle-w {
+      left: -10px;
+    }
+    .widget-board :is(.react-resizable-handle-e, .react-resizable-handle-w)::after {
+      width: 4px;
+      height: 3rem;
+    }
+    .widget-board :is(.react-resizable-handle-n, .react-resizable-handle-s) {
+      inset-inline: 1.5rem;
+      height: 16px;
+      cursor: ns-resize;
+    }
+    .widget-board .react-resizable-handle-n {
+      top: -10px;
+    }
+    .widget-board .react-resizable-handle-s {
+      bottom: -10px;
+    }
+    .widget-board :is(.react-resizable-handle-n, .react-resizable-handle-s)::after {
+      width: 3rem;
+      height: 4px;
+    }
+    .widget-board :is(.react-resizable-handle-ne, .react-resizable-handle-se, .react-resizable-handle-sw) {
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+    .widget-board .react-resizable-handle-ne {
+      top: -10px;
+      right: -10px;
+      cursor: nesw-resize;
+    }
+    .widget-board .react-resizable-handle-se {
+      right: -10px;
+      bottom: -10px;
+      cursor: nwse-resize;
+    }
+    .widget-board .react-resizable-handle-sw {
+      bottom: -10px;
+      left: -10px;
+      cursor: nesw-resize;
+    }
+    .widget-board :is(.react-resizable-handle-ne, .react-resizable-handle-se, .react-resizable-handle-sw)::after {
+      width: 8px;
+      height: 8px;
+    }
+    .widget-board .react-resizable-hide > .react-resizable-handle {
+      display: none;
+    }
+    /* 끄는 위젯이 화면 끝에 닿으면 그쪽 가장자리가 빛난다 — 놓으면 옆 페이지로 */
+    .widget-view[data-edge]::after {
+      content: '';
+      position: absolute;
+      inset-block: 0;
+      z-index: 30;
+      width: 4px;
+      border-radius: 9999px;
+      pointer-events: none;
+      background: var(--color-accent);
+      filter: drop-shadow(0 0 10px var(--color-accent));
+    }
+    .widget-view[data-edge='1']::after {
+      right: 0;
+    }
+    .widget-view[data-edge='-1']::after {
+      left: 0;
+    }
   }
 
   /* 갤러리 안의 것들이 아래에서 차례로 올라온다(--i 번째). 동작 줄이기면 위의 전역 규칙이 끈다 */
@@ -554,18 +781,14 @@
     animation: fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
-  /* 끄는 위젯은 놓일 자리가 아직 다른(숨긴) 페이지에 있어도 보인다 */
-  [data-dragging] {
-    z-index: 20;
-    cursor: grabbing;
-    visibility: visible;
-  }
-  [data-dragging] > .widget-body {
-    scale: 1.03;
-    filter: drop-shadow(0 18px 30px oklch(0 0 0 / 0.22));
-  }
 }
 
+@keyframes placeholder-in {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
 @keyframes rise {
   from {
     opacity: 0;

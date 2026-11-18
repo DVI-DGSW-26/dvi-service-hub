@@ -1,9 +1,14 @@
 {
-  "edit": "Edit widgets",
+  "edit": "Edit home",
+  "dock": "Home editing tools",
+  "undoShort": "Undo",
+  "resetShort": "Default layout",
+  "tidy": "Tidy up gaps",
+  "undo": "Undo (Ctrl + Z)",
   "done": "Done",
-  "editHint": "Drop a widget into a row and its neighbors shrink; drop it above or below a row to start a new row. Hold it at the right edge to go to the next page (or a new one). Press Esc to cancel.",
+  "editHint": "Drag a widget onto another to swap them; if sizes differ, only the widgets in the way move. Drag an edge or corner to resize; the neighbor is pushed or shrinks. Hold it at the left or right edge of the screen to flip to the next page (a new one if needed) and keep placing it there. Press Ctrl + Z to undo.",
   "galleryTitle": "Add widgets",
-  "galleryHint": "Drag onto Home or press + to add to the current page. Drag to the right edge to put it on a new page.",
+  "galleryHint": "Drag onto Home or press + to add to the current page. If there's no room, it goes on a new page.",
   "search": "Search widgets",
   "noResults": "No widgets found.",
   "added": "Added",
@@ -12,8 +17,9 @@
   "reset": "Reset to default layout",
   "portal": "Portal",
   "empty": "There are no widgets on Home.",
-  "emptyHint": "Add the widgets you need from Edit widgets.",
-  "position": "{name}, {index} of {total}. Use arrows to move, Page Up / Page Down to change page, Delete to remove.",
+  "emptyHint": "Add the widgets you need from Edit home.",
+  "position": "{name}, {index} of {total}. Use arrows to move, Shift + arrows to resize, Page Up / Page Down to change page, Delete to remove.",
+  "positionMove": "{name}, {index} of {total}. Use arrows to move, Shift + arrows to resize, Page Up / Page Down to change page.",
   "open": "Open {name}",
   "editCard": "Edit business card",
   "recent": "Recent searches",
@@ -35,10 +41,6 @@
     "news": "Company news from the event archive",
     "calendar": "This month's events and occasions"
   },
-  "noRoom": "No room left on this page — drag to the right edge to start a new page",
-  "full": "This page is full (up to {max} per page) — drag to the right edge to start a new page",
-  "resizeCol": "Resize {a} and {b}",
-  "resizeRow": "Edge below row {row}",
   "header": {
     "title": "Top bar",
     "hint": "Drag to reorder, use the eye to hide",
@@ -55,5 +57,19 @@
   "pages": "Home pages",
   "page": "Page {page} of {total}",
   "perPage": "This page {n} / {max}",
-  "resizeEnd": "Right edge of {name} — grows into the empty columns"
+  "resize": "Resize {name}",
+  "decor": {
+    "wallpaper": "Dashboard background",
+    "hero": "Greeting · notice image",
+    "button": { "wallpaper": "Background", "hero": "Change image" },
+    "default": "Default",
+    "choose": "Choose image",
+    "reset": "Use default",
+    "adjust": "Reposition",
+    "adjustHint": { "wallpaper": "Drag anywhere to move the background", "hero": "Drag anywhere to move the greeting card image" },
+    "zoom": "Zoom",
+    "cancel": "Cancel",
+    "unreadable": "Couldn't read that image. Pick a JPG, PNG or WebP.",
+    "notSaved": "Not enough browser storage — it will be gone after a refresh. Try a smaller image."
+  }
 }

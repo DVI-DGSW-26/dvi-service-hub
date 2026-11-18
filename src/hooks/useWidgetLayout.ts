@@ -1,102 +1,136 @@
 import { useState } from 'react'
+import { COLS, ROWS } from '../components/widgets/constants'
 import type { WidgetDef } from '../components/widgets/registry'
 import { KEYS, readPref, writePref } from '../lib/theme'
-import { bestSpot, count, fitsBox, minSize, movePages, settle, MAX_WIDGETS, without, type Box, type Row, type Target } from '../lib/widgetLayout'
+import { cellsFor, fromHalf, fromRows, minSize, parsePages, placeAt, placeOn, strip, tidy, valid, without, type Page } from '../lib/widgetLayout'
 
-/** 처음 배치 — 위젯 이전의 고정 홈과 같은 한 화면 */
-export const DEFAULT_WIDGETS: Row[][] = [
+/** 처음 배치 — 위젯 이전의 고정 홈과 같은 한 화면(24 × 12 칸) */
+export const DEFAULT_WIDGETS: Page[] = [
   [
-    { h: 1, items: [{ type: 'hero', w: 2 }, { type: 'quick-links', w: 1 }] },
-    { h: 1, items: [{ type: 'systems', w: 2 }, { type: 'today', w: 1 }] },
-    { h: 1, items: [{ type: 'maintenance', w: 1 }, { type: 'news', w: 1 }, { type: 'calendar', w: 1 }] },
+    { i: 'hero', x: 0, y: 0, w: 16, h: 4 },
+    { i: 'quick-links', x: 16, y: 0, w: 8, h: 4 },
+    { i: 'systems', x: 0, y: 4, w: 16, h: 4 },
+    { i: 'today', x: 16, y: 4, w: 8, h: 4 },
+    { i: 'maintenance', x: 0, y: 8, w: 8, h: 4 },
+    { i: 'news', x: 8, y: 8, w: 8, h: 4 },
+    { i: 'calendar', x: 16, y: 8, w: 8, h: 4 },
   ],
 ]
 
-const ratio = (v: unknown) => typeof v === 'number' && v > 0 && Number.isFinite(v)
-const isRow = (r: Row) => ratio(r?.h) && Array.isArray(r.items) && r.items.length > 0 && r.items.every((c) => typeof c?.type === 'string' && ratio(c.w))
-
-/** 저장된 배치(페이지마다 줄 목록). 페이지 없이 줄 목록만 있던 형식은 한 페이지로. 하나라도 모양이 틀리면 처음 배치로 — 반쯤 살린 배치는 홈을 깨뜨린다 */
-function load(): Row[][] {
+const read = (key: string): unknown => {
   try {
-    const saved: unknown = JSON.parse(readPref(KEYS.widgets) ?? 'null')
-    if (!Array.isArray(saved)) return DEFAULT_WIDGETS
-    const pages = (saved.every((p) => !Array.isArray(p)) ? [saved] : saved) as Row[][]
-    return pages.every((p) => Array.isArray(p) && p.every(isRow)) ? pages : DEFAULT_WIDGETS
+    return JSON.parse(readPref(key) ?? 'null')
   } catch {
-    return DEFAULT_WIDGETS
+    return null
   }
 }
 
-/** 판 크기를 모를 때(아직 안 그림 · 좁은 화면) — 개수 상한만 본다 */
-const OPEN: Box = { width: Infinity, height: Infinity, gap: 0 }
+/** 저장된 배치. 예전 키의 12 × 6 칸 · 줄 비율 형식은 지금 칸으로 옮긴다(고치면 새 키에 저장된다). 모양이 틀리면 처음 배치로 */
+function load(): Page[] {
+  const old = read(KEYS.widgetsOld)
+  return parsePages(read(KEYS.widgets)) ?? fromHalf(old) ?? fromRows(old) ?? DEFAULT_WIDGETS
+}
+
+/** 되돌리기로 기억하는 배치 수 */
+const HISTORY = 50
+
+/** 판을 아직 못 쟀을 때의 칸 크기(px) — 화면에 맞춘 기준 화면(1880 × 900)쯤 */
+const NOMINAL = { w: 46, h: 52 }
 
 /**
- * 홈 위젯 배치 — 페이지마다 줄 목록이고, 줄마다 위젯이 폭을 나눠 갖는다 (계산은 lib/widgetLayout.ts). 한도(최소 크기 · 개수)는 페이지마다 본다.
- * 이 사람에게 안 보이는 위젯(권한 · 운영에 없는 목업)은 배치에서 빼고 그리되 저장은 그대로 둔다 — 권한이 돌아오면 마지막 페이지 맨 아래로 돌아온다.
+ * 홈 위젯 배치 — 페이지마다 칸 정수 자리에 놓인 그대로(lib/widgetLayout.ts). 끌기 · 크기 조절 손놀림은 위젯 판의 react-grid-layout 이 한다.
+ * 이 사람에게 안 보이는 위젯(권한 · 운영에 없는 목업)은 배치에서 빼고 그리되 저장은 남긴다 — 고칠 때 마지막 페이지 빈칸으로 옮겨 둔다.
  * shortcut: 이 브라우저에만 저장한다. 다른 기기에서도 같은 홈을 보려면 허브 서버에 사람별로 저장하는 API 가 필요하다.
  */
 export function useWidgetLayout(defs: WidgetDef[]) {
   const [raw, setRaw] = useState(load)
-  /** 보고 있는 페이지 — 끄는 중에는 아직 없는 새 페이지(페이지 수와 같은 번호)일 수 있다. 그리는 쪽이 맞춘다 */
+  // 되돌리기 · 다시 하기 — 바꾸기 전 배치를 쌓는다(이 탭에서만, 최근 HISTORY 번)
+  const [undos, setUndos] = useState<Page[][]>([])
+  const [redos, setRedos] = useState<Page[][]>([])
   const [page, setPage] = useState(0)
-  // 위젯 판(WidgetGrid)이 그린 뒤 알려 준다 — 화면에 맞추지 않는 크기면 높이는 Infinity
-  const [box, setBox] = useState<Box>(OPEN)
+  // 위젯 판이 그린 뒤 알려 주는 칸 한 개 크기(px) — 최소 크기를 칸 수로 바꿀 때
+  const [cell, setCell] = useState(NOMINAL)
   const byType = new Map(defs.map((d) => [d.type, d]))
-  const hidden = (type: string) => !byType.has(type)
-  const pages = raw.map((p) => p.map((r) => ({ ...r, items: r.items.filter((c) => !hidden(c.type)) })).filter((r) => r.items.length)).filter((p) => p.length)
+  const pages = raw.map((p) => p.filter((c) => byType.has(c.i))).filter((p) => p.length)
   const cur = Math.max(0, Math.min(page, pages.length - 1))
-  const rows = pages[cur] ?? []
-  const mins = (type: string) => byType.get(type)?.min ?? minSize(byType.get(type)?.sizes ?? ['s'])
-  const fits = (next: Row[]) => fitsBox(next, box, mins)
+  const items = pages[cur] ?? []
 
-  /** 빈 페이지는 지우고(최소 아래로 내려간 위젯 · 줄은 고쳐서) 저장한다. type 을 주면 그 위젯이 있는 페이지를 보여준다 */
-  const commit = (next: Row[][], type?: string) => {
-    const kept = next.filter((p) => p.length).map((p) => settle(p, box, mins))
-    // 안 보이는 위젯은 마지막 페이지 맨 아래 한 줄로 모아 둔다
-    const lost = raw.flatMap((p) => p.flatMap((r) => r.items.filter((c) => hidden(c.type))))
-    const all = lost.length ? [...kept.slice(0, -1), [...(kept.at(-1) ?? []), { h: 1, items: lost }]] : kept
+  /** 위젯의 최소 크기(칸) — 새로 넣을 때도 이 크기 */
+  const minCells = (type: string) => {
+    const d = byType.get(type)
+    const px = d?.min ?? minSize(d?.sizes ?? ['s'])
+    return { w: cellsFor(px.w, cell.w, COLS), h: cellsFor(px.h, cell.h, ROWS) }
+  }
+
+  /** 배치를 바꾸고 저장한다 — 바꾸기 전 배치는 되돌리기에 쌓는다 */
+  const save = (all: Page[]) => {
+    setUndos((u) => [...u.slice(1 - HISTORY), raw])
+    setRedos([])
     setRaw(all)
     writePref(KEYS.widgets, JSON.stringify(all))
-    const at = kept.findIndex((p) => p.some((r) => r.items.some((c) => c.type === type)))
-    setPage(Math.max(0, at >= 0 ? at : Math.min(cur, kept.length - 1)))
   }
-  /** 페이지 p 의 target 으로 — 그 페이지에 들어가면 저장하고 true */
-  const moveTo = (type: string, p: number, target: Target) => {
-    const next = movePages(pages, type, p, target)
-    return fits(next[p]) && (commit(next, type), true)
+  /** 되돌리기 · 다시 하기 — from 의 마지막 배치로, 지금 배치는 to 에 쌓는다 */
+  const step = (from: Page[][], setFrom: typeof setUndos, setTo: typeof setUndos) => {
+    const prev = from.at(-1)
+    if (!prev) return
+    setFrom(from.slice(0, -1))
+    setTo((t) => [...t, raw])
+    setRaw(prev)
+    writePref(KEYS.widgets, JSON.stringify(prev))
+  }
+
+  /** 빈 페이지는 지우고 저장한다. type 을 주면 그 위젯이 있는 페이지를 보여준다 */
+  const commit = (next: Page[], type?: string) => {
+    let all = next.filter((p) => p.length)
+    // 안 보이는 위젯은 마지막 페이지(자리가 없으면 새 페이지)로 돌려 둔다
+    for (const c of raw.flat().filter((c) => !byType.has(c.i))) all = placeOn(all, c.i, Math.max(0, all.length - 1), c) ?? placeOn(all, c.i, all.length, c) ?? all
+    save(all)
+    const at = next.findIndex((p) => p.some((c) => c.i === type))
+    setPage(Math.max(0, at >= 0 ? at : Math.min(cur, next.length - 1)))
+  }
+  /** 보고 있는 페이지만 바꾼다 — 기준(겹침 · 판 밖 · 위젯 수)에 안 맞으면 받지 않고 false */
+  const commitPage = (p: Page, type?: string) => {
+    if (!valid(p)) return false
+    // 위젯이 하나도 없으면 pages 가 비어 있다 — 그래도 보고 있는 페이지(0)에 넣는다
+    const next = [...pages]
+    next[cur] = strip(p)
+    commit(next, type)
+    return true
   }
 
   return {
     pages,
-    page,
+    page: cur,
     setPage,
-    /** 보고 있는 페이지의 줄 */
-    rows,
-    box,
-    setBox,
-    mins,
-    fits,
-    /** 끄는 동안 미리보기도 놓았을 때와 같게 */
-    settle: (next: Row[]) => settle(next, box, mins),
+    /** 보고 있는 페이지의 위젯 자리 */
+    items,
+    setCell,
+    minCells,
     commit,
-    /** 보고 있는 페이지에 더 넣을 수 없음(개수) */
-    full: count(rows) >= MAX_WIDGETS,
-    has: (type: string) => pages.some((p) => p.some((r) => r.items.some((c) => c.type === type))),
-    /** 보고 있는 페이지에 누르기만 해서 추가할 자리 — 없으면 null */
-    spot: (type: string) => bestSpot(rows, type, box, mins),
-    /** 보고 있는 페이지 안에서 옮기기 · 넣기 */
-    put: (type: string, target: Target) => moveTo(type, cur, target),
-    /** 다른 페이지로 — 그 페이지에 자리가 있으면(없는 페이지면 새로 만들어) */
-    toPage: (type: string, p: number) => {
-      const spot = p < pages.length ? bestSpot(without(pages[p], type), type, box, mins) : { newRow: 0 }
-      return !!spot && moveTo(type, p, spot)
+    commitPage,
+    has: (type: string) => pages.some((p) => p.some((c) => c.i === type)),
+    /** 보고 있는 페이지의 첫 빈칸에, 자리가 없으면 새 페이지에 넣는다 */
+    add: (type: string) => {
+      const next = placeOn(pages, type, cur, minCells(type)) ?? placeOn(pages, type, pages.length, minCells(type))
+      if (next) commit(next, type)
     },
-    remove: (type: string) => commit(pages.map((p) => without(p, type))),
+    /** 다른 페이지로 — at 을 주면 그 칸에(덮인 위젯은 비킨다), 안 되거나 없으면 첫 빈칸에. 자리가 없으면 false(없는 페이지면 새로 만들어) */
+    toPage: (type: string, p: number, at?: { x: number; y: number }) => {
+      const next = (at && placeAt(pages, type, p, at.x, at.y)) || placeOn(pages, type, p, minCells(type))
+      return !!next && (commit(next, type), true)
+    },
+    remove: (type: string) => commit(without(pages, type)),
+    /** 보고 있는 페이지의 빈칸 정리 — 위 · 왼쪽으로 당겨 붙인다(크기 그대로) */
+    tidy: () => commitPage(tidy(items)),
+    /** 기본 배치로 — 되돌리기로 돌아올 수 있다 */
     reset: () => {
-      setRaw(DEFAULT_WIDGETS)
+      save(DEFAULT_WIDGETS)
       setPage(0)
-      writePref(KEYS.widgets, null)
+      writePref(KEYS.widgetsOld, null)
     },
+    canUndo: undos.length > 0,
+    undo: () => step(undos, setUndos, setRedos),
+    redo: () => step(redos, setRedos, setUndos),
   }
 }
 

@@ -1,5 +1,5 @@
-import { Eye, EyeOff, GripVertical, LayoutDashboard, Lock, Search } from 'lucide-react'
-import { Fragment, useState, type ReactNode } from 'react'
+import { Eye, EyeOff, GripVertical, Lock, PencilRuler, Search } from 'lucide-react'
+import { Fragment, useRef, useState, type PointerEvent, type ReactNode } from 'react'
 import { hrefOf, type Page } from '../../hooks/useHashRoute'
 import type { PortalTheme } from '../../hooks/usePortalTheme'
 import { useI18n } from '../../i18n'
@@ -19,11 +19,12 @@ interface TopBarProps {
   query: string
   onQueryChange: (q: string) => void
   theme: PortalTheme
-  /** 홈에서만 — 위젯 편집을 연다 */
+  /** 홈에서만 — 홈 편집을 연다 */
   onEditWidgets?: () => void
-  /** 위젯 편집 중 — 상단 바 항목도 순서 · 보이기를 고치고, 끝에 '완료' */
+  /** 테마 메뉴의 '홈 배경 · 그림 바꾸기' — 홈으로 가서 편집을 연다 */
+  onCustomize: () => void
+  /** 홈 편집 중 — 상단 바 항목의 순서 · 보이기를 고친다. 나머지 도구와 '완료'는 화면 아래 편집 독(EditDock) */
   editing?: boolean
-  onDone?: () => void
 }
 
 /** 고칠 수 있는 상단 바 항목. 사용자 메뉴는 로그아웃이 있어 숨길 수 없다 */
@@ -48,10 +49,13 @@ function loadPrefs(): HeaderPrefs {
 }
 
 /** 본문 위에 떠 있는 유리 상단 바. 본문이 그 아래로 흘러 지나간다. */
-export function TopBar({ me, meLoading, page, query, onQueryChange, theme, onEditWidgets, editing, onDone }: TopBarProps) {
+export function TopBar({ me, meLoading, page, query, onQueryChange, theme, onEditWidgets, onCustomize, editing }: TopBarProps) {
   const { t, f } = useI18n()
   const [prefs, setPrefs] = useState(loadPrefs)
-  const [dragging, setDragging] = useState<Item | null>(null)
+  // 드래그 중인 항목 — 놓기 전에는 순서를 안 바꾸고 transform 으로만 보여 준다(바로 바꾸면 폭이 다른 항목끼리 자리가 왔다 갔다 한다)
+  const [drag, setDrag] = useState<{ from: number; to: number; dx: number; step: number } | null>(null)
+  // 손에 든 값은 ref 에도 — 빠르게 놓으면 다시 그리기 전에 pointerup 이 와서 state 가 한 박자 늦다
+  const held = useRef<{ x: number; dx: [number, number]; edges: [number, number]; mids: number[]; from: number; to: number } | null>(null)
   // 편집을 켜고 끌 때만 오른쪽 내용이 흐려진 채 올라온다 — 처음 열 때는 그대로
   const [toggled, setToggled] = useState(false)
   if (editing && !toggled) setToggled(true)
@@ -74,7 +78,7 @@ export function TopBar({ me, meLoading, page, query, onQueryChange, theme, onEdi
         </a>
       </>
     ),
-    theme: <ThemeMenu theme={theme} />,
+    theme: <ThemeMenu theme={theme} onCustomize={onCustomize} />,
     user: me ? (
       <UserMenu me={me} />
     ) : (
@@ -93,6 +97,47 @@ export function TopBar({ me, meLoading, page, query, onQueryChange, theme, onEdi
   }
   const shown = prefs.order.filter((i) => !prefs.hidden.includes(i))
 
+  const onDragStart = (e: PointerEvent<HTMLLIElement>, from: number) => {
+    if (e.button !== 0 || (e.target as Element).closest('button')) return
+    const rects = [...e.currentTarget.parentElement!.children].map((li) => li.getBoundingClientRect())
+    const me = rects[from]
+    const gap = rects.length > 1 ? rects[1].left - rects[0].right : 0
+    e.currentTarget.setPointerCapture(e.pointerId)
+    held.current = {
+      from,
+      to: from,
+      x: e.clientX,
+      // 목록 밖으로는 못 나가게
+      dx: [rects[0].left - me.left, rects[rects.length - 1].right - me.right],
+      edges: [me.left, me.right],
+      mids: rects.map((r) => r.left + r.width / 2),
+    }
+    setDrag({ from, to: from, dx: 0, step: me.width + gap })
+  }
+  const onDragMove = (e: PointerEvent<HTMLLIElement>) => {
+    const h = held.current
+    if (!h) return
+    const dx = Math.min(h.dx[1], Math.max(h.dx[0], e.clientX - h.x))
+    // 가는 쪽 변이 이웃의 가운데를 넘으면 자리를 바꾼다 — 가운데끼리 견주면 넓은 항목은 끝 항목을 못 넘는다
+    const edge = (dx > 0 ? h.edges[1] : h.edges[0]) + dx
+    h.to = h.mids.filter((m, i) => i !== h.from && m < edge).length
+    setDrag((d) => d && { ...d, dx, to: h.to })
+  }
+  const onDragEnd = () => {
+    const h = held.current
+    held.current = null
+    if (h) moveTo(prefs.order[h.from], h.to)
+    setDrag(null)
+  }
+  // 드래그 중 비켜 주는 항목의 이동 거리
+  const shift = (i: number) => {
+    if (!drag || i === drag.from) return 0
+    const { from, to, step } = drag
+    if (from < to && i > from && i <= to) return -step
+    if (from > to && i >= to && i < from) return step
+    return 0
+  }
+
   return (
     <header className="glass-chrome sticky top-3 z-20 flex h-16 items-center gap-3 rounded-2xl pr-2 pl-3 sm:pl-4">
       <div className="lg:hidden">
@@ -105,39 +150,34 @@ export function TopBar({ me, meLoading, page, query, onQueryChange, theme, onEdi
       </p>
 
       {editing ? (
-        // 편집 중 — 항목을 끌어 순서를 바꾸고 눈 단추로 숨긴다(브라우저 끌어 놓기, 다른 항목 위를 지나는 순간 자리를 바꾼다)
+        // 편집 중 — 항목을 드래그해 순서를 바꾸고 눈 아이콘으로 숨긴다
         <div className="fade-up ml-auto flex min-w-0 items-center gap-2">
           <span className="hidden text-[13px] text-muted xl:block">{t.widgets.header.hint}</span>
-          <ul className="flex min-w-0 items-center gap-1.5 overflow-x-auto" aria-label={t.widgets.header.title}>
+          <ul className="-my-2 flex min-w-0 items-center gap-1.5 overflow-x-auto py-2" aria-label={t.widgets.header.title}>
             {prefs.order.map((item, index) => {
               const name = t.widgets.header.items[item]
               const off = prefs.hidden.includes(item)
               const toggle = f(off ? t.widgets.header.show : t.widgets.header.hide, { name })
+              const lifted = drag?.from === index
               return (
                 <li
                   key={item}
-                  draggable
                   tabIndex={0}
                   aria-label={f(t.widgets.header.move, { name, index: index + 1 })}
-                  onDragStart={(e) => {
-                    setDragging(item)
-                    e.dataTransfer.effectAllowed = 'move'
-                    e.dataTransfer.setData('text/plain', name)
-                  }}
-                  onDragOver={(e) => {
-                    if (!dragging) return
-                    e.preventDefault()
-                    moveTo(dragging, index)
-                  }}
-                  onDragEnd={() => setDragging(null)}
+                  onPointerDown={(e) => onDragStart(e, index)}
+                  onPointerMove={onDragMove}
+                  onPointerUp={onDragEnd}
+                  onPointerCancel={onDragEnd}
+                  style={drag ? { translate: `${lifted ? drag.dx : shift(index)}px 0` } : undefined}
                   onKeyDown={(e) => {
                     const d = { ArrowLeft: -1, ArrowRight: 1 }[e.key]
                     if (!d || e.target !== e.currentTarget) return
                     e.preventDefault()
                     moveTo(item, index + d)
                   }}
-                  className={`flex h-10 flex-none cursor-grab items-center gap-1 rounded-xl pr-1 pl-1.5 text-sm font-semibold ring-1 transition-[opacity,background-color] outline-none focus-visible:ring-2 focus-visible:ring-accent active:cursor-grabbing ${
-                    dragging === item ? 'bg-accent-soft ring-accent/50' : 'bg-subtle ring-line'
+                  // 놓는 순간에는 transition 없이 — 순서가 바뀌는 자리와 비켜 있던 자리가 같아 튀지 않는다
+                  className={`flex h-10 flex-none cursor-grab touch-none items-center gap-1 rounded-xl pr-1 pl-1.5 text-sm font-semibold outline-none select-none focus-visible:ring-2 focus-visible:ring-accent active:cursor-grabbing ${
+                    lifted ? 'relative z-10 bg-bg shadow-[0_4px_14px_oklch(0_0_0/0.25)]' : `bg-subtle ${drag ? 'transition-[translate] duration-200 ease-out' : ''}`
                   } ${off ? 'text-muted' : ''}`}
                 >
                   <GripVertical className="size-4 text-muted" aria-hidden="true" />
@@ -163,19 +203,18 @@ export function TopBar({ me, meLoading, page, query, onQueryChange, theme, onEdi
               )
             })}
           </ul>
-          <button
-            type="button"
-            onClick={onDone}
-            className="h-10 flex-none cursor-pointer rounded-xl bg-accent-fill px-5 text-[15px] font-semibold text-white transition-[scale] active:scale-95"
-          >
-            {t.widgets.done}
-          </button>
         </div>
       ) : (
         <div className={`ml-auto flex items-center gap-1 ${toggled ? 'fade-up' : ''}`}>
+          {/* 글자와 함께 — 아이콘만으로는 배치 · 배경을 여기서 바꾼다는 걸 알기 어렵다 */}
           {onEditWidgets && (
-            <button type="button" onClick={onEditWidgets} aria-label={t.widgets.edit} title={t.widgets.edit} className={ICON_BUTTON}>
-              <LayoutDashboard className="size-5" aria-hidden="true" />
+            <button
+              type="button"
+              onClick={onEditWidgets}
+              className="mr-1 flex h-10 cursor-pointer items-center gap-2 rounded-xl px-3 text-sm font-semibold text-muted ring-1 ring-line transition-[background-color,color,scale] duration-150 hover:bg-subtle hover:text-fg active:scale-95"
+            >
+              <PencilRuler className="size-[18px]" aria-hidden="true" />
+              <span className="max-sm:sr-only">{t.widgets.edit}</span>
             </button>
           )}
           {/* 알림은 서버 API 가 생길 때까지 숨긴다. 사용자 메뉴 앞에는 구분선(맨 앞이면 없음) */}
