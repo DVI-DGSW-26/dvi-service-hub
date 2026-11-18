@@ -6,6 +6,8 @@
  *
  * 파일은 사내 서버에서 내보낸다. 허브는 switcher-v1.2.3 태그를 달면 승인을 거쳐 서버로 올린다
  * (.github/workflows/publish-switcher.yml). main 에 push 하는 것만으로는 바뀌지 않는다.
+ * 옛 주소(허브 /switcher.js)도 vercel.json 이 사내 서버 파일로 넘긴다 — 그래서 Vercel 빌드
+ * (vercel.json buildCommand)는 switcher.js 를 만들지 않는다. 파일이 있으면 rewrite 보다 먼저 나간다.
  * 로고 · "포털 홈" · 역할 조회는 허브로 간다 — 스크립트 주소가 아니라 data-hub(없으면 HUB)를 본다.
  *
  * 왼쪽 아래 버튼이 기본이다. 그 자리에 서비스 자체 버튼이 있으면
