@@ -1,16 +1,15 @@
 import { Eye, EyeOff, GripVertical, Lock, PencilRuler, Search } from 'lucide-react'
 import { Fragment, useRef, useState, useSyncExternalStore, type PointerEvent, type ReactNode } from 'react'
-import { hrefOf, type Page } from '../../hooks/useHashRoute'
-import type { PortalTheme } from '../../hooks/usePortalTheme'
-import { PHONE, useMedia } from '../../hooks/useMedia'
-import { useI18n } from '../../i18n'
-import { KEYS, readPref, writePref } from '../../lib/theme'
-import type { Me } from '../../types/portal'
-import { ICON_BUTTON } from '../ui/Popover'
-import { Skeleton } from '../ui/Skeleton'
-import { SearchBox } from './SearchBox'
+import { hrefOf, type Page } from '@/shared/hooks'
+import type { PortalTheme } from '@/features/theme'
+import { PHONE } from '@/shared/constants'
+import { useMedia } from '@/shared/hooks'
+import { useI18n } from '@/shared/i18n'
+import { KEYS, readPref, writePref } from '@/shared/lib'
+import type { Me } from '@/shared/types'
+import { ICON_BUTTON, Skeleton, SearchBox } from '@/shared/ui'
 import { Brand } from './Sidebar'
-import { ThemeMenu } from './ThemeMenu'
+import { ThemeMenu } from '@/features/theme'
 import { UserMenu } from './UserMenu'
 
 interface TopBarProps {
@@ -60,7 +59,7 @@ function useScrolled(px: number) {
   )
 }
 
-/** 본문 위에 떠 있는 유리 상단 바. 본문이 그 아래로 흘러 지나간다. 휴대폰에서는 화면 맨 위에 붙는다(styles.css 의 .app-bar) */
+/** 본문 위에 떠 있는 유리 상단 바. 본문이 그 아래로 흘러 지나간다. 휴대폰에서는 화면 맨 위에 붙는다(styles/layout.css 의 .app-bar) */
 export function TopBar({ me, meLoading, page, query, onQueryChange, theme, onEditWidgets, onCustomize, editing }: TopBarProps) {
   const { t, f } = useI18n()
   const [prefs, setPrefs] = useState(loadPrefs)

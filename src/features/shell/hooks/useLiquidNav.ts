@@ -6,8 +6,8 @@ import {
   type DragEvent as ReactDragEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
-import { project, rubberband, settle, snap, spring, step } from '../lib/spring'
-import { motionOff } from '../lib/theme'
+import { settle, snap, spring, step, motionOff } from '@/shared/lib'
+import { DRAG_START, EDGE_SPEED, MAX_LIFT, MAX_STRETCH, aimAt, followTo, nearestMenu, type Drag } from '../lib/liquid'
 
 interface Options {
   /** 메뉴가 늘어선 방향 — 사이드바는 세로(y), 하단 탭바는 가로(x) */
@@ -18,35 +18,6 @@ interface Options {
   onCommit: (index: number) => void
 }
 
-interface Drag {
-  /** 터치는 포인터 id, 마우스(브라우저 끌어놓기)는 -1 */
-  id: number
-  startX: number
-  startY: number
-  /** 메뉴 목록의 시작 끝(세로는 위, 가로는 왼쪽) — 화면 기준 */
-  listStart: number
-  /** 잡은 자리 — 메뉴 시작 끝에서 손가락까지 */
-  offset: number
-  live: boolean
-  /** 메뉴 판(data-liquid-root) 안에 있는지. 밖이면 방울은 제자리로 돌아가고 링크 칩이 커서를 따라간다 */
-  inside: boolean
-  to: number
-  history: { t: number; p: number }[]
-}
-
-const DRAG_START = 6
-// 아래 한도들은 모두 px — 비율로만 두면 넓은 칸(하단 탭 84px)에서 방울이 메뉴 판 밖으로 나간다.
-// 탭바 안쪽 여백(6px) 안에 들어오도록: 끝 넘김 4 + 들어 올림 한쪽 1.5 < 6
-/** 끝을 넘겨 끌어도 방울은 이만큼까지만 밀려난다 — 그 뒤로는 버티기만 한다 */
-const OVERSHOOT = 4
-/** 들어 올릴 때 메뉴 방향으로 커지는 길이(양쪽 합) */
-const MAX_LIFT = 3
-/** 빠르게 움직일 때 늘어나는 길이(양쪽 합) */
-const MAX_STRETCH = 10
-/** 끝 메뉴로 내려앉을 때 바깥쪽으로 남겨 둘 속도(px/s) — 이보다 빠르면 스프링이 끝을 넘어 튀어나간다 */
-const EDGE_SPEED = 150
-/** 놓는 순간의 속도는 이 시간(ms) 안의 움직임으로만 잰다 */
-const VELOCITY_WINDOW = 100
 const reduceMotion = motionOff
 
 // 브라우저 기본 끌기 그림은 숨기고 방울 · 링크 칩으로 대신 보여준다
@@ -144,19 +115,7 @@ export function useLiquidNav({ axis = 'y', active, onCommit }: Options) {
     })
 
     // 방울 가운데가 어느 메뉴 위에 있는지 — 그 메뉴 글자를 흰색으로
-    let near = -1
-    if (sim.active >= 0 || following()) {
-      const center = drop.x + size / 2
-      let best = Infinity
-      sim.starts.forEach((start, i) => {
-        const d = Math.abs(start + size / 2 - center)
-        if (d < best) {
-          best = d
-          near = i
-        }
-      })
-      if (best > size * 0.6) near = -1
-    }
+    const near = sim.active >= 0 || following() ? nearestMenu(sim.starts, size, drop.x + size / 2) : -1
     if (near !== sim.lit) {
       sim.lit = near
       setLit(near)
@@ -257,30 +216,12 @@ export function useLiquidNav({ axis = 'y', active, onCommit }: Options) {
   }
 
   /** 손가락 위치를 방울 목표로 — 끝을 넘으면 고무줄처럼 */
-  function follow(d: Drag, client: number, t: number) {
-    const max = sim.starts[sim.starts.length - 1] ?? 0
-    let p = client - d.listStart - d.offset
-    if (p < 0) p = -rubberband(-p, OVERSHOOT)
-    if (p > max) p = max + rubberband(p - max, OVERSHOOT)
-    d.to = p
-    d.history.push({ t, p })
-    while (d.history.length > 2 && t - d.history[0].t > VELOCITY_WINDOW) d.history.shift()
-  }
+  const follow = (d: Drag, client: number, t: number) => followTo(d, client, t, sim.starts[sim.starts.length - 1] ?? 0)
 
   /** 놓기 — 놓는 순간 속도를 넘겨받고, 그 속도로 멈출 자리에 가장 가까운 메뉴로 */
   function land(d: Drag, t: number) {
-    // 멈춰 있다 놓으면 그동안 move 가 오지 않아 멈추기 전 속도가 남는다 — 놓는 순간을 마지막 점으로 넣고
-    // 그 앞 VELOCITY_WINDOW 안의 점만 본다. 오래 멈춰 있었으면 속도 0 → 가장 가까운 메뉴에 내려앉는다
-    const h = [...d.history.filter((s) => t - s.t <= VELOCITY_WINDOW), { t, p: d.to }]
-    const v = h.length > 1 ? ((h[h.length - 1].p - h[0].p) / Math.max(1, h[h.length - 1].t - h[0].t)) * 1000 : 0
-    const aim = d.to + project(v)
-    let target = 0
-    sim.starts.forEach((start, i) => {
-      if (Math.abs(start - aim) < Math.abs(sim.starts[target] - aim)) target = i
-    })
+    const { target, v, outward } = aimAt(d, t, sim.starts)
     // 끝 메뉴로 갈 때 바깥쪽 속도는 판 끝이 받아 낸다 — 그대로 넘기면 끝을 지나쳐 튀어나갔다 돌아온다
-    const last = sim.starts.length - 1
-    const outward = (target === last && v > 0) || (target === 0 && v < 0)
     sim.drop.v = outward ? Math.sign(v) * Math.min(Math.abs(v), EDGE_SPEED) : v
     sim.feel = outward ? [1, 0.32] : [0.8, 0.32]
     sim.releasedAt = performance.now()

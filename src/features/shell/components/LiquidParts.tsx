@@ -1,6 +1,6 @@
 import type { RefObject } from 'react'
-import { useI18n } from '../../i18n'
-import { NAV_ITEMS } from './navItems'
+import { useI18n } from '@/shared/i18n'
+import { NAV_ITEMS } from '../lib/navItems'
 
 const BLOB = 'absolute top-0 left-0 origin-center will-change-transform bg-accent-fill'
 

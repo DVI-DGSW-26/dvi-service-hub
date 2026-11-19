@@ -1,9 +1,9 @@
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
-import { useLiquidNav } from '../../hooks/useLiquidNav'
-import { hrefOf, type Page } from '../../hooks/useHashRoute'
-import { useI18n } from '../../i18n'
+import { useLiquidNav } from '../hooks/useLiquidNav'
+import { hrefOf, type Page } from '@/shared/hooks'
+import { useI18n } from '@/shared/i18n'
 import { CarryChip, LiquidBlobs } from './LiquidParts'
-import { NAV_ITEMS } from './navItems'
+import { NAV_ITEMS } from '../lib/navItems'
 
 interface SidebarProps {
   page: Page
