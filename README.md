@@ -20,6 +20,8 @@ pnpm build      # apps/web/dist 생성
 pnpm check      # 모든 패키지 typecheck · lint · test
 ```
 
+앱은 `pnpm --filter @dvi/mobile start` 로 띄운다 — 자세한 것은 `apps/mobile/README.md`.
+
 Vercel 프로젝트의 Root Directory 는 `apps/web` 이다 (docs/adr/0003-monorepo.md).
 아래에서 `src/` · `api/` 등 경로는 `apps/web/` 기준이다.
 
