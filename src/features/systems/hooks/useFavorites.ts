@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { KEYS, readPref, writePref } from '../lib/theme'
+import { KEYS, readPref, writePref } from '@/shared/lib'
 
 function load(): string[] {
   try {

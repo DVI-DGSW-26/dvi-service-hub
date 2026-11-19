@@ -1,16 +1,14 @@
 import { ChevronRight, LayoutGrid } from 'lucide-react'
 import { useState } from 'react'
-import type { Service } from '../../services'
-import { hrefOf } from '../../hooks/useHashRoute'
-import { useI18n } from '../../i18n'
-import { canSee } from '../../lib/access'
-import type { Me } from '../../types/portal'
-import type { StackSize } from '../../lib/widgetLayout'
-import { ServiceCard, ServiceLogo } from '../services/ServiceCard'
-import { ServiceCardSkeleton } from '../services/ServiceSkeleton'
-import { CountTag, Panel, SmallPanel } from '../ui/Panel'
-import { Segmented } from '../ui/Segmented'
-import { Skeleton, SkeletonText } from '../ui/Skeleton'
+import { useClipRows, hrefOf } from '@/shared/hooks'
+import type { Service } from '../lib/services'
+import { useI18n } from '@/shared/i18n'
+import { canSee } from '../lib/access'
+import type { Me } from '@/shared/types'
+import { isMini, type StackSize } from '@/shared/widget'
+import { ServiceCard, ServiceLogo } from './ServiceCard'
+import { ServiceCardSkeleton } from './ServiceSkeleton'
+import { CountTag, Panel, SmallPanel, Segmented, Skeleton, SkeletonText } from '@/shared/ui'
 
 interface SystemsPanelProps {
   me: Me | null
@@ -35,32 +33,66 @@ const SKELETON_COUNT = 10
 const MOBILE_SHOWN = 4
 
 export function SystemsPanel({ me, loading = false, services, allServices, favorites, onToggleFavorite, stack, className = '' }: SystemsPanelProps) {
-  const all = stack === 'l'
+  // 좁은 화면 고정 칸은 카드를 모두 두고 들어가는 줄만 보인다(useClipRows) — 나머지는 '모두 보기'(업무시스템 화면)
+  const all = !!stack
+  const rows = useClipRows<HTMLUListElement>(!!stack)
   const [filter, setFilter] = useState<Filter>('mine')
   const { t, f, rich } = useI18n()
   const favCount = services.filter((s) => favorites.includes(s.id)).length
   const list = filter === 'all' ? allServices : filter === 'mine' ? services : services.filter((s) => favorites.includes(s.id))
 
-  // 작게 — 즐겨찾기를 앞에 두고 로고 2 × 2. 이름은 화면낭독 · 마우스 올리기로, 나머지는 업무시스템 화면에서
-  if (stack === 's') {
-    const top = [...services].sort((a, b) => Number(favorites.includes(b.id)) - Number(favorites.includes(a.id))).slice(0, 4)
+  // 작은 칸에 보이는 로고 — 즐겨찾기를 앞에
+  const top = [...services].sort((a, b) => Number(favorites.includes(b.id)) - Number(favorites.includes(a.id))).slice(0, 4)
+
+  // 아주 작은 칸 — 제목 없이 로고만: 1×1 하나, 1×2 둘(세로), 4×1 넷(가로). 나머지는 탭 바의 업무시스템에서
+  if (isMini(stack)) {
     return (
-      <SmallPanel title={t.home.systems.title} icon={LayoutGrid} className={className}>
+      <section aria-label={t.home.systems.title} className={`glass flex rounded-3xl p-2 ${className}`}>
         {loading ? (
-          <Skeleton className="h-28 w-full" />
-        ) : top.length ? (
-          <ul className="grid flex-1 grid-cols-2 gap-2">
-            {top.map((s) => (
-              <li key={s.id}>
+          <Skeleton className="w-full rounded-2xl" />
+        ) : (
+          <ul className={`grid min-h-0 flex-1 gap-2 ${stack === '4x1' ? 'grid-cols-4' : 'auto-rows-fr'}`}>
+            {top.slice(0, stack === '1x1' ? 1 : stack === '1x2' ? 2 : 4).map((s) => (
+              <li key={s.id} className="min-w-0">
                 <a
                   href={s.links[0].url}
                   target="_blank"
                   rel="noreferrer"
                   aria-label={`${s.name} ${t.common.newTab}`}
                   title={s.name}
-                  className="grid h-full min-h-14 place-items-center rounded-2xl bg-subtle ring-1 ring-line transition-[background-color,scale] duration-200 hover:bg-raised active:scale-95"
+                  className="grid h-full place-items-center rounded-2xl bg-subtle ring-1 ring-line transition-[background-color,scale] duration-200 hover:bg-raised active:scale-95"
                 >
                   <ServiceLogo service={s} />
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    )
+  }
+
+  // 작게 — 로고 2 × 2(넓게 4×2 는 한 줄 넷에 이름까지). 이름은 화면낭독 · 마우스 올리기로, 나머지는 업무시스템 화면에서
+  if (stack === 's' || stack === 'w') {
+    const wide = stack === 'w'
+    return (
+      <SmallPanel title={t.home.systems.title} icon={LayoutGrid} className={className}>
+        {loading ? (
+          <Skeleton className="h-20 w-full" />
+        ) : top.length ? (
+          <ul className={`grid min-h-0 flex-1 gap-2 ${wide ? 'grid-cols-4' : 'grid-cols-2 grid-rows-2'}`}>
+            {top.map((s) => (
+              <li key={s.id} className="min-w-0">
+                <a
+                  href={s.links[0].url}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`${s.name} ${t.common.newTab}`}
+                  title={s.name}
+                  className="flex h-full flex-col items-center justify-center gap-1 rounded-2xl bg-subtle ring-1 ring-line transition-[background-color,scale] duration-200 hover:bg-raised active:scale-95"
+                >
+                  <ServiceLogo service={s} />
+                  {wide && <span className="max-w-full truncate px-1.5 text-xs font-semibold">{s.name}</span>}
                 </a>
               </li>
             ))}
@@ -68,9 +100,12 @@ export function SystemsPanel({ me, loading = false, services, allServices, favor
         ) : (
           <p className="text-[13px] text-muted break-keep">{t.home.systems.noAccess}</p>
         )}
-        <a href={hrefOf('systems')} className="mt-2 text-[13px] font-semibold text-accent">
-          {f(t.home.systems.mobileAll, { count: services.length })}
-        </a>
+        {/* 작게는 로고 2 × 2 가 칸을 다 쓴다 — 나머지는 탭 바의 업무시스템에서 */}
+        {wide && (
+          <a href={hrefOf('systems')} className="mt-2 text-[13px] font-semibold text-accent">
+            {f(t.home.systems.mobileAll, { count: services.length })}
+          </a>
+        )}
       </SmallPanel>
     )
   }
@@ -102,7 +137,7 @@ export function SystemsPanel({ me, loading = false, services, allServices, favor
       action={{ label: t.common.viewAll, href: hrefOf('systems') }}
       className={className}
     >
-      <div className="mb-3 sm:hidden">{filterControl}</div>
+      <div className="mb-3 flex-none sm:hidden">{filterControl}</div>
       {loading ? (
         <ul
           className="grid grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))] gap-3 fit:flex-1 fit:grid-cols-5 auto-rows-fr fit:gap-2.5"
@@ -132,7 +167,7 @@ export function SystemsPanel({ me, loading = false, services, allServices, favor
         </div>
       ) : (
         // 휴대폰은 앞의 MOBILE_SHOWN 개만 — 나머지는 아래 '모두 보기'(업무시스템 화면)에서
-        <ul className={`grid grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))] gap-3 max-sm:gap-2 ${all ? '' : 'max-sm:[&>li:nth-child(n+5)]:hidden'} fit:flex-1 fit:grid-cols-5 auto-rows-fr fit:gap-2.5`}>
+        <ul ref={rows} className={`grid grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))] gap-3 max-sm:gap-2 ${all ? 'min-h-0 flex-1 content-start overflow-hidden' : 'auto-rows-fr max-sm:[&>li:nth-child(n+5)]:hidden'} fit:flex-1 fit:grid-cols-5 fit:gap-2.5`}>
           {list.map((s) => (
             <ServiceCard
               key={s.id}

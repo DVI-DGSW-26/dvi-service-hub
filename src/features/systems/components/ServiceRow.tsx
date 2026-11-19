@@ -1,6 +1,6 @@
 import { ArrowUpRight, Star } from 'lucide-react'
-import type { Service } from '../../services'
-import { useI18n } from '../../i18n'
+import type { Service } from '../lib/services'
+import { useI18n } from '@/shared/i18n'
 import { ServiceBadge, ServiceLogo } from './ServiceCard'
 
 interface ServiceRowProps {

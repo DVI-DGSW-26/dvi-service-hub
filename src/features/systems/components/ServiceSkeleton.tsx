@@ -1,4 +1,4 @@
-import { Skeleton } from '../ui/Skeleton'
+import { Skeleton } from '@/shared/ui'
 
 /**
  * 로그인 정보(권한)가 오기 전 업무시스템 자리. 실제 카드 · 줄과 같은 틀(여백 · 로고 크기 · 줄 수)로 그려

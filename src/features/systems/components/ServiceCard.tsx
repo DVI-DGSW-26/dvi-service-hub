@@ -1,7 +1,7 @@
 import { ArrowUpRight, Lock, Star } from 'lucide-react'
-import type { AuthMode, Service } from '../../services'
-import { useI18n } from '../../i18n'
-import { Badge, type BadgeTone } from '../ui/Badge'
+import type { AuthMode, Service } from '../lib/services'
+import { useI18n } from '@/shared/i18n'
+import { Badge, type BadgeTone } from '@/shared/ui'
 
 const AUTH_TONE: Record<AuthMode, BadgeTone> = { sso: 'ok', separate: 'warn', none: 'accent' }
 

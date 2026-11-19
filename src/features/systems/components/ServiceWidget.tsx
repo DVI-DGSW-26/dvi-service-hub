@@ -1,10 +1,10 @@
 import { ArrowUpRight, Search } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { useI18n } from '../../i18n'
-import { services } from '../../services'
-import { Badge, type BadgeTone } from '../ui/Badge'
-import { ServiceLogo } from '../services/ServiceCard'
-import type { WidgetSize } from './registry'
+import { useI18n } from '@/shared/i18n'
+import { services } from '../lib/services'
+import { Badge, type BadgeTone } from '@/shared/ui'
+import { ServiceLogo } from './ServiceCard'
+import type { WidgetSize } from '@/features/home'
 
 /** 설비 · 라인 상태 — 글자는 사전(widgets.state)에서 */
 export type UnitState = 'run' | 'idle' | 'alarm' | 'off'
