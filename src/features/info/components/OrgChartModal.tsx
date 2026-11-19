@@ -1,9 +1,9 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { orgChart } from '../../data/orgChart'
-import { useI18n } from '../../i18n'
-import { SearchBox } from '../layout/SearchBox'
-import { Modal } from '../ui/Modal'
-import { OrgChartView, orgMatch, unitCount } from './OrgChartView'
+import { orgChart } from '../lib/orgChart'
+import { useI18n } from '@/shared/i18n'
+import { SearchBox, Modal } from '@/shared/ui'
+import { OrgChartView } from './OrgChartView'
+import { orgMatch, unitCount } from '../lib/orgMatch'
 
 /**
  * 조직도 창 — 오늘의 일정 창과 같은 틀(위 머리말 · 검색, 왼쪽 목록, 오른쪽 본문).

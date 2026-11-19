@@ -1,6 +1,6 @@
 // 조직도 ('26년 DVISION 조직도). 서버 API 가 없어 화면에 둔다 — 조직이 바뀌면 여기만 고친다.
 
-import type { OrgChart } from '../types/portal'
+import type { OrgChart } from '@/shared/types'
 
 export const orgChart: OrgChart = {
   head: '대표이사',

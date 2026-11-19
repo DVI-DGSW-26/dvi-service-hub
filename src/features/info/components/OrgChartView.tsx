@@ -1,24 +1,9 @@
-import { orgChart } from '../../data/orgChart'
-import { useI18n } from '../../i18n'
-import type { OrgChart, OrgTeam, OrgUnit } from '../../types/portal'
-
+import { orgChart } from '../lib/orgChart'
+import { useI18n } from '@/shared/i18n'
+import type { OrgChart, OrgTeam, OrgUnit } from '@/shared/types'
+import { orgMatch } from '../lib/orgMatch'
 /** 가지를 잇는 점선 */
 const LINE = 'border-dashed border-fg/20'
-
-/** 팀의 담당 이름 전부 — 담당 아래 담당까지 */
-const unitNames = (team: OrgTeam) => team.units.flatMap((u) => [u.name, ...(u.units ?? [])])
-
-/** 팀의 담당 수 — 담당 아래 담당까지 센다 */
-export const unitCount = (team: OrgTeam) => unitNames(team).length
-
-/** 찾는 글자에 맞는 팀 · 파트. 팀 이름이 맞으면 그 팀의 파트 전부 */
-export function orgMatch(team: OrgTeam, query: string) {
-  const q = query.trim().toLowerCase()
-  if (!q) return { team: false, units: [] as string[], any: true }
-  const byName = team.name.toLowerCase().includes(q)
-  const units = byName ? unitNames(team) : unitNames(team).filter((u) => u.toLowerCase().includes(q))
-  return { team: byName, units, any: byName || units.length > 0 }
-}
 
 interface Focus {
   /** 찾는 글자 — 맞는 칸은 강조, 나머지 팀은 흐리게 */
