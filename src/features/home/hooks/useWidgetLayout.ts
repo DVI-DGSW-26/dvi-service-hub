@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { COLS, ROWS } from '../components/widgets/constants'
-import type { WidgetDef } from '../components/widgets/registry'
-import { KEYS, readPref, writePref } from '../lib/theme'
-import { cellsFor, fromHalf, fromRows, minSize, parsePages, parseStack, placeAt, placeOn, stack, strip, tidy, valid, without, type Page, type Stack, type StackSize } from '../lib/widgetLayout'
+import { COLS, ROWS } from '../lib/constants'
+import type { WidgetDef } from '../lib/widgetDef'
+import { KEYS, readPref, writePref } from '@/shared/lib'
+import { cellsFor, fromHalf, fromRows, minSize, parsePages, placeAt, placeOn, strip, tidy, valid, without, type Page } from '../lib/widgetLayout'
+import { parseStack, stack, type Stack } from '../lib/stackLayout'
+import { type StackSize } from '@/shared/widget'
 
 /** 처음 배치 — 위젯 이전의 고정 홈과 같은 한 화면(24 × 12 칸) */
 export const DEFAULT_WIDGETS: Page[] = [

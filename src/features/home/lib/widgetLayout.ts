@@ -15,7 +15,7 @@
 // React 없이 값만 다룬다.
 
 import { bottom, collides } from 'react-grid-layout/core'
-import { COLS, GAP, MAX_PER_PAGE, ROWS } from '../components/widgets/constants.ts'
+import { COLS, GAP, MAX_PER_PAGE, ROWS } from './constants.ts'
 
 /** 위젯 하나의 자리 — i 는 위젯 type */
 export interface Item {
@@ -59,7 +59,7 @@ export const rowHeight = (height: number) => (height - GAP * (ROWS - 1)) / ROWS
 export const fits = (page: Page) => page.length <= MAX_PER_PAGE && bottom(page) <= ROWS
 
 /** 읽는 순서 — 위 → 아래, 같은 행이면 왼쪽 → 오른쪽 */
-const reading = (a: Item, b: Item) => a.y - b.y || a.x - b.x
+export const reading = (a: Item, b: Item) => a.y - b.y || a.x - b.x
 
 /** 두 자리가 겹친 칸 수 */
 const overlap = (a: Item, b: Item) =>
@@ -197,40 +197,6 @@ export function tidy(page: Page): Page {
 /** react-grid-layout 이 붙이는 것(moved · static · minW 등)을 떼고 자리만 남긴다 — 저장하는 모양 */
 export const strip = (page: Page): Page => page.map(({ i, x, y, w, h }) => ({ i, x, y, w, h }))
 
-/**
- * 좁은 화면에서 한 줄로 쌓는 순서 — 따로 저장한 순서(order)대로, 거기 없는 위젯은 뒤에 페이지 · 읽는 순서대로.
- * 좁은 화면에서 순서를 바꿔도 넓은 화면의 칸 배치는 그대로다
- */
-export function stack(pages: Page[], order: string[]): Item[] {
-  const at = (i: string) => (order.includes(i) ? order.indexOf(i) : order.length)
-  return pages.flatMap((p) => [...p].sort(reading)).sort((a, b) => at(a.i) - at(b.i))
-}
-
-/**
- * 좁은 화면 크기 — 작게(두 칸 중 한 칸) · 보통(한 줄 전체) · 크게(한 줄 전체, 내용을 더). iOS 위젯의 small · medium · large 처럼
- * 위젯마다 그릴 수 있는 것(registry 의 stack) 사이에서만 고른다
- */
-export type StackSize = 's' | 'm' | 'l'
-const STACK_SIZES: StackSize[] = ['s', 'm', 'l']
-
-/** 좁은 화면 배치 — 쌓는 순서와 위젯별 크기. 넓은 화면 칸 배치와 따로 저장한다 */
-export interface Stack {
-  order: string[]
-  sizes: Record<string, StackSize>
-}
-
-/** 저장해 둔 좁은 화면 배치. 틀린 것은 버린다 — 순서가 틀리면 빈 순서(넓은 화면의 읽는 순서), 크기가 틀리면 그 위젯만 기본 크기 */
-export function parseStack(saved: unknown): Stack {
-  const v = saved as Partial<Stack> | null
-  const order = Array.isArray(v?.order) && v.order.every((i) => typeof i === 'string') ? v.order : []
-  const sizes = v?.sizes && typeof v.sizes === 'object' ? Object.fromEntries(Object.entries(v.sizes).filter(([, s]) => STACK_SIZES.includes(s))) : {}
-  return { order, sizes }
-}
-
-/** 고른 크기를 그 위젯이 그릴 수 있으면 그대로, 아니면 보통(없으면 그릴 수 있는 첫 크기) */
-export const stackSizeOf = (supported: StackSize[], saved: StackSize | undefined): StackSize =>
-  saved && supported.includes(saved) ? saved : supported.includes('m') ? 'm' : supported[0]
-
 /** 모든 페이지에서 i 를 뺀다 — 빈자리는 그대로, 빈 페이지는 지운다 */
 export const without = (pages: Page[], i: string) => pages.map((p) => p.filter((c) => c.i !== i)).filter((p) => p.length)
 
@@ -360,7 +326,7 @@ export function guides(page: Page, i: string, sides: Side[]): Guide[] {
 
 /** 예전 형식(페이지마다 줄 목록 — 줄 높이 h · 위젯 폭 w 가 3 × 3 칸 비율)을 칸 자리로. 모양이 틀리면 null */
 export function fromRows(saved: unknown): Page[] | null {
-  type Row = { h: number; items: { type: string; w: number }[] }
+  interface Row { h: number; items: { type: string; w: number }[] }
   const ok = (n: unknown) => typeof n === 'number' && n > 0 && Number.isFinite(n)
   const isRow = (r: Row) => ok(r?.h) && Array.isArray(r.items) && r.items.length > 0 && r.items.every((c) => typeof c?.type === 'string' && ok(c.w))
   if (!Array.isArray(saved) || !saved.length) return null

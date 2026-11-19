@@ -1,12 +1,11 @@
 import { Check, GripVertical, Plus, RotateCcw, Search } from 'lucide-react'
 import { useId, useState, type CSSProperties } from 'react'
-import type { WidgetLayout } from '../../hooks/useWidgetLayout'
-import { useI18n } from '../../i18n'
-import { services } from '../../services'
-import { ServiceLogo } from '../services/ServiceCard'
-import { Modal } from '../ui/Modal'
-import { MAX_PER_PAGE } from './constants'
-import { galleryDrag, text, type WidgetDef } from './registry'
+import type { WidgetLayout } from '../hooks/useWidgetLayout'
+import { useI18n } from '@/shared/i18n'
+import { services, ServiceLogo } from '@/features/systems'
+import { Modal } from '@/shared/ui'
+import { MAX_PER_PAGE } from '../lib/constants'
+import { galleryDrag, text, type WidgetDef } from '../lib/widgetDef'
 
 interface GalleryProps {
   layout: WidgetLayout

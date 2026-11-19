@@ -1,9 +1,8 @@
 import { BrushCleaning, RotateCcw, Undo2 } from 'lucide-react'
 import type { CSSProperties } from 'react'
-import type { Decor } from '../../hooks/useDecor'
-import { useI18n } from '../../i18n'
-import { MAX_ZOOM } from '../../lib/wallpaper'
-import { DecorMenu } from '../layout/DecorMenu'
+import type { Decor } from '@/features/decor'
+import { useI18n } from '@/shared/i18n'
+import { MAX_ZOOM, DecorMenu } from '@/features/decor'
 
 interface EditDockProps {
   decor: Decor
@@ -12,6 +11,7 @@ interface EditDockProps {
   onUndo?: () => void
   /** 기본 배치로 — 갤러리가 없을 때(운영 · pnpm dev)만. 목업은 갤러리 아래에 있다 */
   onReset?: () => void
+  /** 편집 끝내기(넓은 화면) — 좁은 화면은 탭 바의 완료 · 빈 곳 누르기(App) */
   onDone: () => void
   /** 왼쪽 사이드바 · 갤러리 폭(px) — 넓은 화면에서 본문 가운데에 놓는다 */
   side: number
@@ -23,7 +23,8 @@ const DONE = 'h-10 flex-none cursor-pointer rounded-xl bg-accent-fill px-5 text-
 
 /**
  * 홈 편집 중 화면 아래에 뜨는 도구 막대 — 배경 · 빈칸 정리 · 되돌리기 · 기본 배치 · 완료를 글자와 함께.
- * 그림 위치 조정 중에는 같은 자리가 조정 막대(안내 · 확대 · 취소 · 완료)로 바뀐다. 끄는 판은 layout/Wallpaper.tsx 의 DecorAdjust
+ * 좁은 화면은 그림 위치 조정 때만 탭 바 자리에 뜬다 — 그 밖의 편집 도구는 탭 바가 맡는다(layout/TabBar 의 EditTabBar)
+ * 그림 위치 조정 중에는 같은 자리가 조정 막대(안내 · 확대 · 취소 · 완료)로 바뀐다. 끄는 판은 decor/components/Wallpaper.tsx 의 DecorAdjust
  */
 export function EditDock({ decor, onTidy, onUndo, onReset, onDone, side }: EditDockProps) {
   const { t } = useI18n()
@@ -35,7 +36,7 @@ export function EditDock({ decor, onTidy, onUndo, onReset, onDone, side }: EditD
       role="toolbar"
       aria-label={kind ? t.widgets.decor.adjust : t.widgets.dock}
       style={{ '--side': `${side}px` } as CSSProperties}
-      className="glass-strong animate-materialize fixed bottom-24 left-1/2 z-40 flex w-max max-w-[calc(100vw-24px)] -translate-x-1/2 flex-wrap items-center justify-center gap-x-1 gap-y-2 rounded-2xl p-2 lg:bottom-6 lg:left-[calc((100%+var(--side))/2)]"
+      className="glass-strong animate-materialize fixed inset-x-3 bottom-3 z-40 flex flex-wrap items-center gap-x-1 gap-y-2 rounded-[22px] p-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] lg:inset-x-auto lg:bottom-6 lg:left-[calc((100%+var(--side))/2)] lg:w-max lg:max-w-[calc(100vw-24px)] lg:-translate-x-1/2 lg:justify-center lg:rounded-2xl lg:p-2"
     >
       {kind && pos ? (
         <>
@@ -52,10 +53,21 @@ export function EditDock({ decor, onTidy, onUndo, onReset, onDone, side }: EditD
               className="w-32 accent-(--color-accent-fill)"
             />
           </label>
+          {/* 인사 카드는 메뉴 없이 바로 고르므로(DecorMenu direct) 기본 그림으로 되돌리기는 여기서 */}
+          <button
+            type="button"
+            onClick={() => {
+              decor.endAdjust(false)
+              decor.set(kind, null)
+            }}
+            className={TOOL}
+          >
+            {t.widgets.decor.reset}
+          </button>
           <button type="button" onClick={() => decor.endAdjust(false)} className={TOOL}>
             {t.widgets.decor.cancel}
           </button>
-          <button type="button" onClick={() => decor.endAdjust(true)} className={DONE}>
+          <button type="button" onClick={() => decor.endAdjust(true)} className={`${DONE} max-lg:ml-auto`}>
             {t.widgets.done}
           </button>
         </>

@@ -1,10 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react'
-import type { WidgetLayout } from '../../hooks/useWidgetLayout'
-import { useI18n } from '../../i18n'
-import { motionOff } from '../../lib/theme'
-import { stackSizeOf, type Item, type StackSize } from '../../lib/widgetLayout'
-import { text, type WidgetDef } from './registry'
-
+import { flushSync } from 'react-dom'
+import type { WidgetLayout } from '../hooks/useWidgetLayout'
+import { useI18n } from '@/shared/i18n'
+import { motionOff } from '@/shared/lib'
+import { type Item } from '../lib/widgetLayout'
+import { STACK_CELLS, stackSizeOf, nearest } from '../lib/stackLayout'
+import { type StackSize } from '@/shared/widget'
+import { text, type WidgetDef } from '../lib/widgetDef'
 interface StackBoardProps {
   layout: WidgetLayout
   defs: WidgetDef[]
@@ -13,15 +15,14 @@ interface StackBoardProps {
   onEdit: () => void
   /** 위젯을 골랐는지 — App 이 아래 막대(편집 독 · 탭 바)를 숨긴다 */
   onPick: (picking: boolean) => void
+  /** 끌어 옮긴 위젯을 놓았다 — 놓기를 완료로 보고 편집을 끝낸다 */
+  onDone: () => void
   /** 위젯 하나 — WidgetGrid 의 것을 그대로 쓴다. overlay 는 고른 위젯 위에 얹는 테두리 · 손잡이 */
   renderWidget: (c: Item, index: number, list: Item[], stack: StackSize, overlay?: ReactNode) => ReactNode
 }
 
-const ORDER: StackSize[] = ['s', 'm', 'l']
 /** 이만큼(ms) 누르고 있으면 위젯이 들린다(쉴 때는 편집이 켜지며) — 그 전에 움직이면 스크롤(터치) · 글자 고르기(마우스) */
 const HOLD = 350
-/** 손잡이를 이만큼(px) 끌면 다음 크기로 — 가로는 칸 반 폭, 세로는 이 값 */
-const GROW = 60
 /** 끄는 위젯이 화면 위 · 아래 끝 이만큼(px) 안에 오면 화면이 따라 스크롤된다 — 끝에 가까울수록 빠르게, 맨 끝에서 초당 SCROLL_MAX(px) */
 const EDGE = 100
 const SCROLL_MAX = 1100
@@ -35,20 +36,24 @@ const HANDLE = {
 }
 type Side = keyof typeof HANDLE
 
-/** want 를 못 그리면 그릴 수 있는 것 중 가장 가까운 크기 */
-const nearest = (supported: StackSize[], want: StackSize) =>
-  supported.reduce((a, b) => (Math.abs(ORDER.indexOf(b) - ORDER.indexOf(want)) < Math.abs(ORDER.indexOf(a) - ORDER.indexOf(want)) ? b : a))
+/** 크기를 바꾼다 — 칸이 늘고 주는 모습을 이어 그린다(View Transition, styles/widgets/stack.css 의 ::view-transition-*). 모르는 브라우저 · 애니메이션 끄기는 바로 */
+function morph(change: () => void) {
+  if (motionOff() || !document.startViewTransition) { change(); return; }
+  document.startViewTransition(() => flushSync(change))
+}
 
 /**
- * 좁은 화면의 위젯 판 — 두 칸에 좁은 화면 순서 · 크기대로 쌓는다(작게는 한 칸). 편집은 홈 화면 그 자리에서(삼성 One UI 처럼).
+ * 좁은 화면의 위젯 판 — 4칸 격자에 좁은 화면 순서 · 크기(1×1 ~ 4×4, lib/widgetLayout.ts 의 STACK_CELLS)대로 쌓는다. 편집은 홈 화면 그 자리에서(삼성 One UI 처럼).
  * 쉴 때: 누르면 위젯 기능(링크 등)이 그대로 돈다. 길게 누르면 홈 편집이 켜지고(상단 바의 홈 편집과 같은 상태) 그 위젯이 골라진다.
- * 편집 중: 위젯을 누르면 그 위젯에만 테두리 · 변 손잡이, 다시 누르거나 바깥 · Esc 면 꺼진다. 좌우 손잡이는 작게 ↔ 한 줄, 위아래는 보통 ↔ 크게
- *   (그 위젯이 그릴 수 있는 것만, 바뀌면 바로 저장). 고른 동안 아래 막대는 숨는다.
+ * 편집 중: 위젯을 누르면 그 위젯에만 테두리 · 변 손잡이, 다시 누르거나 바깥 · Esc 면 꺼진다. 좌우 손잡이는 가로 칸 수, 위아래는 세로 칸 수
+ *   (그 위젯이 그릴 수 있는 것만, 바뀌면 바로 저장). 반 칸을 넘을 때마다 위젯이 늘거나 줄며 짧게 진동하고, 테두리는 늘 위젯 크기 그대로 함께 바뀐다.
+ *   고른 동안 아래 막대는 숨는다.
  * 옮기기: 길게 누른 채 움직이면 위젯이 손을 따라 뜨고(테두리는 숨김), 놓일 칸에 점선 자리가 보인다. 손이 다른 위젯의 앞쪽 반이면 그 앞, 뒤쪽 반이면 뒤
- *   — 작게(한 칸)끼리는 좌우 반, 그 밖은 위아래 반. 이미 그 자리면 그대로라 크기가 달라도 오가지 않는다. 비키는 위젯은 미끄러지고, 끝에 대면 스크롤된다.
+ *   — 4칸보다 좁은 위젯은 좌우 반, 4칸 폭은 위아래 반. 이미 그 자리면 그대로라 크기가 달라도 오가지 않는다. 비키는 위젯은 미끄러지고, 끝에 대면 스크롤된다.
+ *   놓으면 그걸 완료로 보고 편집이 끝난다.
  * 키보드는 편집 중 위젯에 초점을 두고 화살표로 옮기고, Enter 로 골라 손잡이로 간다. 넓은 화면 칸 배치는 건드리지 않는다.
  */
-export function StackBoard({ layout, defs, editing, onEdit, onPick, renderWidget }: StackBoardProps) {
+export function StackBoard({ layout, defs, editing, onEdit, onPick, onDone, renderWidget }: StackBoardProps) {
   const { t, f } = useI18n()
   const boardRef = useRef<HTMLDivElement>(null)
   const slotRef = useRef<HTMLDivElement>(null)
@@ -87,7 +92,7 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, renderWidget
     anchor.current = null
     const node = a && el(a.i)
     if (node) scrollBy(0, node.getBoundingClientRect().top - a.top)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- el 은 DOM 을 찾기만 한다
+     
   }, [editing])
   // 실제 폰은 든 뒤 움직이면 브라우저가 스크롤로 가져가 pointercancel 을 보낸다 — 든 동안만 막는다.
   // touch-action 은 손을 댈 때 정해져 나중에 바꿀 수 없고, React 의 onTouchMove 는 passive 라 직접 단다
@@ -111,7 +116,7 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, renderWidget
       document.removeEventListener('pointerdown', outside, true)
       document.removeEventListener('keydown', esc)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- el 은 DOM 을 찾기만 한다
+     
   }, [picked])
 
   /** 들린 위젯을 손에 붙이고, 놓일 칸에 점선 자리를 둔다 — offset 값은 translate(FLIP 포함)를 빼고 잰 칸 자리 */
@@ -136,7 +141,8 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, renderWidget
     })
     if (!target) return
     const r = target.getBoundingClientRect()
-    const after = target.dataset.stack === 's' ? h.x > r.left + r.width / 2 : h.y > r.top + r.height / 2
+    const narrow = STACK_CELLS[target.dataset.stack as StackSize]?.[0] < 4
+    const after = narrow ? h.x > r.left + r.width / 2 : h.y > r.top + r.height / 2
     const next = cur.filter((i) => i !== h.i)
     next.splice(next.indexOf(target.dataset.type!) + (after ? 1 : 0), 0, h.i)
     if (next.join() === cur.join()) return
@@ -226,6 +232,8 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, renderWidget
     }
     if (order.current) layout.moveInStack(h.i, order.current.indexOf(h.i))
     show(null)
+    // 옮기고 놓으면 그대로 완료 — 고른 채 남겨 두지 않고 편집을 끝낸다(길게 눌러 고르기만 했으면 크기 손잡이를 쓰게 편집 그대로)
+    onDone()
   }
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
@@ -251,20 +259,28 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, renderWidget
     reorder()
   }
 
-  /** 크기 손잡이를 끄는 중 — 처음 크기 · 손 위치에서 바깥으로 얼마나 갔는지로 정한다(정해진 경계라 크기가 바뀌어도 오가지 않는다) */
-  const resizing = useRef<{ x: number; y: number; from: StackSize } | null>(null)
-  /** 고른 위젯 위 — 테두리 · 그릴 수 있는 크기 쪽 변 손잡이 */
+  /** 크기 손잡이를 끄는 중 — 처음 크기 · 손 위치에서 얼마나 갔는지로 정한다(정해진 경계라 크기가 바뀌어도 오가지 않는다).
+   * to 는 마지막으로 바꾸라고 한 크기(바뀌기 전 같은 크기를 거듭 부르지 않게) */
+  const resizing = useRef<{ x: number; y: number; from: StackSize; to: StackSize } | null>(null)
+  /** 고른 위젯 위 — 테두리 · 그릴 수 있는 크기 쪽 변 손잡이. 테두리는 위젯에 붙어 있어 크기와 함께 바뀐다(styles/widgets/stack.css 의 stack-frame) */
   const frame = (i: string, sizes: StackSize[], name: string) => {
     const current = sizeOf(i)
-    const pick = (s: StackSize) => s !== sizeOf(i) && layout.resizeInStack(i, s)
-    const across = sizes.includes('s') && sizes.some((s) => s !== 's')
-    const updown = current !== 's' && sizes.includes('m') && sizes.includes('l')
-    const sides = [...(updown ? (['t', 'b'] as const) : []), ...(across ? (['l', 'r'] as const) : [])]
-    /** 그 변을 바깥으로 o(px) 끌었을 때 바라는 크기 */
-    const want = (side: Side, o: number, from: StackSize): StackSize => {
-      if (side === 't' || side === 'b') return (from === 'l' ? o > -GROW : o > GROW) ? 'l' : 'm'
-      const half = (boardRef.current?.clientWidth ?? 0) / 4
-      return !(from === 's' ? o > half : o > -half) ? 's' : from === 'l' ? 'l' : 'm'
+    const pick = (s: StackSize) => {
+      if (s === sizeOf(i)) return
+      navigator.vibrate?.(8)
+      morph(() => layout.resizeInStack(i, s))
+    }
+    const widths = new Set(sizes.map((s) => STACK_CELLS[s][0]))
+    const heights = new Set(sizes.map((s) => STACK_CELLS[s][1]))
+    const sides = [...(heights.size > 1 ? (['t', 'b'] as const) : []), ...(widths.size > 1 ? (['l', 'r'] as const) : [])]
+    /** 한 칸(+ 간격) 폭 — 칸은 정사각이라 높이도 같다 */
+    const step = () => ((boardRef.current?.clientWidth ?? 0) + 16) / 4
+    /** from 에서 그 쪽 칸 수를 n 만큼 늘린(줄인) 크기 */
+    const by = (side: Side, n: number, from: StackSize) => {
+      const [w, h] = STACK_CELLS[from]
+      const across = side === 'l' || side === 'r'
+      const clamp = (v: number) => Math.min(4, Math.max(1, v))
+      return nearest(sizes, across ? clamp(w + n) : w, across ? h : clamp(h + n), across)
     }
     return (
       <div className="stack-frame absolute -inset-1.5 z-10 animate-materialize rounded-[30px] border-2 border-accent">
@@ -275,23 +291,32 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, renderWidget
             aria-label={f(t.widgets.resizeStack, { name, size: t.widgets.stackSize[current] })}
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture(e.pointerId)
-              resizing.current = { x: e.clientX, y: e.clientY, from: current }
+              resizing.current = { x: e.clientX, y: e.clientY, from: current, to: current }
             }}
             onPointerMove={(e) => {
               const r = resizing.current
               if (!r) return
+              // 바깥으로 끈 거리 — 반 칸을 넘으면 다음 칸
               const o = { l: r.x - e.clientX, r: e.clientX - r.x, t: r.y - e.clientY, b: e.clientY - r.y }[side]
-              pick(nearest(sizes, want(side, o, r.from)))
+              const next = by(side, Math.round(o / step()), r.from)
+              if (next !== r.to) {
+                r.to = next
+                pick(next)
+              }
             }}
             onPointerUp={() => (resizing.current = null)}
             onPointerCancel={() => (resizing.current = null)}
-            // 키보드(Enter · Space)로 누르면 그 방향으로 한 단계 — 손으로 누르기만 한 것(detail > 0)은 끄기의 일부라 그냥 둔다
-            onClick={(e) => e.detail === 0 && pick(nearest(sizes, side === 't' || side === 'b' ? (current === 'l' ? 'm' : 'l') : current === 's' ? 'm' : 's'))}
+            // 키보드(Enter · Space)로 누르면 한 단계 — 오른쪽 · 아래는 늘리고 왼쪽 · 위는 줄인다. 손으로 누르기만 한 것(detail > 0)은 끄기의 일부라 그냥 둔다
+            onClick={(e) => e.detail === 0 && pick(by(side, side === 'r' || side === 'b' ? 1 : -1, current))}
             className={`absolute grid size-11 touch-none place-items-center ${HANDLE[side]}`}
           >
             <span className="size-3.5 rounded-full border-2 border-accent bg-bg shadow-[0_1px_4px_oklch(0_0_0/0.3)]" />
           </button>
         ))}
+        {/* 지금 크기 — 칸 수로. 끄는 동안 칸을 넘을 때마다 바뀐다 */}
+        <span className="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 rounded-full bg-accent-fill px-2.5 py-0.5 text-xs font-bold whitespace-nowrap text-white tabular-nums shadow-[0_2px_6px_oklch(0_0_0/0.2)]">
+          {t.widgets.stackSize[current]}
+        </span>
       </div>
     )
   }
@@ -303,7 +328,7 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, renderWidget
     if (!editing || !i) return
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
-      return setPicked(picked === i ? null : i)
+      setPicked(picked === i ? null : i); return;
     }
     if (!d) return
     e.preventDefault()
@@ -312,36 +337,39 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, renderWidget
   }
 
   return (
-    <div
-      ref={boardRef}
-      role="list"
-      aria-label={editing ? t.widgets.editHintStack : undefined}
-      className="widget-board relative"
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      // 편집 중 들지 않고 뗐으면 누르기 — 그 위젯 테두리를 켜고, 이미 켜져 있으면 끈다
-      onPointerUp={() => {
-        const h = held.current
-        if (editing && h && !h.lifted) setPicked((p) => (p === h.i ? null : h.i))
-        drop()
-      }}
-      onPointerCancel={drop}
-      // 안드로이드는 길게 누르면 이미지 · 링크 메뉴가 떠 끌기를 끊는다
-      onContextMenu={(e) => held.current && e.preventDefault()}
-      onClickCapture={(e) => {
-        if (!swallow.current) return
-        swallow.current = false
-        e.preventDefault()
-        e.stopPropagation()
-      }}
-      onKeyDown={onKeyDown}
-    >
-      {items.map((c, index) => {
-        const def = byType.get(c.i)!
-        return renderWidget(c, index, items, sizeOf(c.i), picked === c.i ? frame(c.i, def.stack ?? ['m'], text(def.title, t)) : undefined)
-      })}
-      {/* 옮기는 중 놓일 칸 — follow 가 자리 · 크기를 맞춘다 */}
-      {preview && <div ref={slotRef} aria-hidden="true" className="stack-slot" />}
+    // 칸 폭을 판 폭에서 정하려고 한 겹 감싼다(styles/widgets/stack.css 의 .stack-wrap)
+    <div className="stack-wrap">
+      <div
+        ref={boardRef}
+        role="list"
+        aria-label={editing ? t.widgets.editHintStack : undefined}
+        className="widget-board relative"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        // 편집 중 들지 않고 뗐으면 누르기 — 그 위젯 테두리를 켜고, 이미 켜져 있으면 끈다
+        onPointerUp={() => {
+          const h = held.current
+          if (editing && h && !h.lifted) setPicked((p) => (p === h.i ? null : h.i))
+          drop()
+        }}
+        onPointerCancel={drop}
+        // 안드로이드는 길게 누르면 이미지 · 링크 메뉴가 떠 끌기를 끊는다
+        onContextMenu={(e) => held.current && e.preventDefault()}
+        onClickCapture={(e) => {
+          if (!swallow.current) return
+          swallow.current = false
+          e.preventDefault()
+          e.stopPropagation()
+        }}
+        onKeyDown={onKeyDown}
+      >
+        {items.map((c, index) => {
+          const def = byType.get(c.i)!
+          return renderWidget(c, index, items, sizeOf(c.i), picked === c.i ? frame(c.i, def.stack ?? ['m'], text(def.title, t)) : undefined)
+        })}
+        {/* 옮기는 중 놓일 칸 — follow 가 자리 · 크기를 맞춘다 */}
+        {preview && <div ref={slotRef} aria-hidden="true" className="stack-slot" />}
+      </div>
     </div>
   )
 }

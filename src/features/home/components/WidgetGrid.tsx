@@ -1,14 +1,21 @@
-import { Minus } from 'lucide-react'
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type KeyboardEvent, type MouseEvent as ReactMouseEvent, type PointerEvent, type WheelEvent } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type KeyboardEvent } from 'react'
 import GridLayout, { type Compactor, type Layout, type LayoutItem } from 'react-grid-layout'
 import { calcGridItemPosition, setTransform } from 'react-grid-layout/core'
-import type { Decor } from '../../hooks/useDecor'
-import type { WidgetLayout } from '../../hooks/useWidgetLayout'
-import { useI18n } from '../../i18n'
-import { colWidth, grow, guides, nudge, place, reach, rowHeight, sizeFor, span, type Guide, type Page, type Side, type StackSize } from '../../lib/widgetLayout'
-import { DecorMenu } from '../layout/DecorMenu'
-import { BOARD, COLS, EDGE, EDIT_HOLD, FIT, FLIP_HOLD, GAP, ROW_H, ROWS, SLIDE } from './constants'
-import { GALLERY, galleryDrag, text, type WidgetContext, type WidgetDef } from './registry'
+import type { Decor } from '@/features/decor'
+import type { WidgetLayout } from '../hooks/useWidgetLayout'
+import { useI18n } from '@/shared/i18n'
+import { colWidth, grow, guides, nudge, place, reach, rowHeight, sizeFor, span, type Page, type Side } from '../lib/widgetLayout'
+import { type StackSize } from '@/shared/widget'
+import { BOARD, COLS, EDGE, FIT, FLIP_HOLD, GAP, ROW_H, ROWS, SLIDE } from '../lib/constants'
+import { useGuides } from '../hooks/useGuides'
+import { useResumeDrag } from '../hooks/useResumeDrag'
+import { readTranslate } from '../lib/readTranslate'
+import { BoardEmpty } from './BoardEmpty'
+import { useLongPress } from '../hooks/useLongPress'
+import { usePageNav } from '../hooks/usePageNav'
+import { PageDots } from './PageDots'
+import { GALLERY, galleryDrag, type WidgetContext, type WidgetDef } from '../lib/widgetDef'
+import { WidgetCell } from './WidgetCell'
 import { StackBoard } from './StackBoard'
 
 interface WidgetGridProps {
@@ -20,6 +27,8 @@ interface WidgetGridProps {
   onEdit: () => void
   /** 좁은 화면 편집에서 위젯을 골랐는지(StackBoard) */
   onPick: (picking: boolean) => void
+  /** 좁은 화면에서 위젯을 끌어 옮기고 놓으면 편집을 끝낸다(StackBoard) */
+  onDone: () => void
   /** 편집 중 인사 카드 위의 그림 바꾸기(registry 의 decor) */
   decor: Decor
 }
@@ -35,8 +44,6 @@ const DROP = '__drop__'
 /** 갤러리 자리표시를 뺀 위젯들 */
 const clean = (l: Layout): Page => l.filter((c) => c.i !== DROP)
 
-/** 위젯 자리(transform: translate(x, y)) 읽기 */
-const TRANSLATE = /translate\(([-\d.]+)px,\s*([-\d.]+)px\)/
 const point = (e: Event) => ('touches' in e ? ((e as TouchEvent).changedTouches[0] ?? { clientX: 0, clientY: 0 }) : (e as MouseEvent))
 
 /**
@@ -47,15 +54,12 @@ const point = (e: Event) => ('touches' in e ? ((e as TouchEvent).changedTouches[
  * 키보드는 위젯에 초점을 두고 화살표로 옮기고(이웃과 바꾸기 포함) Shift + 화살표로 크기, PageUp · PageDown 으로 페이지, Delete 로 뺀다(갤러리가 있을 때만).
  * 편집 중 Ctrl(⌘) + Z 로 되돌리고 Ctrl + Shift + Z · Ctrl + Y 로 다시 한다. 페이지는 빈 곳을 옆으로 밀거나(스와이프) 위젯에 초점이 없을 때 ← · → 로도 넘긴다.
  * 크기를 바꾸는 동안 잡은 변이 다른 위젯의 같은 쪽 변과 나란하면 기준선을 긋는다(피그마처럼).
- * 좁은 화면은 칸 배치 없이 두 칸 판에 좁은 화면 순서 · 크기대로 쌓고, 편집도 그 자리에서 한다(StackBoard — 길게 눌러 옮기기, 모서리 손잡이로 크기).
+ * 좁은 화면은 넓은 화면 칸 배치 없이 4칸 격자 판에 좁은 화면 순서 · 크기대로 쌓고, 편집도 그 자리에서 한다(StackBoard — 길게 눌러 옮기기, 모서리 손잡이로 크기).
  */
-export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, decor }: WidgetGridProps) {
+export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, onDone, decor }: WidgetGridProps) {
   const { t, f } = useI18n()
   const viewRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
-  const press = useRef<{ timer: number; x: number; y: number } | null>(null)
-  const pressed = useRef(false)
-  const wheel = useRef({ sum: 0, at: 0 })
   const dragging = useRef(false)
   const edgeRef = useRef(0)
   const [edge, setEdge] = useState(0)
@@ -63,25 +67,7 @@ export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, decor }
   const flip = useRef(0)
   const hand = useRef({ x: 0, y: 0, touch: false })
   const resume = useRef<string | null>(null)
-  /** 보고 있는 페이지의 기준선 판 — 끄는 동안 자주 바뀌어 React 로 다시 그리지 않고 직접 그린다 */
-  const guideRef = useRef<HTMLDivElement>(null)
-  const drawn = useRef('')
-  // 손이 움직일 때마다 불린다 — 선이 그대로면 다시 그리지 않는다(나타나는 애니메이션이 매번 다시 돌지 않게)
-  const drawGuides = (list: Guide[]) => {
-    const key = JSON.stringify(list)
-    if (key === drawn.current) return
-    drawn.current = key
-    guideRef.current?.replaceChildren(
-      ...list.map((g) => {
-        const line = document.createElement('i')
-        line.dataset.dir = g.vertical ? 'v' : 'h'
-        for (const [k, v] of Object.entries({ at: g.at, from: g.from, to: g.to })) line.style.setProperty(`--${k}`, String(v))
-        return line
-      }),
-    )
-  }
-  /** 빈 곳을 옆으로 미는 중 — 손가락 · 마우스 하나, 시작점과 민 거리(px) */
-  const swipe = useRef<{ id: number; x: number; dx: number } | null>(null)
+  const { guideRef, drawGuides } = useGuides()
   /** 끌거나 크기를 바꾸는 위젯, 그때의 배치(base) · 마지막으로 놓을 수 있던 배치(last) · 크기 조절이면 잡은 변(sides) */
   const active = useRef<{ i: string; drag: boolean; base: LayoutItem[]; last: LayoutItem[]; sides: Side[] } | null>(null)
   // 우리 규칙(lib/widgetLayout.ts 의 place)을 react-grid-layout 의 compactor 로 — 끄는 동안 미리보기가 놓은 결과와 같다.
@@ -152,10 +138,10 @@ export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, decor }
     active.current = item ? { i: item.i, drag, base, last: base, sides } : null
     const el = drag ? node : node?.closest<HTMLElement>('.react-grid-item')
     if (!e || !el) return
-    const [, left = '0', top = '0'] = TRANSLATE.exec(el.style.transform) ?? []
+    const [left, top] = readTranslate(el)
     const { clientX: x, clientY: y } = drag ? { clientX: downAt.current.x, clientY: downAt.current.y } : point(e)
     const box = el.getBoundingClientRect()
-    grab.current = { x, y, left: +left, top: +top, width: el.offsetWidth, height: el.offsetHeight, ox: x - box.left, oy: y - box.top }
+    grab.current = { x, y, left, top, width: el.offsetWidth, height: el.offsetHeight, ox: x - box.left, oy: y - box.top }
   }
   const onDrag = (_l: Layout, _o: unknown, _n: unknown, _p: unknown, e: Event, node: HTMLElement | null) => {
     dragging.current = true
@@ -201,44 +187,7 @@ export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, decor }
     active.current = null
     rebuild(page)
   }
-  useEffect(() => {
-    const r = resume.current
-    resume.current = null
-    // 새 페이지가 다 미끄러져 들어온 뒤에, 그때의 손 자리에서 — 미끄러지는 중에 누르면 react-grid-layout 이 움직이는 판 기준으로 재어
-    // 판이 온 만큼 위젯이 튄다. 바로 누르면 끌기가 시작만 되고 따라오지 않았다(동작 줄이기면 미끄러짐이 없어 조금 일찍 이어진다)
-    if (!r) return
-    const slide = matchMedia('(prefers-reduced-motion: reduce)').matches ? 50 : SLIDE
-    // 새 판의 위젯을 처음 잡은 점이 손 아래 오게 옮겨 둔다
-    const stick = () => {
-      const el = viewRef.current?.querySelector<HTMLElement>(`.widget-page:not(.invisible) [data-type="${r}"]`)
-      if (!el) return null
-      const box = el.getBoundingClientRect()
-      const [, left = '0', top = '0'] = TRANSLATE.exec(el.style.transform) ?? []
-      el.style.transition = 'none'
-      el.style.transform = `translate(${+left + hand.current.x - box.left - grab.current.ox}px, ${+top + hand.current.y - box.top - grab.current.oy}px)`
-      return el
-    }
-    // 옛 끌기가 끝나 onDrag 가 손을 못 따라가니 그동안은 직접 따라간다. 그새 놓았으면(터치 포함) 이어 끌지 않는다 — 위젯은 손 아래 칸에 놓여 있다
-    let up = false
-    const follow = (e: globalThis.PointerEvent) => {
-      hand.current = { ...hand.current, x: e.clientX, y: e.clientY }
-      if (!hand.current.touch) stick()
-    }
-    const lift = () => void (up = true)
-    document.addEventListener('pointermove', follow)
-    document.addEventListener('pointerup', lift)
-    window.setTimeout(() => {
-      document.removeEventListener('pointermove', follow)
-      document.removeEventListener('pointerup', lift)
-      if (up || hand.current.touch) return
-      // 위젯을 손 아래(처음 잡은 점)로 옮겨 두고 손 자리에서 누른다 — 위젯과 손이 떨어진 채 누르면 첫 움직임이 크게 튀는데,
-      // react-grid-layout 은 다시 그리기 전에 온 움직임을 버리면서도 기준점은 옮겨 그 거리만큼 위젯이 손에서 영영 떨어진다
-      const el = stick()
-      downAt.current = { x: hand.current.x, y: hand.current.y }
-      el?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: hand.current.x, clientY: hand.current.y, button: 0, buttons: 1 }))
-      if (el) el.style.transition = ''
-    }, slide)
-  })
+  useResumeDrag({ resume, hand, grab, downAt, viewRef })
   /**
    * 손에 붙였던 위젯을 놓인 칸 자리 · 크기로 — react-grid-layout 은 칸 자리 · 크기가 그대로면 다시 그리지 않아,
    * 놓을 수 없던 자리에서 놓으면 손에 붙인 transform · 크기가 남아 이웃을 덮는다(편집을 마쳐야 돌아왔다)
@@ -261,9 +210,9 @@ export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, decor }
     if (dir) {
       if (layout.toPage(item.i, page + dir, cellAt(point(e).clientX, point(e).clientY))) return
       resume.current = null
-      return rebuild(page)
+      rebuild(page); return;
     }
-    if (!layout.commitPage(clean(l), item.i)) return rebuild(page)
+    if (!layout.commitPage(clean(l), item.i)) { rebuild(page); return; }
     settle(node, l, item.i)
   }
   // 크기도 손에 붙인다 — 끌기와 같은 까닭(react-grid-layout 은 칸 수가 바뀔 때만 다시 그리고, 이웃이 비킬 곳이 없으면 칸 수가 머문다).
@@ -304,7 +253,7 @@ export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, decor }
   const onResizeStop = (l: Layout, _o: unknown, item: { i: string } | null, _p: unknown, _e: Event, node: HTMLElement | null) => {
     active.current = null
     drawGuides([])
-    if (!item || !layout.commitPage(clean(l), item.i)) return rebuild(page)
+    if (!item || !layout.commitPage(clean(l), item.i)) { rebuild(page); return; }
     settle(node?.closest('.react-grid-item'), l, item.i)
   }
   // 갤러리에서 끌어 온 위젯 — 놓은 자리에(덮인 위젯은 비킨다), 놓을 수 없으면 첫 빈칸 · 새 페이지로
@@ -314,6 +263,9 @@ export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, decor }
     const next = place(clean(l), { i: type, x: item.x, y: item.y, w: item.w, h: item.h })
     if (!(next && layout.commitPage(next, type))) layout.add(type)
   }
+
+  const longPress = useLongPress(editing, onEdit)
+  const nav = usePageNav({ layout, pageCount, area, editing, dragging, viewRef, trackRef })
 
   const onKeyDown = (e: KeyboardEvent<HTMLElement>, type: string, next?: string) => {
     if (e.target !== e.currentTarget) return
@@ -338,162 +290,20 @@ export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, decor }
     }
   }
 
-  // 터치로 길게 누르면 편집 시작. 마우스는 상단 바의 '홈 편집' 단추로
-  const onPointerDown = (e: PointerEvent<HTMLElement>) => {
-    if (editing || e.button !== 0 || e.pointerType !== 'touch') return
-    press.current = {
-      x: e.clientX,
-      y: e.clientY,
-      timer: window.setTimeout(() => {
-        press.current = null
-        pressed.current = true
-        navigator.vibrate?.(10)
-        onEdit()
-      }, EDIT_HOLD),
-    }
-  }
-  const onPressMove = (e: PointerEvent<HTMLElement>) => {
-    const p = press.current
-    if (p && Math.hypot(e.clientX - p.x, e.clientY - p.y) > 8) cancelPress()
-  }
-  const cancelPress = () => {
-    clearTimeout(press.current?.timer)
-    press.current = null
-  }
 
-  // 트랙패드 · 가로 휠로 페이지 넘기기 — 한 번 넘기면 잠깐 쉰다(관성 스크롤이 여러 장을 넘기지 않게)
-  const onWheel = (e: WheelEvent) => {
-    if (pageCount < 2 || dragging.current || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return
-    const w = wheel.current
-    if (performance.now() - w.at < 600) return
-    w.sum += e.deltaX
-    if (Math.abs(w.sum) < 60) return
-    const next = page + Math.sign(w.sum)
-    w.sum = 0
-    w.at = performance.now()
-    if (next >= 0 && next < pageCount) layout.setPage(next)
-  }
 
-  /** 판의 빈 곳(위젯 · 단추 밖)인지 */
-  const empty = (t: EventTarget) => !(t as Element).closest('.react-grid-item, button, a, input')
-  // 빈 곳을 누르고 끌면 브라우저가 글자 선택을 시작해 화면 글자가 다 잡힌다 — 빈 곳에서는 선택을 시작하지 않는다(위젯 안 글자는 그대로 고를 수 있다).
-  // 누르기를 막으면 초점도 안 옮겨 가니, 위젯에 있던 초점은 직접 풀어 ← · → 가 페이지를 넘기게 한다
-  const onMouseDown = (e: ReactMouseEvent<HTMLDivElement>) => {
-    if (!area.lg || !empty(e.target)) return
-    e.preventDefault()
-    ;(document.activeElement as HTMLElement | null)?.blur()
-  }
-  // 빈 곳을 옆으로 밀면 옆 페이지로 — 트랙이 손을 따라오고, 판 폭의 1/6(최대 120px)을 넘게 밀고 놓으면 넘어간다
-  const onSwipeStart = (e: PointerEvent<HTMLDivElement>) => {
-    if (!area.lg || pageCount < 2 || e.button !== 0 || !empty(e.target)) return
-    swipe.current = { id: e.pointerId, x: e.clientX, dx: 0 }
-    e.currentTarget.setPointerCapture(e.pointerId)
-  }
-  const onSwipeMove = (e: PointerEvent<HTMLDivElement>) => {
-    const s = swipe.current
-    const track = trackRef.current
-    if (!s || s.id !== e.pointerId || !track) return
-    const dx = e.clientX - s.x
-    // 처음 · 마지막 페이지 너머로는 버티며 조금만
-    s.dx = (dx > 0 && page === 0) || (dx < 0 && page === pageCount - 1) ? dx / 4 : dx
-    track.dataset.swiping = ''
-    track.style.setProperty('--swipe', `${s.dx}px`)
-  }
-  const onSwipeEnd = (e: PointerEvent<HTMLDivElement>) => {
-    const s = swipe.current
-    const track = trackRef.current
-    if (!s || s.id !== e.pointerId || !track) return
-    swipe.current = null
-    delete track.dataset.swiping
-    track.style.removeProperty('--swipe')
-    const next = page - Math.sign(s.dx)
-    if (e.type === 'pointerup' && Math.abs(s.dx) > Math.min(120, area.width / 6) && next >= 0 && next < pageCount) layout.setPage(next)
-  }
-
-  // 편집 중 되돌리기 · 다시 하기, 위젯에 초점이 없을 때 ← · → 로 페이지 — 글을 쓰는 칸 · 열린 창에서는 그쪽 몫으로 둔다.
-  // 렌더마다 다시 건다(지금 페이지 · 배치를 읽는다)
-  useEffect(() => {
-    const onKey = (e: globalThis.KeyboardEvent) => {
-      const el = e.target as HTMLElement
-      if (e.defaultPrevented || document.querySelector('dialog[open]') || el.closest('input, textarea, select, [contenteditable="true"]')) return
-      const mod = e.ctrlKey || e.metaKey
-      const key = e.key.toLowerCase()
-      if (editing && mod && (key === 'z' || key === 'y')) {
-        e.preventDefault()
-        return key === 'z' && !e.shiftKey ? layout.undo() : layout.redo()
-      }
-      const dir = { ArrowLeft: -1, ArrowRight: 1 }[e.key]
-      const next = page + (dir ?? 0)
-      if (!dir || mod || e.altKey || e.shiftKey || !area.lg || (el !== document.body && el !== viewRef.current) || next < 0 || next >= pageCount) return
-      e.preventDefault()
-      layout.setPage(next)
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  })
-
-  /**
-   * 위젯 하나 — 그릴 크기는 칸이 그려진 px 로 정한다. 좁은 화면은 고른 크기(stack)도 넘긴다 — 작게면 두 칸 중 한 칸(styles.css).
-   * 좁은 화면의 옮기기 · 키보드는 StackBoard 가 하고, 편집 중 위에 얹을 크기 손잡이(overlay)를 받는다
-   */
+  /** 위젯 하나 — 그릴 크기는 칸이 그려진 px 로 정한다. 좁은 화면은 고른 크기(stack)와 편집 중 얹을 손잡이(overlay)도 받는다(StackBoard) */
   const widget = (c: Page[number], index: number, list: Page, stack?: StackSize, overlay?: ReactNode) => {
     const def = byType.get(c.i)
     if (!def) return null
-    const name = text(def.title, t)
     const size = sizeFor(def.sizes, area.lg ? span(c.w, colW) : area.width, span(c.h, rowH))
     return (
-      <div
+      <WidgetCell
         key={c.i}
-        role="listitem"
-        data-size={size}
-        data-stack={stack}
-        data-type={c.i}
-        className={`rounded-3xl ${editing || stack ? 'cursor-grab touch-manipulation select-none [-webkit-touch-callout:none]' : ''}`}
-        tabIndex={editing ? 0 : undefined}
-        aria-label={editing ? f(stack ? t.widgets.positionStack : GALLERY ? t.widgets.position : t.widgets.positionMove, { name, index: index + 1, total: list.length }) : undefined}
-        // 좁은 화면의 길게 누르기(편집 켜고 위젯 들기)는 StackBoard 가 맡는다
-        onPointerDown={stack ? undefined : onPointerDown}
-        onPointerMove={onPressMove}
-        onPointerUp={cancelPress}
-        onPointerCancel={cancelPress}
+        {...{ c, index, list, stack, overlay, def, size, editing, ctx, decor, longPress }}
         onKeyDown={editing && !stack ? (e) => onKeyDown(e, c.i, (list[index + 1] ?? list[index - 1])?.i) : undefined}
-        // 길게 눌러 편집을 시작했으면 손을 뗄 때의 누르기(링크 열기 등)는 버린다
-        onClickCapture={(e) => {
-          if (!pressed.current) return
-          pressed.current = false
-          e.preventDefault()
-          e.stopPropagation()
-        }}
-        onContextMenu={(e) => (editing || stack || press.current) && e.preventDefault()}
-      >
-        <div className="widget-body relative h-full">
-          <div inert={editing} className="h-full">
-            {def.render({ ...ctx, size, stack })}
-          </div>
-          {/* 빼기는 다시 넣을 갤러리가 있을 때만(GALLERY) */}
-          {editing && GALLERY && (
-            <button
-              type="button"
-              onClick={() => layout.remove(c.i)}
-              aria-label={f(t.widgets.remove, { name })}
-              className="absolute -top-2 -left-2 z-10 grid size-7 animate-materialize cursor-pointer place-items-center rounded-full bg-fg/75 text-bg shadow-[0_2px_8px_oklch(0_0_0/0.25)] ring-2 ring-bg transition-[scale] hover:scale-110 active:scale-90"
-            >
-              <Minus className="size-4" strokeWidth={3} aria-hidden="true" />
-            </button>
-          )}
-          {/* 그림을 고칠 수 있는 위젯(인사 카드)은 그 위에서 바로 — 위젯 내용은 inert 라 그 밖에 둔다. no-drag: 메뉴 안을 눌러도 위젯이 끌리지 않게 */}
-          {editing && def.decor && (
-            <div className="no-drag absolute top-3 right-3 z-10">
-              <DecorMenu
-                kind={def.decor}
-                decor={decor}
-                className="flex h-9 cursor-pointer items-center gap-1.5 rounded-full bg-raised px-3.5 text-sm font-semibold text-fg shadow-[0_2px_8px_oklch(0_0_0/0.18)] ring-1 ring-line active:scale-95"
-              />
-            </div>
-          )}
-          {overlay}
-        </div>
-      </div>
+        onRemove={() => layout.remove(c.i)}
+      />
     )
   }
 
@@ -551,55 +361,32 @@ export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, decor }
     <div className="flex flex-col gap-3 lg:h-full">
       <div
         ref={viewRef}
-        onWheel={onWheel}
-        onMouseDown={onMouseDown}
+        onWheel={nav.onWheel}
+        onMouseDown={nav.onMouseDown}
         onPointerDownCapture={(e) => void (downAt.current = { x: e.clientX, y: e.clientY })}
-        onPointerDown={onSwipeStart}
-        onPointerMove={onSwipeMove}
-        onPointerUp={onSwipeEnd}
-        onPointerCancel={onSwipeEnd}
+        onPointerDown={nav.onSwipeStart}
+        onPointerMove={nav.onSwipeMove}
+        onPointerUp={nav.onSwipeEnd}
+        onPointerCancel={nav.onSwipeEnd}
         data-edge={edge || undefined}
         className="widget-view lg:min-h-0 lg:flex-1 lg:touch-pan-y"
       >
         <div ref={trackRef} className="widget-track" style={{ '--page': page } as CSSProperties}>
           {!total && !editing ? (
-            <div className="glass grid w-full place-items-center rounded-3xl px-6 py-20 text-center lg:h-full">
-              <div>
-                <p className="font-semibold">{t.widgets.empty}</p>
-                <p className="mt-1 text-sm text-muted">{t.widgets.emptyHint}</p>
-                <button type="button" onClick={onEdit} className="mt-4 h-11 cursor-pointer rounded-xl bg-accent-fill px-5 text-[15px] font-semibold text-white active:scale-95">
-                  {t.widgets.edit}
-                </button>
-              </div>
-            </div>
+            <BoardEmpty onEdit={onEdit} />
           ) : (
             area.width > 0 &&
             (area.lg ? (
               Array.from({ length: pageCount }, (_, p) => board(pages[p] ?? [], p))
             ) : (
-              // 좁은 화면 — 모든 페이지를 두 칸 판에, 좁은 화면 순서 · 크기대로. 편집도 그 자리에서
-              <StackBoard layout={layout} defs={defs} editing={editing} onEdit={onEdit} onPick={onPick} renderWidget={widget} />
+              // 좁은 화면 — 모든 페이지를 4칸 격자 판에, 좁은 화면 순서 · 크기대로. 편집도 그 자리에서
+              <StackBoard layout={layout} defs={defs} editing={editing} onEdit={onEdit} onPick={onPick} onDone={onDone} renderWidget={widget} />
             ))
           )}
         </div>
       </div>
 
-      {pageCount > 1 && (
-        <div className="hidden flex-none justify-center gap-1 lg:flex" role="group" aria-label={t.widgets.pages}>
-          {Array.from({ length: pageCount }, (_, p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => layout.setPage(p)}
-              aria-label={f(t.widgets.page, { page: p + 1, total: pageCount })}
-              aria-current={p === page ? 'page' : undefined}
-              className="grid size-6 cursor-pointer place-items-center"
-            >
-              <span className={`block size-2 rounded-full transition-[background-color,scale] ${p === page ? 'scale-125 bg-fg' : 'bg-fg/25 hover:bg-fg/45'}`} />
-            </button>
-          ))}
-        </div>
-      )}
+      {pageCount > 1 && <PageDots page={page} pageCount={pageCount} onPage={layout.setPage} />}
     </div>
   )
 }

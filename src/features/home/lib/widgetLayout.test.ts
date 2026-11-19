@@ -3,7 +3,8 @@
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { cellsFor, fits, fromHalf, fromRows, grow, guides, nudge, parsePages, parseStack, place, placeAt, placeOn, reach, sizeFor, span, stack, stackSizeOf, tidy, valid, without, type Page } from './widgetLayout.ts'
+import { cellsFor, fits, fromHalf, fromRows, grow, guides, nudge, parsePages, place, placeAt, placeOn, reach, sizeFor, span, tidy, valid, without, type Page } from './widgetLayout.ts'
+import { parseStack, stack, stackSizeOf } from './stackLayout.ts'
 
 const it = (i: string, x: number, y: number, w: number, h: number) => ({ i, x, y, w, h })
 const at = (page: Page, i: string) => page.find((c) => c.i === i)
@@ -225,7 +226,7 @@ test('stack — 좁은 화면은 저장한 순서대로, 거기 없는 위젯은
 })
 
 test('parseStack · stackSizeOf — 틀린 순서 · 크기는 버리고, 그릴 수 없는 크기는 보통으로', () => {
-  assert.deepEqual(parseStack({ order: ['a', 1], sizes: { a: 's', b: 'xl', c: 'l' } }), { order: [], sizes: { a: 's', c: 'l' } })
+  assert.deepEqual(parseStack({ order: ['a', 1], sizes: { a: 's', b: 'xl', c: 'l', d: 'w', e: '1x2' } }), { order: [], sizes: { a: 's', c: 'l', d: 'w', e: '1x2' } })
   assert.deepEqual(parseStack(null), { order: [], sizes: {} })
   assert.equal(stackSizeOf(['s', 'm', 'l'], 's'), 's')
   assert.equal(stackSizeOf(['m', 'l'], 's'), 'm')
