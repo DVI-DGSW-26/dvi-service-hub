@@ -1,4 +1,4 @@
-// 꾸미기 그림(홈 배경 · 인사 카드)의 자리 계산 — layout/Wallpaper.tsx · HeroCard 가 쓴다. DOM 없이 돌아 pnpm test 로 본다
+// 꾸미기 그림(홈 배경 · 인사 카드)의 자리 계산 — decor/components/Wallpaper.tsx · HeroCard 가 쓴다. DOM 없이 돌아 pnpm test 로 본다
 
 interface Size {
   w: number

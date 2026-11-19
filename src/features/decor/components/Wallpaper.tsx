@@ -1,8 +1,8 @@
 import { useEffect, useRef, type PointerEvent } from 'react'
-import type { Decor, DecorPos } from '../../hooks/useDecor'
-import { panBy, placeStyle } from '../../lib/wallpaper'
+import type { Decor, DecorPos } from '../hooks/useDecor'
+import { panBy, placeStyle } from '../lib/wallpaper'
 
-/** 홈 배경 그림(위젯 편집의 꾸미기) — 화면에 고정해 깔고 바탕색을 반쯤 덮어 옅게(styles.css 의 .wallpaper) */
+/** 홈 배경 그림(위젯 편집의 꾸미기) — 화면에 고정해 깔고 바탕색을 반쯤 덮어 옅게(styles/home.css 의 .wallpaper) */
 export function Wallpaper({ src, pos }: { src: string; pos: DecorPos }) {
   return (
     <div aria-hidden="true" className="wallpaper">
@@ -13,7 +13,7 @@ export function Wallpaper({ src, pos }: { src: string; pos: DecorPos }) {
 
 /**
  * 꾸미기 그림 위치 조정의 끄는 판 — 화면 어디든 끌면 조정 중인 그림(배경 · 인사 카드, data-decor)이 손을 따라온다. 확대 · 취소 · 완료는 편집 독(EditDock).
- * 그동안 배경이면 위젯을 숨기고, 인사 카드면 다른 위젯을 흐린다(App · styles.css 의 [data-adjust])
+ * 그동안 배경이면 위젯을 숨기고, 인사 카드면 다른 위젯을 흐린다(App · styles/home.css 의 [data-adjust])
  */
 export function DecorAdjust({ decor }: { decor: Decor }) {
   const drag = useRef<{ id: number; x: number; y: number; from: DecorPos } | null>(null)

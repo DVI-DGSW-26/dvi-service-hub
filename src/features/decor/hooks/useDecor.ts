@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import { fitImage } from '../lib/image'
+import { fitImage, KEYS, readPref, writePref } from '@/shared/lib'
 import { CENTER, MAX_ZOOM, type DecorPos } from '../lib/wallpaper'
-import { KEYS, readPref, writePref } from '../lib/theme'
 
 export type DecorKind = 'wallpaper' | 'hero'
 export type { DecorPos }

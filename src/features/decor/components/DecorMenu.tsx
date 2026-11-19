@@ -1,9 +1,9 @@
 import { Image } from 'lucide-react'
 import { useRef, useState } from 'react'
-import type { Decor, DecorKind } from '../../hooks/useDecor'
-import { usePopover } from '../../hooks/usePopover'
-import { useI18n } from '../../i18n'
-import { PopoverPanel } from '../ui/Popover'
+import type { Decor, DecorKind } from '../hooks/useDecor'
+import { usePopover } from '@/shared/hooks'
+import { useI18n } from '@/shared/i18n'
+import { PopoverPanel } from '@/shared/ui'
 
 const BUTTON = 'flex h-9 flex-none cursor-pointer items-center rounded-xl bg-subtle px-3 text-sm font-semibold ring-1 ring-line hover:bg-raised active:scale-95'
 
@@ -14,18 +14,38 @@ interface DecorMenuProps {
   className: string
   /** 펼침 패널 자리 — 기본은 단추 아래 오른쪽 끝 */
   panelClassName?: string
+  /** 메뉴 없이 누르면 바로 이미지 고르기(인사 카드) — 고르면 위치 조정이 이어지고, 기본으로는 위치 조정 독에서 */
+  direct?: boolean
 }
 
 /**
  * 꾸미기 그림 하나(배경 · 인사 카드)의 메뉴 — 미리보기 · 고르기 · 위치 조정 · 기본으로.
  * 배경은 편집 독(EditDock)에, 인사 카드 그림은 편집 중 카드 위(WidgetGrid)에 둔다 — 바꿀 것 바로 곁에서 바꾸게
  */
-export function DecorMenu({ kind, decor, className, panelClassName = '' }: DecorMenuProps) {
+export function DecorMenu({ kind, decor, className, panelClassName = '', direct = false }: DecorMenuProps) {
   const { open, toggle, close, ref } = usePopover()
   const { t } = useI18n()
+  const picker = usePicker(kind, decor, close)
+
+  if (direct) {
+    return (
+      <div className="relative">
+        <button type="button" onClick={picker.open} className={className}>
+          <Image className="size-[18px]" aria-hidden="true" />
+          <span className="max-sm:sr-only">{t.widgets.decor.button[kind]}</span>
+        </button>
+        {picker.input}
+        {picker.error && (
+          <p role="alert" className="absolute top-full right-0 mt-1.5 w-max max-w-56 rounded-lg bg-raised px-2.5 py-1.5 text-xs text-danger shadow-[0_2px_8px_oklch(0_0_0/0.18)]">
+            {picker.error}
+          </p>
+        )}
+      </div>
+    )
+  }
 
   return (
-    // data-open — 열려 있는 동안 위젯 칸을 다른 위젯 위로(styles.css)
+    // data-open — 열려 있는 동안 위젯 칸을 다른 위젯 위로(styles/widgets/grid.css)
     <div ref={ref} data-open={open || undefined} className="relative">
       <button type="button" onClick={toggle} aria-expanded={open} className={className}>
         <Image className="size-[18px]" aria-hidden="true" />
@@ -45,21 +65,8 @@ export function DecorMenu({ kind, decor, className, panelClassName = '' }: Decor
 /** 미리보기 · 고르기 · 위치 조정 · 기본으로. 위치 조정을 시작하면 메뉴를 닫는다(onAdjust) */
 function DecorRow({ kind, decor, onAdjust }: { kind: DecorKind; decor: Decor; onAdjust: () => void }) {
   const { t } = useI18n()
-  const input = useRef<HTMLInputElement>(null)
-  const [error, setError] = useState('')
+  const { open, input, error, pick } = usePicker(kind, decor, onAdjust)
   const image = decor[kind]
-
-  const pick = async (file: File | null) => {
-    setError('')
-    try {
-      const saved = await decor.set(kind, file)
-      if (!saved) setError(t.widgets.decor.notSaved)
-      // 새 그림은 바로 위치 조정으로 — 저장을 못 했으면 안내를 보도록 메뉴는 둔다
-      else if (file) onAdjust()
-    } catch {
-      setError(t.widgets.decor.unreadable)
-    }
-  }
 
   return (
     <div>
@@ -68,7 +75,7 @@ function DecorRow({ kind, decor, onAdjust }: { kind: DecorKind; decor: Decor; on
         <span className="grid h-12 w-20 flex-none place-items-center overflow-hidden rounded-lg bg-subtle ring-1 ring-line">
           {image ? <img src={image} alt="" className="size-full object-cover" /> : <span className="text-[11px] text-muted">{t.widgets.decor.default}</span>}
         </span>
-        <button type="button" onClick={() => input.current?.click()} className={BUTTON}>
+        <button type="button" onClick={open} className={BUTTON}>
           {t.widgets.decor.choose}
         </button>
         {image && (
@@ -88,19 +95,7 @@ function DecorRow({ kind, decor, onAdjust }: { kind: DecorKind; decor: Decor; on
             {t.widgets.decor.reset}
           </button>
         )}
-        <input
-          ref={input}
-          type="file"
-          accept="image/*"
-          hidden
-          aria-label={t.widgets.decor[kind]}
-          onChange={(e) => {
-            const file = e.target.files?.[0]
-            // 같은 파일을 다시 골라도 바뀌게
-            e.target.value = ''
-            if (file) pick(file)
-          }}
-        />
+        {input}
       </div>
       {error && (
         <p role="alert" className="mt-1.5 text-xs text-danger">
@@ -109,4 +104,40 @@ function DecorRow({ kind, decor, onAdjust }: { kind: DecorKind; decor: Decor; on
       )}
     </div>
   )
+}
+
+/** 파일 고르기 — 숨긴 input 과 여는 함수, 못 읽거나 저장 못 한 안내. 새 그림은 decor.set 이 바로 위치 조정을 시작한다(onPicked) */
+function usePicker(kind: DecorKind, decor: Decor, onPicked: () => void) {
+  const { t } = useI18n()
+  const ref = useRef<HTMLInputElement>(null)
+  const [error, setError] = useState('')
+
+  const pick = async (file: File | null) => {
+    setError('')
+    try {
+      const saved = await decor.set(kind, file)
+      if (!saved) setError(t.widgets.decor.notSaved)
+      // 새 그림은 바로 위치 조정으로 — 저장을 못 했으면 안내를 보도록 메뉴는 둔다
+      else if (file) onPicked()
+    } catch {
+      setError(t.widgets.decor.unreadable)
+    }
+  }
+
+  const input = (
+    <input
+      ref={ref}
+      type="file"
+      accept="image/*"
+      hidden
+      aria-label={t.widgets.decor[kind]}
+      onChange={(e) => {
+        const file = e.target.files?.[0]
+        // 같은 파일을 다시 골라도 바뀌게
+        e.target.value = ''
+        if (file) pick(file)
+      }}
+    />
+  )
+  return { open: () => ref.current?.click(), input, error, pick }
 }
