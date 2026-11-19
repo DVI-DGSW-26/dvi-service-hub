@@ -13,9 +13,9 @@ import { QuickLinksPanel } from '../dashboard/QuickLinksPanel'
 import { SystemsPanel } from '../dashboard/SystemsPanel'
 import { TodayPanel } from '../dashboard/TodayPanel'
 
-import type { WidgetSize } from '../../lib/widgetLayout'
+import type { StackSize, WidgetSize } from '../../lib/widgetLayout'
 
-export { SIZES, type WidgetSize } from '../../lib/widgetLayout'
+export { SIZES, type StackSize, type WidgetSize } from '../../lib/widgetLayout'
 
 /** 위젯이 그릴 때 받는 것 — 홈 화면이 가진 것을 그대로 넘긴다 */
 export interface WidgetContext {
@@ -29,6 +29,8 @@ export interface WidgetContext {
   /** 인사 카드 배경 그림과 자리 — 위젯 편집의 꾸미기에서 고른 것, 없으면 기본 건물 그림 */
   hero?: { src: string; pos: DecorPos } | null
   size: WidgetSize
+  /** 좁은 화면에서 고른 크기 — 넓은 화면 칸 판에서는 없다(칸이 그려진 px 로 정하는 size 를 쓴다) */
+  stack?: StackSize
 }
 
 export interface WidgetDef {
@@ -42,6 +44,8 @@ export interface WidgetDef {
   sizes: WidgetSize[]
   /** 최소 크기(px)를 따로 정할 때 — 내용이 sizes 의 기본 최소(PX)보다 더 있어야 안 잘리는 위젯 */
   min?: { w: number; h: number }
+  /** 좁은 화면에서 고를 수 있는 크기 — 없으면 보통만(크기 버튼이 안 나온다). 작게(반 폭)는 그 위젯에 작은 모양이 있을 때만 */
+  stack?: StackSize[]
   /** 서비스 안에서 역할이 더 필요한 위젯 (연구노트 책임자용 등). 숨기는 것은 안내이고, 막는 건 그 서비스다 */
   access?: Access
   /** 편집 중 위젯 위에 그림 바꾸기 메뉴를 띄울 꾸미기 그림 — 인사 카드 */
@@ -76,8 +80,9 @@ export const WIDGETS: WidgetDef[] = [
     sizes: ['m', 'l'],
     min: { w: 560, h: 300 },
     decor: 'hero',
-    render: ({ me, meLoading, services: list, favorites, hero }) => (
-      <HeroCard me={me} loading={meLoading} favoriteCount={list.filter((s) => favorites.includes(s.id)).length} image={hero} className={FILL} />
+    stack: ['s', 'm', 'l'],
+    render: ({ me, meLoading, services: list, favorites, hero, stack }) => (
+      <HeroCard me={me} loading={meLoading} favoriteCount={list.filter((s) => favorites.includes(s.id)).length} image={hero} size={stack} className={FILL} />
     ),
   },
   {
@@ -86,7 +91,8 @@ export const WIDGETS: WidgetDef[] = [
     title: (t) => t.home.quickLinks.title,
     description: (t) => t.widgets.builtin.quickLinks,
     sizes: ['s', 'm', 'l'],
-    render: () => <QuickLinksPanel className={FILL} />,
+    stack: ['s', 'm', 'l'],
+    render: ({ stack }) => <QuickLinksPanel size={stack} className={FILL} />,
   },
   {
     type: 'systems',
@@ -97,6 +103,7 @@ export const WIDGETS: WidgetDef[] = [
     sizes: ['m', 'xl'],
     // 화면에 맞춘 칸에서는 카드가 다섯 칸으로 늘어선다 — 그보다 좁으면 이름과 별이 겹친다
     min: { w: 860, h: 300 },
+    stack: ['s', 'm', 'l'],
     render: (ctx) => <SystemsPanel {...ctx} loading={ctx.meLoading} className={FILL} />,
   },
   {
@@ -106,7 +113,8 @@ export const WIDGETS: WidgetDef[] = [
     description: (t) => t.widgets.builtin.today,
     sizes: ['s', 'm', 'l'],
     min: { w: 320, h: 300 },
-    render: () => <TodayPanel className={FILL} />,
+    stack: ['s', 'm', 'l'],
+    render: ({ stack }) => <TodayPanel size={stack} className={FILL} />,
   },
   {
     type: 'maintenance',
@@ -115,7 +123,8 @@ export const WIDGETS: WidgetDef[] = [
     description: (t) => t.widgets.builtin.maintenance,
     sizes: ['s', 'm', 'l'],
     min: { w: 320, h: 300 },
-    render: ({ me }) => <MaintenancePanel me={me} className={FILL} />,
+    stack: ['s', 'm', 'l'],
+    render: ({ me, stack }) => <MaintenancePanel me={me} size={stack} className={FILL} />,
   },
   {
     type: 'news',
@@ -123,7 +132,8 @@ export const WIDGETS: WidgetDef[] = [
     title: (t) => t.home.news.title,
     description: (t) => t.widgets.builtin.news,
     sizes: ['s', 'm', 'l'],
-    render: () => <NewsPanel className={FILL} />,
+    stack: ['s', 'm', 'l'],
+    render: ({ stack }) => <NewsPanel size={stack} className={FILL} />,
   },
   {
     type: 'calendar',
@@ -132,7 +142,8 @@ export const WIDGETS: WidgetDef[] = [
     description: (t) => t.widgets.builtin.calendar,
     sizes: ['s', 'm', 'l'],
     min: { w: 340, h: 300 },
-    render: () => <CalendarPanel className={FILL} />,
+    stack: ['s', 'm', 'l'],
+    render: ({ stack }) => <CalendarPanel size={stack} className={FILL} />,
   },
 ]
 

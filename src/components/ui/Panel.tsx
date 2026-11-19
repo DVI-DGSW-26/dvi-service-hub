@@ -59,6 +59,30 @@ export function Panel({ title, icon: IconC, meta, description, toolbar, action, 
   )
 }
 
+/**
+ * 좁은 화면의 '작게'(두 칸 중 한 칸) 위젯 겉틀 — 폭이 150px 남짓이라 제목 줄의 표시 · 조작은 빼고 아이콘과 제목만.
+ * 내용은 한두 가지 핵심만 크게(iOS 작은 위젯처럼), 나머지는 누르면 여는 창에서
+ */
+export function SmallPanel({ title, icon: IconC, className = '', children }: { title: string; icon: LucideIcon; className?: string; children: ReactNode }) {
+  const headingId = useId()
+  return (
+    <section aria-labelledby={headingId} className={`glass flex flex-col rounded-3xl p-4 ${className}`}>
+      <div className="mb-3 flex items-center gap-2">
+        <span className="grid size-7 flex-none place-items-center rounded-lg bg-accent-soft text-accent">
+          <IconC className="size-4" strokeWidth={2.2} aria-hidden="true" />
+        </span>
+        <h2 id={headingId} className="min-w-0 text-[15px]/tight font-bold tracking-[-0.01em] break-keep">
+          {title}
+        </h2>
+      </div>
+      {children}
+    </section>
+  )
+}
+
+/** 작은 위젯 안에서 누르면 창을 여는 넓은 버튼 — 남는 높이를 채우고 내용을 위아래로 벌린다 */
+export const SMALL_BODY = 'flex min-h-0 flex-1 cursor-pointer flex-col items-start rounded-2xl text-left transition-[scale] duration-150 active:scale-[0.97]'
+
 /** 제목 옆 출처 표시 (From 플로우) */
 export function SourceTag({ children }: { children: ReactNode }) {
   return <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent">{children}</span>

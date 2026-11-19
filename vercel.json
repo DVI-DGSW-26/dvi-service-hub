@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "devCommand": "pnpm dev:mock --port $PORT",
+  "buildCommand": "tsc -b && vite build",
   "headers": [
     {
       "source": "/switcher.js",
@@ -8,6 +9,10 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/switcher.js",
+      "destination": "https://api.dvi-ind.com/static/switcher/switcher.js"
+    },
     {
       "source": "/api/hub/:path*",
       "destination": "https://api.dvi-ind.com/hub/:path*"

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { COLS, ROWS } from '../components/widgets/constants'
 import type { WidgetDef } from '../components/widgets/registry'
 import { KEYS, readPref, writePref } from '../lib/theme'
-import { cellsFor, fromHalf, fromRows, minSize, parsePages, placeAt, placeOn, strip, tidy, valid, without, type Page } from '../lib/widgetLayout'
+import { cellsFor, fromHalf, fromRows, minSize, parsePages, parseStack, placeAt, placeOn, stack, strip, tidy, valid, without, type Page, type Stack, type StackSize } from '../lib/widgetLayout'
 
 /** 처음 배치 — 위젯 이전의 고정 홈과 같은 한 화면(24 × 12 칸) */
 export const DEFAULT_WIDGETS: Page[] = [
@@ -48,12 +48,19 @@ export function useWidgetLayout(defs: WidgetDef[]) {
   const [undos, setUndos] = useState<Page[][]>([])
   const [redos, setRedos] = useState<Page[][]>([])
   const [page, setPage] = useState(0)
+  // 좁은 화면 배치(순서 · 크기) — 되돌리기에는 넣지 않는다(다시 드래그하거나 고르면 된다)
+  const [narrow, setNarrow] = useState(() => parseStack(read(KEYS.widgetsStack)))
   // 위젯 판이 그린 뒤 알려 주는 칸 한 개 크기(px) — 최소 크기를 칸 수로 바꿀 때
   const [cell, setCell] = useState(NOMINAL)
   const byType = new Map(defs.map((d) => [d.type, d]))
   const pages = raw.map((p) => p.filter((c) => byType.has(c.i))).filter((p) => p.length)
   const cur = Math.max(0, Math.min(page, pages.length - 1))
   const items = pages[cur] ?? []
+  const stacked = stack(pages, narrow.order)
+  const saveNarrow = (next: Stack) => {
+    setNarrow(next)
+    writePref(KEYS.widgetsStack, JSON.stringify(next))
+  }
 
   /** 위젯의 최소 크기(칸) — 새로 넣을 때도 이 크기 */
   const minCells = (type: string) => {
@@ -120,6 +127,17 @@ export function useWidgetLayout(defs: WidgetDef[]) {
       return !!next && (commit(next, type), true)
     },
     remove: (type: string) => commit(without(pages, type)),
+    /** 좁은 화면에서 한 줄로 쌓은 위젯(모든 페이지) */
+    stack: stacked,
+    /** 좁은 화면에서 위젯을 to 번째로 — 넓은 화면 칸 배치는 그대로. 안 보이는 위젯의 순서는 뒤에 남긴다 */
+    moveInStack: (type: string, to: number) => {
+      const list = stacked.map((c) => c.i).filter((i) => i !== type)
+      list.splice(Math.max(0, Math.min(list.length, to)), 0, type)
+      saveNarrow({ ...narrow, order: [...list, ...narrow.order.filter((i) => !list.includes(i))] })
+    },
+    /** 좁은 화면에서 고른 크기 — 그릴 수 있는지는 registry 의 stack 으로 본다(lib/widgetLayout.ts 의 stackSizeOf) */
+    stackSizes: narrow.sizes,
+    resizeInStack: (type: string, size: StackSize) => saveNarrow({ ...narrow, sizes: { ...narrow.sizes, [type]: size } }),
     /** 보고 있는 페이지의 빈칸 정리 — 위 · 왼쪽으로 당겨 붙인다(크기 그대로) */
     tidy: () => commitPage(tidy(items)),
     /** 기본 배치로 — 되돌리기로 돌아올 수 있다 */
@@ -127,6 +145,8 @@ export function useWidgetLayout(defs: WidgetDef[]) {
       save(DEFAULT_WIDGETS)
       setPage(0)
       writePref(KEYS.widgetsOld, null)
+      setNarrow({ order: [], sizes: {} })
+      writePref(KEYS.widgetsStack, null)
     },
     canUndo: undos.length > 0,
     undo: () => step(undos, setUndos, setRedos),

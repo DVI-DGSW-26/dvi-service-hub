@@ -4,10 +4,11 @@ import { Suspense, lazy } from 'react'
 import { useNow } from '../../hooks/useNow'
 import { useI18n } from '../../i18n'
 import { toIso } from '../../lib/calendar'
-import { nowMinutes } from '../../lib/format'
+import { clockTime, nowMinutes, useTitle } from '../../lib/format'
+import type { StackSize } from '../../lib/widgetLayout'
 import { scheduleQueries } from '../../queries/dashboard'
-import { PANEL_LINK, Panel, SourceTag } from '../ui/Panel'
-import { LoadError, SkeletonList } from '../ui/Skeleton'
+import { PANEL_LINK, Panel, SMALL_BODY, SmallPanel, SourceTag } from '../ui/Panel'
+import { LoadError, Skeleton, SkeletonList } from '../ui/Skeleton'
 import { NowGuide, ScheduleRow, statusOf } from './ScheduleRow'
 import { useLazyModal } from '../../hooks/useLazyModal'
 
@@ -23,20 +24,59 @@ const VISIBLE = 3
  * 일정이 많으면 끝난 일정은 건너뛰고 지금부터 3건만 — 패널 높이는 늘 같다.
  * 전체 · 지난 일정 · 검색은 '전체 N건' 버튼의 모달에서.
  */
-export function TodayPanel({ className = '' }: { className?: string }) {
+export function TodayPanel({ size, className = '' }: { size?: StackSize; className?: string }) {
   const modal = useLazyModal()
-  const { t, f } = useI18n()
+  const { t, f, lang } = useI18n()
+  const title = useTitle()
   const date = useNow()
   const now = nowMinutes(date)
   // 오늘 + 지난 2주를 한 번에 받는다 — 마지막 날이 오늘, 앞의 날들은 전체 일정 창에서 넘겨 본다
   const { data, isPending: loading, error } = useQuery({ ...scheduleQueries.recent(toIso(date)), select: (days) => days.at(-1)?.items })
   const items = data ?? []
 
+  // 크게(좁은 화면)는 두 배까지
+  const visible = size === 'l' ? VISIBLE * 2 : VISIBLE
   const firstOpen = items.findIndex((s) => statusOf(s, now) !== 'done')
-  const last = Math.max(0, items.length - VISIBLE)
+  const last = Math.max(0, items.length - visible)
   const from = firstOpen < 0 ? last : Math.min(firstOpen, last)
-  const shown = items.slice(from, from + VISIBLE)
-  const more = items.length > VISIBLE
+  const shown = items.slice(from, from + visible)
+  const more = items.length > visible
+  const listModal = modal.mounted && (
+    <Suspense>
+      <TodayModal key={modal.key} items={items} now={now} date={date} open={modal.open} onClose={modal.close} />
+    </Suspense>
+  )
+
+  // 작게 — 진행 중(없으면 다음) 일정 하나를 크게. 누르면 전체 일정 창
+  if (size === 's') {
+    // 진행 중 → 시간이 정해진 다음 일정 → 종일 순으로 하나
+    const pick = (['now', 'upcoming', 'allDay'] as const).map((k) => items.find((s) => statusOf(s, now) === k)).find(Boolean)
+    const st = pick && statusOf(pick, now)
+    return (
+      <SmallPanel title={t.schedule.title} icon={CalendarDays} className={className}>
+        {loading ? (
+          <Skeleton className="h-20 w-full" />
+        ) : error ? (
+          <LoadError error={error} className="text-sm" />
+        ) : (
+          <button type="button" onClick={() => modal.show()} aria-haspopup="dialog" className={SMALL_BODY}>
+            {pick ? (
+              <>
+                {/* 종일은 아래 시각 자리에 '종일' 이 들어가니 상태는 뺀다 */}
+                {st !== 'allDay' && <span className={`text-[13px] font-bold ${st === 'now' ? 'text-live' : 'text-muted'}`}>{t.schedule.status[st!]}</span>}
+                <span className={`text-xl font-bold tabular-nums ${st === 'now' ? 'text-live' : ''}`}>{pick.allDay || !pick.start ? t.schedule.allDay : clockTime(pick.start, lang)}</span>
+                <span className="mt-1 line-clamp-2 text-[15px] font-semibold break-keep">{title(pick.title)}</span>
+              </>
+            ) : (
+              <span className="text-[15px] font-semibold break-keep text-muted">{items.length ? t.schedule.allDone : t.schedule.empty}</span>
+            )}
+            <span className="mt-auto pt-2 text-[13px] font-semibold text-accent">{f(t.schedule.viewAll, { count: items.length })}</span>
+          </button>
+        )}
+        {listModal}
+      </SmallPanel>
+    )
+  }
 
   return (
     <Panel
@@ -77,11 +117,7 @@ export function TodayPanel({ className = '' }: { className?: string }) {
         <p className="py-4 text-base text-muted">{t.schedule.empty}</p>
       )}
       {/* 오늘 일정이 없어도 지난 일정 · 검색은 볼 수 있게 목록 밖에 둔다 */}
-      {modal.mounted && (
-        <Suspense>
-          <TodayModal key={modal.key} items={items} now={now} date={date} open={modal.open} onClose={modal.close} />
-        </Suspense>
-      )}
+      {listModal}
     </Panel>
   )
 }

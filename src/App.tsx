@@ -57,6 +57,8 @@ export default function App() {
   const [editingHome, setEditing] = useState(false)
   const editing = editingHome && home
   const stopEditing = () => setEditing(false)
+  // 좁은 화면 편집에서 위젯을 골라 테두리를 띄운 동안 — 아래 막대(편집 독 · 탭 바)가 손잡이를 가리지 않게 숨긴다
+  const [picking, setPicking] = useState(false)
   // 테마 메뉴 · 설정 화면의 '홈 배경 · 그림 바꾸기' — 어느 화면에서든 홈으로 가서 편집을 연다
   const customize = () => {
     location.hash = hrefOf('home')
@@ -107,7 +109,7 @@ export default function App() {
       {home && decor.wallpaper && <Wallpaper src={decor.wallpaper} pos={decor.pos.wallpaper} />}
       {editing && adjusting && <DecorAdjust decor={decor} />}
       {/* 편집 도구 · 완료는 화면 아래 독에 — 상단 바는 그 항목 고치기만 */}
-      {editing && (
+      {editing && !picking && (
         <EditDock
           decor={decor}
           onTidy={widgets.tidy}
@@ -155,6 +157,7 @@ export default function App() {
                 defs={visible}
                 editing={editing}
                 onEdit={() => setEditing(true)}
+                onPick={setPicking}
                 decor={decor}
               />
             )}
@@ -177,7 +180,7 @@ export default function App() {
         <footer className={`px-1 pt-8 text-xs text-muted ${home ? 'board-fit:hidden' : ''}`}>© DVISION · DVI Portal</footer>
       </div>
 
-      {!gallery && <TabBar page={route.page} />}
+      {!gallery && !picking && <TabBar page={route.page} />}
       <GooFilter />
     </>
   )
