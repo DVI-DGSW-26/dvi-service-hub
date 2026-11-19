@@ -34,6 +34,8 @@ export const KEYS = {
   systemsView: 'portal-systems-view',
   favorites: 'favorites',
   widgets: 'portal-widgets-v2',
+  /** 좁은 화면 배치(쌓는 순서 · 위젯별 크기) — 넓은 화면 칸 배치와 따로 */
+  widgetsStack: 'portal-widgets-stack',
   /** 12 × 6 칸(또는 그 전 줄 비율)으로 저장하던 홈 배치 — 읽어서 옮기기만 한다 */
   widgetsOld: 'portal-widgets',
   header: 'portal-header',

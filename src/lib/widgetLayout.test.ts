@@ -3,7 +3,7 @@
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { cellsFor, fits, fromHalf, fromRows, grow, guides, nudge, parsePages, place, placeAt, placeOn, reach, sizeFor, span, tidy, valid, without, type Page } from './widgetLayout.ts'
+import { cellsFor, fits, fromHalf, fromRows, grow, guides, nudge, parsePages, parseStack, place, placeAt, placeOn, reach, sizeFor, span, stack, stackSizeOf, tidy, valid, without, type Page } from './widgetLayout.ts'
 
 const it = (i: string, x: number, y: number, w: number, h: number) => ({ i, x, y, w, h })
 const at = (page: Page, i: string) => page.find((c) => c.i === i)
@@ -213,4 +213,22 @@ test('placeAt — 옆 페이지의 손 아래 칸으로, 판 밖이면 당기고
   assert.deepEqual(at(over, 'a'), it('a', 0, 0, 8, 4))
   // 혼자 있던 페이지에서 나가 새 페이지로 — 페이지 번호가 하나 당겨진다
   assert.equal(placeAt([[it('a', 0, 0, 8, 4)], [it('c', 0, 0, 8, 4)]], 'a', 2, 0, 0)!.length, 2)
+})
+
+test('stack — 좁은 화면은 저장한 순서대로, 거기 없는 위젯은 뒤에 페이지 · 읽는 순서대로', () => {
+  const pages = [[it('b', 8, 0, 8, 4), it('a', 0, 0, 8, 4), it('c', 0, 4, 8, 4)], [it('d', 0, 0, 8, 4)]]
+  const ids = (order: string[]) => stack(pages, order).map((c) => c.i).join()
+  assert.equal(ids([]), 'a,b,c,d')
+  assert.equal(ids(['d', 'b']), 'd,b,a,c')
+  // 지금 안 보이는(배치에 없는) 위젯 이름은 건너뛴다
+  assert.equal(ids(['gone', 'c']), 'c,a,b,d')
+})
+
+test('parseStack · stackSizeOf — 틀린 순서 · 크기는 버리고, 그릴 수 없는 크기는 보통으로', () => {
+  assert.deepEqual(parseStack({ order: ['a', 1], sizes: { a: 's', b: 'xl', c: 'l' } }), { order: [], sizes: { a: 's', c: 'l' } })
+  assert.deepEqual(parseStack(null), { order: [], sizes: {} })
+  assert.equal(stackSizeOf(['s', 'm', 'l'], 's'), 's')
+  assert.equal(stackSizeOf(['m', 'l'], 's'), 'm')
+  assert.equal(stackSizeOf(['s', 'm'], undefined), 'm')
+  assert.equal(stackSizeOf(['l'], undefined), 'l')
 })

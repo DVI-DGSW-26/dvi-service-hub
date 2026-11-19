@@ -3,6 +3,7 @@ import { Newspaper, Presentation } from 'lucide-react'
 import { useState } from 'react'
 import { hrefOf } from '../../hooks/useHashRoute'
 import { useI18n } from '../../i18n'
+import type { StackSize } from '../../lib/widgetLayout'
 import { formatDate, useTitle } from '../../lib/format'
 import { newsQueries } from '../../queries/dashboard'
 import type { NewsItem } from '../../types/portal'
@@ -25,14 +26,14 @@ export function NewsThumb({ item, large = false, className = '' }: { item: NewsI
   )
 }
 
-/** 홈에 보여줄 최신 소식 수 — 대표 1건(그림) + 제목 2건. 첫 쪽(6건)에서 여기서 자른다 */
+/** 홈에 보여줄 최신 소식 수 — 대표 1건(그림) + 제목 2건. 첫 쪽(6건)에서 여기서 자른다. 크게(좁은 화면)는 두 배 = 첫 쪽 전부 */
 const SHOWN = 3
 
 /**
  * 가장 최근 소식은 그림과 함께, 그다음 2건은 제목으로. 누르면 모달로 펼친다.
  * 한 화면 모드(fit)에서는 그림이 남는 높이만큼만 차지한다.
  */
-export function NewsPanel({ className = '' }: { className?: string }) {
+export function NewsPanel({ size, className = '' }: { size?: StackSize; className?: string }) {
   // 사내정보의 소식 목록과 같은 캐시 — 홈은 첫 쪽만 쓴다
   const { data, isPending: loading, error } = useInfiniteQuery(newsQueries.pages())
   const { t, f, lang } = useI18n()
@@ -41,7 +42,7 @@ export function NewsPanel({ className = '' }: { className?: string }) {
   const news = data?.pages[0]?.items ?? []
   const total = data?.pages[0]?.total ?? 0
   // 소식이 늘어도 패널 높이는 같고, 나머지는 '전체 n건'(사내정보)에서 — 펼쳐 보기 창도 이 3건만 넘긴다
-  const shown = news.slice(0, SHOWN)
+  const shown = news.slice(0, size === 'l' ? SHOWN * 2 : SHOWN)
   const [top, ...listed] = shown
 
   return (

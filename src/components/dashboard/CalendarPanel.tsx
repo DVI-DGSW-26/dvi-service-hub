@@ -3,10 +3,11 @@ import { CalendarHeart, Maximize2 } from 'lucide-react'
 import { Suspense, lazy, useState } from 'react'
 import { useNow } from '../../hooks/useNow'
 import { useI18n } from '../../i18n'
-import { monthKey, monthOf, monthTitle, toIso } from '../../lib/calendar'
+import { dtf, monthKey, monthOf, monthTitle, toIso } from '../../lib/calendar'
 import { shortDate, useTitle } from '../../lib/format'
+import type { StackSize } from '../../lib/widgetLayout'
 import { calendarQueries } from '../../queries/dashboard'
-import { CountTag, Panel, SourceTag } from '../ui/Panel'
+import { CountTag, Panel, SMALL_BODY, SmallPanel, SourceTag } from '../ui/Panel'
 import { LoadError, Skeleton } from '../ui/Skeleton'
 import { EventDot, MonthGrid, WeekdayRow } from './MonthGrid'
 import { useLazyModal } from '../../hooks/useLazyModal'
@@ -19,7 +20,7 @@ const CalendarModal = lazy(() => import('./CalendarModal').then((m) => ({ defaul
  * 날짜를 누르거나 오른쪽 위 버튼을 누르면 크게 보기(달마다 좌우로 넘기는 모달)가 열린다.
  * 아래 줄은 오늘부터 가장 가까운 일정 하나와 남은 개수. 한 화면 모드(fit)에서는 남는 높이에 맞춰 칸이 줄어든다.
  */
-export function CalendarPanel({ className = '' }: { className?: string }) {
+export function CalendarPanel({ size, className = '' }: { size?: StackSize; className?: string }) {
   const { t, f, lang, locale } = useI18n()
   const title = useTitle()
   const now = useNow()
@@ -36,6 +37,45 @@ export function CalendarPanel({ className = '' }: { className?: string }) {
     setStart(iso)
     modal.show()
   }
+  const bigView = modal.mounted && (
+    <Suspense>
+      <CalendarModal key={modal.key} open={modal.open} start={start} today={today} onClose={modal.close} />
+    </Suspense>
+  )
+
+  // 작게 — iOS 캘린더 작은 위젯처럼 오늘 요일 · 날짜를 크게, 아래에 다가오는 일정 하나. 누르면 크게 보기
+  if (size === 's') {
+    return (
+      <SmallPanel title={t.calendar.title} icon={CalendarHeart} className={className}>
+        <button type="button" onClick={() => openAt(next && next.date > today ? next.date : today)} aria-haspopup="dialog" aria-label={t.calendar.expand} className={SMALL_BODY}>
+          <span className="text-[13px] font-bold text-accent">{dtf(locale, { weekday: 'long' }).format(now)}</span>
+          <span className="text-[34px]/none font-bold tracking-[-0.03em] tabular-nums">{now.getDate()}</span>
+          <span className="mt-auto w-full pt-3">
+            {loading ? (
+              <Skeleton className="h-9 w-full" />
+            ) : error ? (
+              <LoadError error={error} className="text-sm" />
+            ) : next ? (
+              <>
+                <span className="flex items-center gap-1.5">
+                  <EventDot event={next} className="size-2 flex-none" />
+                  <span className="truncate text-sm font-semibold">{title(next.title)}</span>
+                </span>
+                <span className="block text-[13px] text-muted">
+                  {next.date <= today ? t.calendar.today : shortDate(next.date, lang)}
+                  {later.length > 0 && ` · ${f(t.calendar.later, { count: later.length })}`}
+                </span>
+              </>
+            ) : (
+              <span className="block text-[13px] text-muted break-keep">{events.length ? t.calendar.noneLeft : t.calendar.monthEmpty}</span>
+            )}
+          </span>
+        </button>
+        {bigView}
+      </SmallPanel>
+    )
+  }
+
   const iconButton =
     'grid size-9 cursor-pointer place-items-center rounded-xl text-muted transition-[background-color,color,scale] duration-150 hover:bg-subtle hover:text-fg active:scale-90'
 
@@ -97,11 +137,7 @@ export function CalendarPanel({ className = '' }: { className?: string }) {
           <p className="sr-only">{f(t.calendar.eventCount, { count: events.length })}</p>
         </div>
       )}
-      {modal.mounted && (
-        <Suspense>
-          <CalendarModal key={modal.key} open={modal.open} start={start} today={today} onClose={modal.close} />
-        </Suspense>
-      )}
+      {bigView}
     </Panel>
   )
 }

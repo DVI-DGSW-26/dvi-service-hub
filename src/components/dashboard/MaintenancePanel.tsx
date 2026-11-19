@@ -3,12 +3,13 @@ import { ChevronRight, PenLine, Wrench } from 'lucide-react'
 import { Suspense, lazy, useState } from 'react'
 import { useI18n, type Lang } from '../../i18n'
 import { canWriteMaintenance } from '../../lib/access'
-import { dateTimeRange } from '../../lib/format'
+import { dateTimeRange, shortDate } from '../../lib/format'
+import type { StackSize } from '../../lib/widgetLayout'
 import { maintenanceQueries } from '../../queries/dashboard'
 import type { Maintenance, MaintenanceKind, Me } from '../../types/portal'
 import { Badge, type BadgeTone } from '../ui/Badge'
-import { Panel } from '../ui/Panel'
-import { LoadError, SkeletonList } from '../ui/Skeleton'
+import { Panel, SMALL_BODY, SmallPanel } from '../ui/Panel'
+import { LoadError, Skeleton, SkeletonList } from '../ui/Skeleton'
 import { DetailModal } from './DetailModal'
 import { useLazyModal } from '../../hooks/useLazyModal'
 
@@ -28,13 +29,67 @@ const composeButton =
   'flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft'
 
 /** 시스템 점검 · 안내. maintenance:write · admin 이면 오른쪽 위에 작성 단추가 붙는다 */
-export function MaintenancePanel({ me, className = '' }: { me: Me | null; className?: string }) {
+export function MaintenancePanel({ me, size, className = '' }: { me: Me | null; size?: StackSize; className?: string }) {
   const { data, isPending: loading, error } = useQuery(maintenanceQueries.list())
   const { t, f, lang } = useI18n()
   const composer = useLazyModal()
   const [detail, setDetail] = useState<number | null>(null)
   const items = data ?? []
-  const hidden = items.length - LISTED
+  // 크게(좁은 화면)는 두 배까지
+  const listed = size === 'l' ? LISTED * 2 : LISTED
+  const hidden = items.length - listed
+  const detailModal = (
+    <DetailModal
+      items={items}
+      index={detail}
+      onIndexChange={setDetail}
+      prevLabel={t.home.maintenance.prev}
+      nextLabel={t.home.maintenance.next}
+      list={{
+        label: t.home.maintenance.title,
+        row: (m) => (
+          <span className="flex items-start gap-2.5">
+            <Badge tone={MAINTENANCE_TONE[m.kind]}>{t.home.maintenance.kind[m.kind]}</Badge>
+            <span className="min-w-0">
+              <span className="block text-[15px] font-semibold break-keep">{m.title}</span>
+              <span className="mt-0.5 block text-[13px] text-muted">{maintenanceWhen(m, lang)}</span>
+            </span>
+          </span>
+        ),
+      }}
+      content={(m) => ({
+        eyebrow: <Badge tone={MAINTENANCE_TONE[m.kind]}>{t.home.maintenance.kind[m.kind]}</Badge>,
+        title: m.title,
+        lead: maintenanceWhen(m, lang),
+        body: m.body,
+        link: m.url ? { label: t.home.maintenance.open, url: m.url } : undefined,
+      })}
+    />
+  )
+
+  // 작게 — 가장 가까운 안내 하나와 남은 수. 누르면 펼쳐 보기(그 안에서 목록 · 다음 안내로). 작성은 보통 크기에서
+  if (size === 's') {
+    const [first] = items
+    return (
+      <SmallPanel title={t.home.maintenance.title} icon={Wrench} className={className}>
+        {loading ? (
+          <Skeleton className="h-20 w-full" />
+        ) : error ? (
+          <LoadError error={error} className="text-sm" />
+        ) : first ? (
+          <button type="button" onClick={() => setDetail(0)} aria-haspopup="dialog" className={SMALL_BODY}>
+            <Badge tone={MAINTENANCE_TONE[first.kind]}>{t.home.maintenance.kind[first.kind]}</Badge>
+            <span className="mt-2 line-clamp-2 text-[15px] font-semibold break-keep">{first.title}</span>
+            <span className="mt-1 text-[13px] text-muted tabular-nums">{shortDate(first.date, lang)}</span>
+            {items.length > 1 && <span className="mt-auto pt-2 text-[13px] font-semibold text-accent">{f(t.home.maintenance.more, { count: items.length - 1 })}</span>}
+          </button>
+        ) : (
+          <p className="text-sm text-muted break-keep">{t.home.maintenance.empty}</p>
+        )}
+        {detailModal}
+      </SmallPanel>
+    )
+  }
 
   return (
     <Panel
@@ -66,7 +121,7 @@ export function MaintenancePanel({ me, className = '' }: { me: Me | null; classN
       ) : data?.length ? (
         // 낮은 한 화면(fit)에서만 줄 간격을 좁히고, 높은 화면(tall)에서는 다시 넉넉하게
         <ul className="space-y-2 fit:space-y-1.5 tall:space-y-2.5">
-          {data.slice(0, LISTED).map((m, i) => (
+          {data.slice(0, listed).map((m, i) => (
             <li key={m.id}>
               {/* 제목이 잘리고 본문 · 링크는 안 보이므로, 누르면 펼쳐 보기 — 시스템 열기는 그 안에서 */}
               <button
@@ -89,7 +144,7 @@ export function MaintenancePanel({ me, className = '' }: { me: Me | null; classN
             <li>
               <button
                 type="button"
-                onClick={() => setDetail(LISTED)}
+                onClick={() => setDetail(listed)}
                 aria-haspopup="dialog"
                 className="flex w-full cursor-pointer items-center justify-center gap-1 rounded-2xl px-3 py-2 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft fit:py-1.5"
               >
@@ -102,32 +157,7 @@ export function MaintenancePanel({ me, className = '' }: { me: Me | null; classN
       ) : (
         <p className="py-4 text-sm text-muted">{t.home.maintenance.empty}</p>
       )}
-      <DetailModal
-        items={items}
-        index={detail}
-        onIndexChange={setDetail}
-        prevLabel={t.home.maintenance.prev}
-        nextLabel={t.home.maintenance.next}
-        list={{
-          label: t.home.maintenance.title,
-          row: (m) => (
-            <span className="flex items-start gap-2.5">
-              <Badge tone={MAINTENANCE_TONE[m.kind]}>{t.home.maintenance.kind[m.kind]}</Badge>
-              <span className="min-w-0">
-                <span className="block text-[15px] font-semibold break-keep">{m.title}</span>
-                <span className="mt-0.5 block text-[13px] text-muted">{maintenanceWhen(m, lang)}</span>
-              </span>
-            </span>
-          ),
-        }}
-        content={(m) => ({
-          eyebrow: <Badge tone={MAINTENANCE_TONE[m.kind]}>{t.home.maintenance.kind[m.kind]}</Badge>,
-          title: m.title,
-          lead: maintenanceWhen(m, lang),
-          body: m.body,
-          link: m.url ? { label: t.home.maintenance.open, url: m.url } : undefined,
-        })}
-      />
+      {detailModal}
       {composer.mounted && (
         <Suspense>
           <MaintenanceComposer key={composer.key} open={composer.open} onClose={composer.close} items={items} />

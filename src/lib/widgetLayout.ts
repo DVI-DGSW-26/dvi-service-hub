@@ -197,6 +197,40 @@ export function tidy(page: Page): Page {
 /** react-grid-layout 이 붙이는 것(moved · static · minW 등)을 떼고 자리만 남긴다 — 저장하는 모양 */
 export const strip = (page: Page): Page => page.map(({ i, x, y, w, h }) => ({ i, x, y, w, h }))
 
+/**
+ * 좁은 화면에서 한 줄로 쌓는 순서 — 따로 저장한 순서(order)대로, 거기 없는 위젯은 뒤에 페이지 · 읽는 순서대로.
+ * 좁은 화면에서 순서를 바꿔도 넓은 화면의 칸 배치는 그대로다
+ */
+export function stack(pages: Page[], order: string[]): Item[] {
+  const at = (i: string) => (order.includes(i) ? order.indexOf(i) : order.length)
+  return pages.flatMap((p) => [...p].sort(reading)).sort((a, b) => at(a.i) - at(b.i))
+}
+
+/**
+ * 좁은 화면 크기 — 작게(두 칸 중 한 칸) · 보통(한 줄 전체) · 크게(한 줄 전체, 내용을 더). iOS 위젯의 small · medium · large 처럼
+ * 위젯마다 그릴 수 있는 것(registry 의 stack) 사이에서만 고른다
+ */
+export type StackSize = 's' | 'm' | 'l'
+const STACK_SIZES: StackSize[] = ['s', 'm', 'l']
+
+/** 좁은 화면 배치 — 쌓는 순서와 위젯별 크기. 넓은 화면 칸 배치와 따로 저장한다 */
+export interface Stack {
+  order: string[]
+  sizes: Record<string, StackSize>
+}
+
+/** 저장해 둔 좁은 화면 배치. 틀린 것은 버린다 — 순서가 틀리면 빈 순서(넓은 화면의 읽는 순서), 크기가 틀리면 그 위젯만 기본 크기 */
+export function parseStack(saved: unknown): Stack {
+  const v = saved as Partial<Stack> | null
+  const order = Array.isArray(v?.order) && v.order.every((i) => typeof i === 'string') ? v.order : []
+  const sizes = v?.sizes && typeof v.sizes === 'object' ? Object.fromEntries(Object.entries(v.sizes).filter(([, s]) => STACK_SIZES.includes(s))) : {}
+  return { order, sizes }
+}
+
+/** 고른 크기를 그 위젯이 그릴 수 있으면 그대로, 아니면 보통(없으면 그릴 수 있는 첫 크기) */
+export const stackSizeOf = (supported: StackSize[], saved: StackSize | undefined): StackSize =>
+  saved && supported.includes(saved) ? saved : supported.includes('m') ? 'm' : supported[0]
+
 /** 모든 페이지에서 i 를 뺀다 — 빈자리는 그대로, 빈 페이지는 지운다 */
 export const without = (pages: Page[], i: string) => pages.map((p) => p.filter((c) => c.i !== i)).filter((p) => p.length)
 
