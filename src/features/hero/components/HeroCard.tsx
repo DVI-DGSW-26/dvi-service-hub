@@ -1,20 +1,19 @@
 import { useQuery } from '@tanstack/react-query'
 import { CalendarDays, ChevronLeft, ChevronRight, Megaphone, PenLine, Star, Wrench } from 'lucide-react'
 import { Suspense, lazy, useRef, useState, type MouseEvent, type ReactNode, type TouchEvent } from 'react'
-import { useNow } from '../../hooks/useNow'
-import { useI18n, type Plural } from '../../i18n'
-import { formatDate, longToday, shortDate } from '../../lib/format'
-import { canWriteNotice } from '../../lib/access'
-import { toIso } from '../../lib/calendar'
-import { placeStyle, type DecorPos } from '../../lib/wallpaper'
-import type { StackSize } from '../../lib/widgetLayout'
-import { greetings, plainGreeting } from '../../lib/greetings'
-import { maintenanceQueries, noticeQueries, scheduleQueries } from '../../queries/dashboard'
-import type { Me, Notice } from '../../types/portal'
-import { LoadError, SkeletonText } from '../ui/Skeleton'
-import { DetailModal } from './DetailModal'
+import { useNow, useLazyModal } from '@/shared/hooks'
+import { useI18n, type Plural } from '@/shared/i18n'
+import { canWriteNotice, toIso } from '@/shared/lib'
+import { formatDate, longToday, shortDate } from '@/shared/format'
+import { placeStyle, type DecorPos } from '@/features/decor'
+import type { StackSize } from '@/shared/widget'
+import { greetings, plainGreeting } from '../lib/greetings'
+import { maintenanceQueries } from '@/features/maintenance'
+import { scheduleQueries } from '@/features/schedule'
+import { noticeQueries } from '../api/queries'
+import type { Me, Notice } from '@/shared/types'
+import { LoadError, SkeletonText, DetailModal } from '@/shared/ui'
 import { HeroIllustration } from './HeroIllustration'
-import { useLazyModal } from '../../hooks/useLazyModal'
 
 // 눌러서 열 때 받는다 — 첫 화면 번들에서 뺀다
 const NoticeComposer = lazy(() => import('./NoticeComposer').then((m) => ({ default: m.NoticeComposer })))
@@ -51,7 +50,7 @@ export function HeroCard({ me, loading = false, favoriteCount, image, size, clas
   const schedule = useQuery({ ...scheduleQueries.recent(toIso(now)), select: (days) => days.at(-1)?.items ?? [] })
   const maintenance = useQuery(maintenanceQueries.list())
   const { t, lang } = useI18n()
-  // 고른 그림은 카드 전체를 덮고, 글자가 있는 왼쪽부터 바탕색으로 옅게 덮는다(styles.css 의 .hero-scrim)
+  // 고른 그림은 카드 전체를 덮고, 글자가 있는 왼쪽부터 바탕색으로 옅게 덮는다(styles/home.css 의 .hero-scrim)
   const picture = image && (
     <>
       <img data-decor="hero" src={image.src} alt="" style={placeStyle(image.pos)} className="pointer-events-none absolute inset-0 size-full object-cover" />
@@ -59,7 +58,34 @@ export function HeroCard({ me, loading = false, favoriteCount, image, size, clas
     </>
   )
 
-  // 작게(반 칸) — 날짜와 인사만. 공지는 보통 이상에서
+  // 한 줄(4×1) — 날짜와 인사 한 줄. 공지는 넓게 이상에서
+  if (size === '4x1') {
+    return (
+      <section className={`hero relative flex flex-col justify-center overflow-hidden rounded-3xl px-5 ${className}`}>
+        {picture}
+        <p className="relative text-xs font-semibold text-accent">{longToday(now, lang)}</p>
+        <div className="relative [&_h1]:mt-0.5 [&_h1]:line-clamp-1 [&_h1]:text-base">
+          <Greeting name={me?.name} loading={loading} small />
+        </div>
+      </section>
+    )
+  }
+
+  // 넓게(4×2) — 날짜 · 인사(두 줄까지)와 전사 공지 한 줄
+  if (size === 'w') {
+    return (
+      <section className={`hero relative flex flex-col justify-center gap-3 overflow-hidden rounded-3xl p-5 ${className}`}>
+        {picture}
+        <div className="relative [&_h1]:line-clamp-2">
+          <p className="text-[13px] font-semibold text-accent">{longToday(now, lang)}</p>
+          <Greeting name={me?.name} loading={loading} small />
+        </div>
+        <NoticeTicker canWrite={canWriteNotice(me)} compact />
+      </section>
+    )
+  }
+
+  // 작게(반 칸) — 날짜와 인사만. 공지는 넓게 이상에서
   if (size === 's') {
     return (
       <section className={`hero relative flex flex-col overflow-hidden rounded-3xl p-4 ${className}`}>
@@ -71,7 +97,7 @@ export function HeroCard({ me, loading = false, favoriteCount, image, size, clas
   }
 
   return (
-    <section className={`hero relative flex flex-col justify-center gap-6 overflow-hidden rounded-3xl p-6 sm:p-8 fit:gap-4 fit:px-8 fit:py-6 ${className}`}>
+    <section className={`hero relative flex flex-col justify-center overflow-hidden rounded-3xl fit:gap-4 fit:px-8 fit:py-6 ${size ? 'gap-4 p-5' : 'gap-6 p-6 sm:p-8'} ${className}`}>
       {/* 카드 높이에 맞춰 잘리지 않게 그리고, 왼쪽으로 갈수록 배경에 녹인다 */}
       {picture ?? (
         <HeroIllustration className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-auto max-w-[62%] mask-[linear-gradient(to_right,transparent,black_45%)] sm:block dark:opacity-35 dark:saturate-50" />
@@ -97,7 +123,7 @@ export function HeroCard({ me, loading = false, favoriteCount, image, size, clas
         </div>
       </div>
 
-      <NoticeTicker canWrite={canWriteNotice(me)} />
+      <NoticeTicker canWrite={canWriteNotice(me)} compact={!!size} />
     </section>
   )
 }
@@ -152,7 +178,8 @@ function Greeting({ name, loading, small = false }: { name?: string; loading: bo
  * 전사 공지 한 건씩. 날짜 · 넘김 버튼은 오른쪽에 모아 세로 가운데로 맞춘다. admin 이면 맨 오른쪽에 작성 단추.
  * 좁은 화면에서는 위 줄에 '전사 공지' · 넘김, 아래 줄에 공지 글을 폭 가득 — 글이 몇 글자로 잘리지 않게.
  */
-function NoticeTicker({ canWrite, className = '' }: { canWrite: boolean; className?: string }) {
+/** compact — 좁은 화면 고정 칸: 한 줄에 표시 · 제목 · 쓰기만(넘기기는 좌우로 쓸기 · 펼쳐 보기에서) */
+function NoticeTicker({ canWrite, compact = false, className = '' }: { canWrite: boolean; compact?: boolean; className?: string }) {
   const { data, isPending: loading, error } = useQuery(noticeQueries.list())
   const { t, lang } = useI18n()
   const [index, setIndex] = useState(0)
@@ -173,28 +200,29 @@ function NoticeTicker({ canWrite, className = '' }: { canWrite: boolean; classNa
 
   return (
     <div
-      className={`hero-glass relative flex flex-wrap items-center gap-x-4 gap-y-2.5 rounded-2xl py-3.5 pr-2.5 pl-4 sm:max-w-[min(100%,760px)] sm:flex-nowrap ${className}`}
+      className={`hero-glass relative flex items-center rounded-2xl sm:max-w-[min(100%,760px)] ${compact ? 'gap-2.5 py-2 pr-3 pl-2' : 'flex-wrap gap-x-4 gap-y-2.5 py-3.5 pr-2.5 pl-4 sm:flex-nowrap'} ${className}`}
     >
-      <span className="flex flex-none items-center gap-1.5 rounded-xl bg-accent-fill px-3 py-2 text-sm font-bold text-white max-sm:px-2.5 max-sm:py-1.5">
+      {/* 한 줄(compact)은 아이콘만 — 좁은 칸(3×2)에서도 제목이 보이게 */}
+      <span className={`flex flex-none items-center gap-1.5 rounded-xl bg-accent-fill text-sm font-bold text-white ${compact ? 'p-1.5' : 'px-3 py-2 max-sm:px-2.5 max-sm:py-1.5'}`}>
         <Megaphone className="size-4" aria-hidden="true" />
-        {t.home.notice.label}
+        <span className={compact ? 'sr-only' : ''}>{t.home.notice.label}</span>
       </span>
       {/* 좌우로 쓸면 이전 · 다음 공지 (위아래는 화면 스크롤 그대로 — touch-pan-y) */}
-      <div {...swipe} className="order-last w-full min-w-0 touch-pan-y overflow-hidden pr-1.5 sm:order-none sm:w-auto sm:flex-1 sm:pr-0" aria-live="polite">
+      <div {...swipe} className={`min-w-0 touch-pan-y overflow-hidden ${compact ? 'flex-1' : 'order-last w-full pr-1.5 sm:order-none sm:w-auto sm:flex-1 sm:pr-0'}`} aria-live="polite">
         {loading ? (
           <div className="h-12 animate-pulse rounded-lg bg-fg/[0.07]" />
         ) : error ? (
           <LoadError error={error} className="text-[15px]" />
         ) : n ? (
           // 제목 · 요약은 한 줄로 잘리므로 누르면 전체를 펼쳐 본다 — 원문 링크는 그 안에서
-          <NoticeBody key={n.id} notice={n} onOpen={() => setDetail(index)} />
+          <NoticeBody key={n.id} notice={n} onOpen={() => setDetail(index)} brief={compact} />
         ) : (
           <p className="text-[15px] text-muted">{t.home.notice.empty}</p>
         )}
       </div>
       <div className="ml-auto flex flex-none items-center gap-1 sm:ml-0">
         {n && <span className="mr-2 hidden text-sm font-medium text-muted md:inline">{shortDate(n.date, lang)}</span>}
-        {notices.length > 1 && (
+        {notices.length > 1 && !compact && (
           <>
             <button type="button" onClick={() => step(-1)} aria-label={t.home.notice.prev} className={arrow}>
               <ChevronLeft className="size-5" aria-hidden="true" />
@@ -285,7 +313,7 @@ function useSwipe(onStep: (d: 1 | -1) => void) {
   }
 }
 
-function NoticeBody({ notice: n, onOpen }: { notice: Notice; onOpen: () => void }) {
+function NoticeBody({ notice: n, onOpen, brief = false }: { notice: Notice; onOpen: () => void; brief?: boolean }) {
   const { t } = useI18n()
   return (
     <button type="button" onClick={onOpen} aria-haspopup="dialog" title={t.home.notice.more} className="group block w-full min-w-0 animate-[notice-in_220ms_cubic-bezier(0.2,0.8,0.2,1)] cursor-pointer rounded-lg text-left">
@@ -294,7 +322,7 @@ function NoticeBody({ notice: n, onOpen }: { notice: Notice; onOpen: () => void 
         {/* min-w-0: flex 안에서 글자 길이만큼 버티지 않고 줄어들어 말줄임이 된다 — 없으면 긴 제목이 공지 줄을 화면 밖으로 넓힌다 */}
         <span className="min-w-0 truncate text-base font-bold group-hover:text-accent group-hover:underline">{n.title}</span>
       </span>
-      <span className="mt-1.5 block truncate text-sm text-muted">{n.summary}</span>
+      {!brief && <span className="mt-1.5 block truncate text-sm text-muted">{n.summary}</span>}
     </button>
   )
 }

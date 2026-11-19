@@ -1,4 +1,4 @@
-import { interpolate, type Messages } from '../i18n'
+import { interpolate, type Messages } from '@/shared/i18n'
 
 /**
  * 인사 카드 문구 고르기. 문구는 사전(i18n/<lang>/greetings.json)에 있고, 여기서는 시간대 · 요일에 맞는 것만 추린다.

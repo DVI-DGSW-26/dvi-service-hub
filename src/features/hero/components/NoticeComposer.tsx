@@ -1,8 +1,8 @@
-import { useI18n } from '../../i18n'
-import { shortDate } from '../../lib/format'
-import { useCreateNotice, useDeleteNotice } from '../../queries/dashboard'
-import type { Notice } from '../../types/portal'
-import { ComposeModal, DeletableItem, TextField, isHttpUrl, useComposeForm } from './ComposeModal'
+import { useI18n } from '@/shared/i18n'
+import { shortDate } from '@/shared/format'
+import { useCreateNotice, useDeleteNotice } from '../api/queries'
+import type { Notice } from '@/shared/types'
+import { ComposeModal, DeletableItem, TextField, isHttpUrl, useComposeForm } from '@/shared/ui'
 
 /** 서버 한도 (명세 2.2) */
 const MAX = { title: 100, summary: 150, body: 5000, url: 500 }
