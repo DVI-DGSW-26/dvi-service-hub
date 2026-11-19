@@ -89,6 +89,13 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, renderWidget
     if (node) scrollBy(0, node.getBoundingClientRect().top - a.top)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- el 은 DOM 을 찾기만 한다
   }, [editing])
+  // 실제 폰은 든 뒤 움직이면 브라우저가 스크롤로 가져가 pointercancel 을 보낸다 — 든 동안만 막는다.
+  // touch-action 은 손을 댈 때 정해져 나중에 바꿀 수 없고, React 의 onTouchMove 는 passive 라 직접 단다
+  useEffect(() => {
+    const stop = (e: TouchEvent) => held.current?.lifted && e.preventDefault()
+    document.addEventListener('touchmove', stop, { passive: false })
+    return () => document.removeEventListener('touchmove', stop)
+  }, [])
   // 고른 위젯 밖을 누르거나 Esc 면 꺼진다 — Esc 는 편집 끝내기(App)보다 먼저 받아 거기서 멈춘다
   useEffect(() => {
     if (!picked) return
@@ -319,6 +326,8 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, renderWidget
         drop()
       }}
       onPointerCancel={drop}
+      // 안드로이드는 길게 누르면 이미지 · 링크 메뉴가 떠 끌기를 끊는다
+      onContextMenu={(e) => held.current && e.preventDefault()}
       onClickCapture={(e) => {
         if (!swallow.current) return
         swallow.current = false

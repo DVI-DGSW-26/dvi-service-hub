@@ -39,7 +39,7 @@ export function NewsModal({ news, index, onIndexChange, viewAll }: NewsModalProp
               {title(item.title)}
             </h2>
             {/* 본문은 행사 메모를 줄바꿈(\n)으로 이은 일반 글자 */}
-            <p className="mt-4 text-[17px]/[1.75] whitespace-pre-line text-fg/90">{item.body || item.summary}</p>
+            <p className="mt-4 text-[17px]/[1.75] whitespace-pre-line text-fg/90 select-text">{item.body || item.summary}</p>
 
             <div className="mt-7 flex flex-wrap items-center justify-between gap-3">
               <OpenLink href={item.url} label={t.home.news.original} />

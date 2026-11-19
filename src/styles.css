@@ -191,6 +191,50 @@
     @apply bg-bg text-fg antialiased;
     /* 사이드바를 접을 때 밀려가는 본문(App.tsx)이 가로 스크롤을 만들지 않게 — clip 은 sticky 를 깨지 않는다 */
     overflow-x: clip;
+    /* 앱처럼 — 누를 때 회색 번쩍임 · 두 번 눌러 확대를 끈다(두 손가락 확대는 남긴다) */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    /* 한글은 낱말 가운데서 줄을 바꾸지 않는다(띄어쓰기에서만) — 띄어쓰기 없이 긴 것(주소 등)만 아무 데서나 */
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  /* 화면 스크롤의 끝 튕김 · 당겨서 새로고침은 html 값을 따른다 */
+  html {
+    overscroll-behavior: none;
+  }
+
+  /* body 의 overflow 는 화면(viewport)으로 넘어가 body 자신은 자르지 않는다 — 모바일은 넘친 만큼 화면 폭을 늘려
+     100vw 로 잡은 팝오버 · 헤더까지 같이 넓어진다. 그래서 바로 안쪽에서 한 번 더 자른다 */
+  #root {
+    overflow-x: clip;
+  }
+
+  /* 손가락 화면은 hover: 가 아예 안 켜져 눌러도 아무 반응이 없다 — 누르는 동안 살짝 흐려 앱 버튼처럼 받는다.
+     :where 라 우선순위가 0 — 따로 opacity 를 준 요소는 그 값이 이긴다 */
+  @media (hover: none) {
+    :where(a[href], button:enabled, label, summary, [role='button'], [role='tab'], [role='option']) {
+      transition: opacity 150ms ease;
+    }
+    :where(a[href], button:enabled, label, summary, [role='button'], [role='tab'], [role='option']):active {
+      opacity: 0.6;
+      transition-duration: 0s;
+    }
+    /* 길게 누르면 글자가 골라지고 링크 · 이미지 미리보기가 뜨는 건 웹 페이지 티 — 앱처럼 끈다.
+       입력칸 · 글 본문(.select-text: 공지 내용처럼 복사할 만한 것)만 고를 수 있다 */
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+    :is(input, textarea, [contenteditable]) {
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    /* iOS 는 16px 보다 작은 입력칸을 누르면 화면을 확대한다 */
+    :is(input, textarea, select) {
+      font-size: max(16px, 1em) !important;
+    }
   }
 
   :focus-visible {
@@ -829,5 +873,104 @@
   from {
     opacity: 0;
     translate: 0 10px;
+  }
+}
+
+/*
+ * 아래 둘은 레이어 밖 — 요소에 붙은 유틸리티(w-64 · p-4 · absolute …)보다 이겨야 한다.
+ *
+ * 화면을 옮길 때(App.tsx 의 main) — 옮긴 방향(--dir: 1 뒤 · -1 앞)에서 조금 밀려 들어온다
+ */
+.page-in {
+  animation: page-in 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    translate: calc(var(--dir) * 28px) 0;
+  }
+}
+
+/* 휴대폰의 펼침 메뉴(Popover.tsx) — 맨 위 층에 올라가 모달 시트와 같은 모양 · 움직임으로 아래에서 올라온다 */
+@media (max-width: 639.98px) {
+  .popover-panel:popover-open {
+    inset: auto 0 0;
+    margin: 0;
+    width: auto;
+    max-width: none;
+    max-height: 85dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 1.5rem 1.5rem 0 0;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    animation:
+      sheet-in 380ms cubic-bezier(0.32, 0.72, 0, 1),
+      solid-hold 380ms step-end;
+  }
+  .popover-panel:popover-open::before {
+    animation-duration: 380ms;
+  }
+  .popover-panel::backdrop {
+    background: oklch(0.15 0.01 var(--accent-h) / 0.42);
+    animation: backdrop-in 260ms ease;
+  }
+}
+
+/*
+ * 유리 면이 나타나고 사라지는 동안은 흐림을 빼 둔다(blur-hold) — 그동안 반투명한 면으로 뒤 화면이 비치지 않게 불투명하게 나타났다가,
+ * 다 올라온 순간 흐림과 함께 유리가 된다. 닫힐 때도 흐림이 빠지니 불투명하게 사라진다
+ */
+.modal[open] > :is(.glass-chrome, .glass-strong) {
+  animation: solid-hold 260ms step-end;
+}
+/* 휴대폰 시트(:popover-open)는 위 sheet-in 이 맡는다 */
+.animate-materialize:is(.glass-chrome, .glass-strong):not(:popover-open) {
+  animation:
+    var(--animate-materialize),
+    solid-hold 260ms step-end;
+}
+.modal[data-closing] > :is(.glass-chrome, .glass-strong) {
+  background: var(--glass-solid);
+}
+@media (max-width: 639.98px) {
+  .modal[open] > :is(.glass-chrome, .glass-strong) {
+    animation-duration: 380ms;
+  }
+}
+@keyframes solid-hold {
+  from {
+    background-color: var(--glass-solid);
+  }
+}
+
+/*
+ * 휴대폰 상단 바 — 앱처럼 화면 맨 위에 붙는다(떠 있는 둥근 카드 대신). 맨 위에서는 바탕에 녹아 있다가
+ * 내용이 밑으로 지나가기 시작하면 유리가 깔린다(TopBar 의 data-scrolled)
+ */
+@media (max-width: 639.98px) {
+  .app-bar {
+    top: 0;
+    margin: -0.75rem -0.75rem 0;
+    height: calc(4rem + env(safe-area-inset-top));
+    padding-top: env(safe-area-inset-top);
+    border-radius: 0;
+    border-width: 0 0 1px;
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease,
+      box-shadow 200ms ease;
+  }
+  .app-bar::before,
+  .app-bar::after {
+    transition: opacity 200ms ease;
+  }
+  .app-bar:not([data-scrolled]) {
+    background-color: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+  .app-bar:not([data-scrolled])::before,
+  .app-bar:not([data-scrolled])::after {
+    opacity: 0;
   }
 }

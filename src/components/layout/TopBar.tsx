@@ -1,7 +1,8 @@
 import { Eye, EyeOff, GripVertical, Lock, PencilRuler, Search } from 'lucide-react'
-import { Fragment, useRef, useState, type PointerEvent, type ReactNode } from 'react'
+import { Fragment, useRef, useState, useSyncExternalStore, type PointerEvent, type ReactNode } from 'react'
 import { hrefOf, type Page } from '../../hooks/useHashRoute'
 import type { PortalTheme } from '../../hooks/usePortalTheme'
+import { PHONE, useMedia } from '../../hooks/useMedia'
 import { useI18n } from '../../i18n'
 import { KEYS, readPref, writePref } from '../../lib/theme'
 import type { Me } from '../../types/portal'
@@ -48,10 +49,26 @@ function loadPrefs(): HeaderPrefs {
   }
 }
 
-/** 본문 위에 떠 있는 유리 상단 바. 본문이 그 아래로 흘러 지나간다. */
+/** 문서를 px 보다 더 내렸는지 — 넘나들 때만 다시 그린다 */
+function useScrolled(px: number) {
+  return useSyncExternalStore(
+    (onChange) => {
+      addEventListener('scroll', onChange, { passive: true })
+      return () => removeEventListener('scroll', onChange)
+    },
+    () => scrollY > px,
+  )
+}
+
+/** 본문 위에 떠 있는 유리 상단 바. 본문이 그 아래로 흘러 지나간다. 휴대폰에서는 화면 맨 위에 붙는다(styles.css 의 .app-bar) */
 export function TopBar({ me, meLoading, page, query, onQueryChange, theme, onEditWidgets, onCustomize, editing }: TopBarProps) {
   const { t, f } = useI18n()
   const [prefs, setPrefs] = useState(loadPrefs)
+  // 휴대폰은 상단 바를 고치지 않는다 — 편집 중에도 · 고친 설정이 있어도 늘 같은 모양(좁아 항목 줄이 들어갈 자리도 없다)
+  const phone = useMedia(PHONE)
+  const scrolled = useScrolled(0)
+  // 큰 제목(PageTitle 의 h1) 이 바 밑으로 다 들어간 즈음
+  const pastTitle = useScrolled(52)
   // 드래그 중인 항목 — 놓기 전에는 순서를 안 바꾸고 transform 으로만 보여 준다(바로 바꾸면 폭이 다른 항목끼리 자리가 왔다 갔다 한다)
   const [drag, setDrag] = useState<{ from: number; to: number; dx: number; step: number } | null>(null)
   // 손에 든 값은 ref 에도 — 빠르게 놓으면 다시 그리기 전에 pointerup 이 와서 state 가 한 박자 늦다
@@ -95,7 +112,7 @@ export function TopBar({ me, meLoading, page, query, onQueryChange, theme, onEdi
       )
     ),
   }
-  const shown = prefs.order.filter((i) => !prefs.hidden.includes(i))
+  const shown = phone ? ITEMS : prefs.order.filter((i) => !prefs.hidden.includes(i))
 
   const onDragStart = (e: PointerEvent<HTMLLIElement>, from: number) => {
     if (e.button !== 0 || (e.target as Element).closest('button')) return
@@ -139,17 +156,17 @@ export function TopBar({ me, meLoading, page, query, onQueryChange, theme, onEdi
   }
 
   return (
-    <header className="glass-chrome sticky top-3 z-20 flex h-16 items-center gap-3 rounded-2xl pr-2 pl-3 sm:pl-4">
+    <header data-scrolled={scrolled || undefined} className="app-bar glass-chrome sticky top-3 z-20 flex h-16 items-center gap-3 rounded-2xl pr-2 pl-3 sm:pl-4">
       <div className="lg:hidden">
         <Brand compact />
       </div>
-      {/* 지금 어디에 있는지 */}
-      <p className="min-w-0 truncate leading-tight">
+      {/* 지금 어디에 있는지 — 휴대폰에서 큰 제목(PageTitle)이 있는 화면은 그 제목이 바 밑으로 들어간 뒤에 나타난다 */}
+      <p className={`min-w-0 truncate leading-tight transition-opacity duration-200 ${phone && page !== 'home' && !pastTitle ? 'opacity-0' : ''}`}>
         <span className="hidden text-xs text-muted sm:block">DVI Portal</span>
         <span className="block text-[15px] font-bold tracking-[-0.01em] sm:text-base">{t.layout.pages[page]}</span>
       </p>
 
-      {editing ? (
+      {editing && !phone ? (
         // 편집 중 — 항목을 드래그해 순서를 바꾸고 눈 아이콘으로 숨긴다
         <div className="fade-up ml-auto flex min-w-0 items-center gap-2">
           <span className="hidden text-[13px] text-muted xl:block">{t.widgets.header.hint}</span>
@@ -205,9 +222,9 @@ export function TopBar({ me, meLoading, page, query, onQueryChange, theme, onEdi
           </ul>
         </div>
       ) : (
-        <div className={`ml-auto flex items-center gap-1 ${toggled ? 'fade-up' : ''}`}>
+        <div className={`ml-auto flex items-center gap-1 ${toggled && !phone ? 'fade-up' : ''}`}>
           {/* 글자와 함께 — 아이콘만으로는 배치 · 배경을 여기서 바꾼다는 걸 알기 어렵다 */}
-          {onEditWidgets && (
+          {onEditWidgets && !editing && (
             <button
               type="button"
               onClick={onEditWidgets}

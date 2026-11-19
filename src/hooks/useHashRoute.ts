@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 export type Page = 'home' | 'systems' | 'info' | 'account'
 
@@ -6,6 +6,8 @@ export interface Route {
   page: Page
   /** #/info/rules 의 rules 처럼 두 번째 조각 */
   param?: string
+  /** 화면을 옮긴 방향 — 탭 순서로 뒤(+) · 앞(-). 처음 열 때는 없다(들어오는 움직임 없이 바로) */
+  dir?: number
 }
 
 const PAGES: Page[] = ['home', 'systems', 'info', 'account']
@@ -20,17 +22,28 @@ function parse(hash: string): Route {
   return { page, param: second || undefined }
 }
 
+/** 탭마다 마지막으로 보던 스크롤 위치 */
+const scrolls = new Map<Page, number>()
+
 export function useHashRoute(): Route {
   const [route, setRoute] = useState(() => parse(location.hash))
+  const page = useRef(route.page)
 
   useEffect(() => {
     const onChange = () => {
-      setRoute(parse(location.hash))
-      window.scrollTo({ top: 0 })
+      const next = parse(location.hash)
+      scrolls.set(page.current, scrollY)
+      page.current = next.page
+      setRoute((r) => ({ ...next, dir: PAGES.indexOf(next.page) - PAGES.indexOf(r.page) }))
     }
     addEventListener('hashchange', onChange)
     return () => removeEventListener('hashchange', onChange)
   }, [])
+
+  // 앱의 탭처럼 다른 탭에서 돌아오면 보던 자리로, 같은 화면 안에서 옮기면(#/info/a → b) 맨 위로. 처음 열 때(dir 없음)는 브라우저에 맡긴다
+  useLayoutEffect(() => {
+    if (route.dir !== undefined) scrollTo({ top: route.dir ? (scrolls.get(route.page) ?? 0) : 0, behavior: 'instant' })
+  }, [route])
 
   return route
 }

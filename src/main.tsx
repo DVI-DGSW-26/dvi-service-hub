@@ -14,6 +14,9 @@ const QueryDevtools = import.meta.env.DEV
 
 applySavedPrefs()
 
+// 앱 껍데기 캐시(public/sw.js) — 배포본에서만. 개발 서버는 /assets 가 없고 고친 것이 바로 보여야 한다
+if (import.meta.env.PROD && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js')
+
 // pnpm dev:mock · Vercel preview — 서버 없이 가짜 API 로 연다. production 빌드에서는 VITE_MOCK 이 false 라 이 import 가 통째로 빠진다
 async function prepare() {
   if (!import.meta.env.VITE_MOCK) return

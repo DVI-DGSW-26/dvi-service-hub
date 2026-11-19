@@ -39,6 +39,8 @@ export function TabBar({ page }: { page: Page }) {
                   <a
                     href={hrefOf(p)}
                     aria-current={p === page ? 'page' : undefined}
+                    // 앱처럼 — 지금 탭을 한 번 더 누르면 맨 위로(같은 주소라 화면 이동이 일어나지 않는다)
+                    onClick={() => p === page && scrollTo({ top: 0, behavior: 'smooth' })}
                     className={`flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-2xl text-[11px] font-semibold transition-[color,scale] duration-150 ${
                       dragging ? 'cursor-grabbing' : 'active:scale-95'
                     } ${on ? 'text-white' : 'text-muted'}`}

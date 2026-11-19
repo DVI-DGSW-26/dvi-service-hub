@@ -61,7 +61,7 @@ export function EditDock({ decor, onTidy, onUndo, onReset, onDone, side }: EditD
         </>
       ) : (
         <>
-          <DecorMenu kind="wallpaper" decor={decor} className={TOOL} panelClassName="top-auto! right-auto! bottom-full left-0 mt-0! mb-4 origin-bottom-left!" />
+          <DecorMenu kind="wallpaper" decor={decor} className={TOOL} panelClassName="sm:top-auto! sm:right-auto! sm:bottom-full sm:left-0 sm:mt-0! sm:mb-4 sm:origin-bottom-left!" />
           {/* 빈칸 정리 · 되돌리기는 넓은 화면 칸 배치를 고친다 — 좁은 화면(순서만 바꾸는 편집)에서는 보이지 않는 배치가 바뀌니 숨긴다 */}
           <button type="button" onClick={onTidy} title={t.widgets.tidy} className={`${TOOL} max-lg:hidden`}>
             <BrushCleaning className="size-[18px]" aria-hidden="true" />

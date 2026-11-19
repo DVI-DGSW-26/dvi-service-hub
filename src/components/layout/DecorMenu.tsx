@@ -33,7 +33,7 @@ export function DecorMenu({ kind, decor, className, panelClassName = '' }: Decor
       </button>
 
       {open && (
-        <PopoverPanel label={t.widgets.decor[kind]} className={`w-[min(320px,calc(100vw-24px))] p-4 ${panelClassName}`}>
+        <PopoverPanel label={t.widgets.decor[kind]} onClose={close} className={`w-[min(320px,calc(100vw-24px))] p-4 ${panelClassName}`}>
           <DecorRow kind={kind} decor={decor} onAdjust={close} />
           <p className="mt-3 text-[11px] text-muted">{t.theme.savedLocally}</p>
         </PopoverPanel>

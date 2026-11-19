@@ -94,7 +94,7 @@ export function DetailModal<T>({ items, index, onIndexChange, content, prevLabel
           {c.title}
         </h2>
         {c.lead && <p className="mt-2 text-base text-muted break-keep">{c.lead}</p>}
-        {c.body && <p className="mt-6 border-t border-line pt-6 text-[17px]/[1.75] whitespace-pre-line text-fg/90 break-keep">{c.body}</p>}
+        {c.body && <p className="mt-6 border-t border-line pt-6 text-[17px]/[1.75] whitespace-pre-line text-fg/90 break-keep select-text">{c.body}</p>}
       </div>
 
       {(c.link || items.length > 1) && (

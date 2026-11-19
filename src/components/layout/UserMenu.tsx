@@ -35,7 +35,7 @@ export function UserMenu({ me }: { me: Me }) {
       </button>
 
       {open && (
-        <PopoverPanel label={t.layout.user.menu} className="w-64 p-1.5">
+        <PopoverPanel label={t.layout.user.menu} onClose={close} className="w-64 p-1.5">
           <div className="px-3 py-2.5">
             <p className="text-sm font-bold">{me.name}</p>
             <p className="mt-0.5 truncate text-xs text-muted">{me.email}</p>
