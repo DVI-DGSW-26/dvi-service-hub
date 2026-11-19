@@ -15,24 +15,26 @@ export function stack(pages: Page[], order: string[]): Item[] {
 
 /**
  * 좁은 화면 크기 — 갤럭시 홈 화면처럼 4칸 격자의 칸 수로 정한다(칸은 정사각, styles/widgets/stack.css 의 .stack-wrap).
- * 작게 2×2 · 넓게 4×2 · 보통 4×3 · 크게 4×4(처음 넷은 저장 이름이 글자 하나), 그리고 1×1 · 1×2 · 4×1 · 3×2 · 2×3.
+ * 작게 2×2 · 넓게 4×2 · 보통 4×3 · 크게 4×4(처음 넷은 저장 이름이 글자 하나), 그리고 1×1 · 1×2 · 2×1 · 4×1 · 3×2 · 2×3 · 2×4.
  * 위젯마다 그릴 수 있는 것(registry 의 stack) 사이에서만 고른다
  */
-export const STACK_SIZES: StackSize[] = ['1x1', '1x2', '4x1', 's', '3x2', 'w', '2x3', 'm', 'l']
+export const STACK_SIZES: StackSize[] = ['1x1', '1x2', '2x1', '4x1', 's', '3x2', 'w', '2x3', '2x4', 'm', 'l']
 /** 크기별 [가로, 세로] 칸 수 */
 export const STACK_CELLS: Record<StackSize, [number, number]> = {
   '1x1': [1, 1],
   '1x2': [1, 2],
+  '2x1': [2, 1],
   '4x1': [4, 1],
   s: [2, 2],
   '3x2': [3, 2],
   w: [4, 2],
   '2x3': [2, 3],
+  '2x4': [2, 4],
   m: [4, 3],
   l: [4, 4],
 }
-/** 위젯이 그릴 모양 — 3×2 는 넓게(4×2), 2×3 은 작게(2×2) 모양을 칸에 맞춰 늘려 쓴다. 나머지는 그 크기 그대로 */
-export const lookOf = (s: StackSize | undefined) => (s === '3x2' ? 'w' : s === '2x3' ? 's' : s)
+/** 위젯이 그릴 모양 — 3×2 는 넓게(4×2), 2×3 · 2×4 는 작게(2×2) 모양을 칸에 맞춰 늘려 쓴다. 나머지는 그 크기 그대로 */
+export const lookOf = (s: StackSize | undefined) => (s === '3x2' ? 'w' : s === '2x3' || s === '2x4' ? 's' : s)
 
 /** 좁은 화면 배치 — 쌓는 순서와 위젯별 크기. 넓은 화면 칸 배치와 따로 저장한다 */
 export interface Stack {

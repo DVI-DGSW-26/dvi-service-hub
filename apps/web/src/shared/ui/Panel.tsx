@@ -84,21 +84,23 @@ export function SmallPanel({ title, icon: IconC, className = '', children }: { t
 
 /**
  * 좁은 화면의 아주 작은 칸 위젯 — 통째로 누르는 버튼 하나(그 위젯의 창을 연다).
- * 1×1 은 아이콘과 숫자, 1×2 는 아이콘 · 숫자 · 제목을 세로로, 4×1 은 아이콘 · 제목 · 한 줄 요약 · 숫자를 가로로
+ * 1×1 은 아이콘과 숫자, 1×2 는 아이콘 · 숫자 · 제목을 세로로, 2×1 은 아이콘 · 제목 · 숫자를, 4×1 은 한 줄 요약까지 가로로
  */
 export function MiniPanel({ size, title, icon: IconC, value, detail, onClick, className = '', children }: {
   size: MiniSize
   title: string
   icon: LucideIcon
   value?: string | number
-  /** 한 줄 요약 — 4×1 에서만 보이고, 1×1 · 1×2 는 화면낭독 · 마우스 올리기로 */
+  /** 한 줄 요약 — 4×1 에서만 보이고, 나머지는 화면낭독 · 마우스 올리기로 */
   detail?: string
   onClick: () => void
   className?: string
   /** 여는 창 */
   children?: ReactNode
 }) {
-  const strip = size === '4x1'
+  const strip = size === '4x1' || size === '2x1'
+  // 요약이 보이는 4×1 만 글자를 그대로 읽히고, 나머지는 버튼 이름에 모두 담는다
+  const full = size === '4x1'
   const label = [title, value, detail].filter((x) => x !== undefined && x !== '').join(', ')
   const icon = (
     <span className="grid size-8 flex-none place-items-center rounded-xl bg-accent-soft text-accent">
@@ -111,18 +113,18 @@ export function MiniPanel({ size, title, icon: IconC, value, detail, onClick, cl
         type="button"
         onClick={onClick}
         aria-haspopup="dialog"
-        aria-label={strip ? undefined : label}
-        title={strip ? undefined : label}
+        aria-label={full ? undefined : label}
+        title={full ? undefined : label}
         className={`flex min-w-0 flex-1 cursor-pointer items-center rounded-[inherit] transition-[scale] duration-150 active:scale-[0.97] ${
-          strip ? 'gap-3 px-4' : size === '1x2' ? 'flex-col justify-between px-1.5 py-4' : 'flex-col justify-center gap-1'
+          strip ? (full ? 'gap-3 px-4' : 'gap-2 px-3') : size === '1x2' ? 'flex-col justify-between px-1.5 py-4' : 'flex-col justify-center gap-1'
         }`}
       >
         {icon}
         {strip ? (
           <>
             <span className="min-w-0 flex-1 text-left">
-              <span className="block text-xs font-semibold text-muted">{title}</span>
-              <span className="block truncate text-[15px] font-semibold">{detail}</span>
+              <span className={`block truncate font-semibold ${full ? 'text-xs text-muted' : 'text-[13px]'}`}>{title}</span>
+              {full && <span className="block truncate text-[15px] font-semibold">{detail}</span>}
             </span>
             {value !== undefined && <span className="flex-none text-lg font-bold tabular-nums">{value}</span>}
           </>

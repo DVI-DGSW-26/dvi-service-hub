@@ -1,10 +1,10 @@
-import { useRef, useState, type CSSProperties } from 'react'
+import { useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
-import { DecorAdjust, Wallpaper } from '@/features/decor'
-import { DesktopBoard, EditDock, GALLERY, HomePage, WidgetEditBar } from '@/features/home'
+import { DesktopBoard, GALLERY, HomePage, WidgetEditBar } from '@/features/home'
 import { GooFilter, Sidebar, TopBar } from '@/features/shell'
 import { KEYS, motionOff, readPref, writePref } from '@/shared/lib'
-import { Screens } from './Screens'
+import { pageIn } from './pageIn'
+import { Backdrop, Dock, Screens } from './Screens'
 import { SkipLink } from './SkipLink'
 import type { Hub } from './useHub'
 
@@ -32,19 +32,10 @@ export default function DesktopApp({ hub }: { hub: Hub }) {
   return (
     <>
       <SkipLink />
-      {/* 홈 배경 그림(위젯 편집의 꾸미기). 배경 위치 조정 중에는 위젯을 숨기고, 인사 카드 그림 조정 중에는 다른 위젯을 흐린다(아래 main) */}
-      {home && decor.wallpaper && <Wallpaper src={decor.wallpaper} pos={decor.pos.wallpaper} />}
-      {editing && adjusting && <DecorAdjust decor={decor} />}
+      <Backdrop hub={hub} />
       {/* 편집 도구 · 완료는 화면 아래 독에 — 상단 바는 그 항목 고치기만 */}
       {editing && (
-        <EditDock
-          decor={decor}
-          onTidy={widgets.tidy}
-          onUndo={widgets.canUndo ? widgets.undo : undefined}
-          onReset={GALLERY ? undefined : widgets.reset}
-          onDone={hub.stopEditing}
-          side={gallery ? 408 : collapsed ? 104 : 276}
-        />
+        <Dock hub={hub} side={gallery ? 408 : collapsed ? 104 : 276} />
       )}
 
       {/* 위젯 편집 중에는(목업) 사이드바 자리에 위젯 갤러리가 들어온다 */}
@@ -69,14 +60,13 @@ export default function DesktopApp({ hub }: { hub: Hub }) {
           editing={editing}
         />
 
-        {/* 화면을 옮기면 main 을 새로 그려 옮긴 방향에서 밀려 들어온다(styles/layout.css 의 .page-in) */}
         <main
           key={route.page}
           id="main"
           tabIndex={-1}
-          className={`flex-1 pt-5 outline-none ${route.dir ? 'page-in' : ''} ${home ? 'flex flex-col board-fit:min-h-0' : ''} ${adjusting === 'wallpaper' ? 'invisible' : ''}`}
+          className={`flex-1 pt-5 outline-none ${pageIn(route.dir).className} ${home ? 'flex flex-col board-fit:min-h-0' : ''} ${adjusting === 'wallpaper' ? 'invisible' : ''}`}
           data-adjust={adjusting ?? undefined}
-          style={route.dir ? ({ '--dir': Math.sign(route.dir) } as CSSProperties) : undefined}
+          style={pageIn(route.dir).style}
         >
           <Screens
             hub={hub}

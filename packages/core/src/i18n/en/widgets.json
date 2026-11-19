@@ -8,7 +8,7 @@
   "done": "Done",
   "editHint": "Drag a widget onto another to swap them; if sizes differ, only the widgets in the way move. Drag an edge or corner to resize; the neighbor is pushed or shrinks. Hold it at the left or right edge of the screen to flip to the next page (a new one if needed) and keep placing it there. Press Ctrl + Z to undo.",
   "editHintStack": "Tap a widget to show its frame, then drag a handle on its edge to resize it; tap it again to hide the frame. Long-press and drag to reorder. This layout is only used on narrow screens; the wide-screen layout stays as it is.",
-  "stackSize": { "1x1": "Icon 1×1", "1x2": "Column 1×2", "4x1": "Strip 4×1", "s": "Small 2×2", "3x2": "Broad 3×2", "w": "Wide 4×2", "2x3": "Tall 2×3", "m": "Medium 4×3", "l": "Large 4×4" },
+  "stackSize": { "1x1": "Icon 1×1", "1x2": "Column 1×2", "2x1": "Half strip 2×1", "4x1": "Strip 4×1", "s": "Small 2×2", "3x2": "Broad 3×2", "w": "Wide 4×2", "2x3": "Tall 2×3", "2x4": "Tower 2×4", "m": "Medium 4×3", "l": "Large 4×4" },
   "resizeStack": "Resize {name} — currently {size}",
   "galleryTitle": "Add widgets",
   "galleryHint": "Drag onto Home or press + to add to the current page. If there's no room, it goes on a new page.",

@@ -25,8 +25,8 @@ export const WIDGETS: WidgetDef[] = [
     sizes: ['m', 'l'],
     min: { w: 560, h: 300 },
     decor: 'hero',
-    // 1×1 · 1×2 는 인사 · 배경 그림이 들어가지 않아 뺀다
-    stack: ['4x1', 's', '3x2', 'w', '2x3', 'm', 'l'],
+    // 1×1 · 1×2 · 2×1 은 인사 · 배경 그림이 들어가지 않아 뺀다
+    stack: ['4x1', 's', '3x2', 'w', '2x3', '2x4', 'm', 'l'],
     render: ({ me, meLoading, services: list, favorites, hero, stack }) => (
       <HeroCard me={me} loading={meLoading} favoriteCount={list.filter((s) => favorites.includes(s.id)).length} image={hero} size={lookOf(stack)} className={FILL} />
     ),

@@ -45,8 +45,8 @@ export function QuickLinksPanel({ size, className = '' }: { size?: StackSize; cl
   if (isMini(size)) {
     return (
       <section aria-label={t.home.quickLinks.title} className={`glass flex rounded-3xl p-2 ${className}`}>
-        <ul className={`grid min-h-0 flex-1 gap-2 ${size === '4x1' ? 'grid-cols-4' : 'auto-rows-fr'}`}>
-          {quickLinks.slice(0, size === '1x1' ? 1 : size === '1x2' ? 2 : 4).map((q) => (
+        <ul className={`grid min-h-0 flex-1 gap-2 ${size === '4x1' ? 'grid-cols-4' : size === '2x1' ? 'grid-cols-2' : 'auto-rows-fr'}`}>
+          {quickLinks.slice(0, size === '1x1' ? 1 : size === '1x2' || size === '2x1' ? 2 : 4).map((q) => (
             <li key={q.id} className="min-w-0">
               <a
                 {...linkProps(q)}
