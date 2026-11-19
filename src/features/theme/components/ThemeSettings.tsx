@@ -1,9 +1,9 @@
 import { Check, ChevronRight, Image, Monitor, Moon, Sun } from 'lucide-react'
 import { useId } from 'react'
-import type { PortalTheme } from '../../hooks/usePortalTheme'
-import { LANGS, useI18n } from '../../i18n'
-import { ACCENTS, MOTIONS, type ThemeMode } from '../../lib/theme'
-import { Segmented } from '../ui/Segmented'
+import type { PortalTheme } from '../hooks/usePortalTheme'
+import { LANGS, useI18n } from '@/shared/i18n'
+import { ACCENTS, MOTIONS, type ThemeMode } from '../lib/theme'
+import { Segmented } from '@/shared/ui'
 
 const MODES: { value: ThemeMode; icon: typeof Sun }[] = [
   { value: 'light', icon: Sun },

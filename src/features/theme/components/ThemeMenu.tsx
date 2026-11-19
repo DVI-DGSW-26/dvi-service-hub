@@ -1,8 +1,8 @@
 import { Palette } from 'lucide-react'
-import type { PortalTheme } from '../../hooks/usePortalTheme'
-import { usePopover } from '../../hooks/usePopover'
-import { useI18n } from '../../i18n'
-import { ICON_BUTTON, PopoverPanel } from '../ui/Popover'
+import type { PortalTheme } from '../hooks/usePortalTheme'
+import { usePopover } from '@/shared/hooks'
+import { useI18n } from '@/shared/i18n'
+import { ICON_BUTTON, PopoverPanel } from '@/shared/ui'
 import { ThemeSettings } from './ThemeSettings'
 
 export function ThemeMenu({ theme, onCustomize }: { theme: PortalTheme; onCustomize: () => void }) {

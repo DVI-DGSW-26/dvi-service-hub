@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { ACCENTS, KEYS, applyAccent, applyGlass, applyMotion, readPref, resolveMode, savedGlass, savedMotion, writePref, type Motion, type ThemeMode } from '../lib/theme'
+import { ACCENTS, applyAccent, applyGlass, applyMotion, resolveMode, savedGlass, savedMotion, type Motion, type ThemeMode } from '../lib/theme'
+import { KEYS, readPref, writePref } from '@/shared/lib'
 
-/** 밝기가 확 뒤집히지 않게 바꾸는 순간에만 색 전환을 켠다 (styles.css 의 .theme-switching) */
+/** 밝기가 확 뒤집히지 않게 바꾸는 순간에만 색 전환을 켠다 (styles/base.css 의 .theme-switching) */
 function easeThemeSwitch() {
   const root = document.documentElement
   root.classList.add('theme-switching')
@@ -23,7 +24,7 @@ export function usePortalTheme() {
     const apply = () => {
       const t = resolveMode(mode)
       document.documentElement.dataset.theme = t
-      // 폰 상태 표시줄 · 앱 전환 화면 색 — styles.css 의 --color-bg 와 맞춘다
+      // 폰 상태 표시줄 · 앱 전환 화면 색 — styles/theme.css 의 --color-bg 와 맞춘다
       document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t === 'dark' ? '#0d0e12' : '#f3f4f7')
     }
     apply()

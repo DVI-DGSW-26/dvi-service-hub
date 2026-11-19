@@ -1,0 +1,5 @@
+export { ThemeMenu } from './components/ThemeMenu'
+export { ThemeSettings } from './components/ThemeSettings'
+export { usePortalTheme } from './hooks/usePortalTheme'
+export type { PortalTheme } from './hooks/usePortalTheme'
+export { applySavedPrefs } from './lib/theme'
