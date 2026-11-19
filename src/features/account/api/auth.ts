@@ -1,10 +1,8 @@
 // 로그인 정보 (/api/auth/me — 허브의 Vercel Edge 함수).
 
-import { mockMe } from '../mocks/info'
-import type { Me } from '../types/portal'
-import { isApiError } from './errors'
-import { auth, toLogin } from './http'
-import { apiLog } from './logger'
+import { mockMe } from '@/mocks/info'
+import type { Me } from '@/shared/types'
+import { isApiError, auth, toLogin, apiLog } from '@/shared/api'
 
 /**
  * 로그인 정보. 미들웨어가 로그인 안 된 접근을 이미 막지만, 화면이 열린 채

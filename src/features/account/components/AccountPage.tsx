@@ -1,20 +1,16 @@
 import { ArrowUpRight, LayoutGrid, LogOut, MonitorSmartphone, Palette, ShieldCheck } from 'lucide-react'
 import type { ReactNode } from 'react'
-import type { Service } from '../services'
-import { SignInMethods } from '../components/account/SignInMethods'
-import { ThemeSettings } from '../components/layout/ThemeSettings'
-import { ServiceLogo } from '../components/services/ServiceCard'
-import { Badge } from '../components/ui/Badge'
-import { ComingSoon } from '../components/ui/ComingSoon'
-import { PageTitle } from '../components/ui/PageTitle'
-import { CountTag, PANEL_LINK, Panel } from '../components/ui/Panel'
-import { LoadError, Skeleton, SkeletonText } from '../components/ui/Skeleton'
-import { hrefOf } from '../hooks/useHashRoute'
-import type { PortalTheme } from '../hooks/usePortalTheme'
+import type { Service } from '@/features/systems'
+import { SignInMethods } from './SignInMethods'
+import { ThemeSettings } from '@/features/theme'
+import { ServiceLogo } from '@/features/systems'
+import { Badge, ComingSoon, PageTitle, CountTag, PANEL_LINK, Panel, LoadError, Skeleton, SkeletonText } from '@/shared/ui'
+import { hrefOf } from '@/shared/hooks'
+import type { PortalTheme } from '@/features/theme'
 import { ACCOUNT_URL, LOGOUT_URL } from '../lib/account'
-import { useI18n } from '../i18n'
-import { hasNoDepartment } from '../lib/access'
-import type { Me } from '../types/portal'
+import { useI18n } from '@/shared/i18n'
+import { hasNoDepartment } from '@/shared/lib'
+import type { Me } from '@/shared/types'
 
 interface AccountPageProps {
   me: Me | null
@@ -42,14 +38,16 @@ export function AccountPage({ me, loading, services, theme, onCustomize }: Accou
     <>
       <PageTitle title={t.account.title} description={t.account.description} />
 
+      {/* 휴대폰은 한 줄로 — 두 칸을 풀어(contents) 자주 쓰는 순서로: 내 정보 · 화면 · 로그인 수단 · 내 서비스 · 기기 · 로그아웃 */}
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_400px]">
-        <div className="min-w-0 space-y-5">
+        <div className="min-w-0 max-lg:contents lg:space-y-5">
           <ProfileCard me={me} loading={loading} />
 
           <Panel
             title={t.account.signIn.title}
             icon={ShieldCheck}
             description={t.account.signIn.description}
+            className="max-lg:order-2"
             toolbar={
               <a href={ACCOUNT_URL} className={PANEL_LINK}>
                 {t.account.signIn.manage}
@@ -64,13 +62,14 @@ export function AccountPage({ me, loading, services, theme, onCustomize }: Accou
             title={t.account.devices.title}
             icon={MonitorSmartphone}
             meta={soon}
+            className="max-lg:order-4"
           >
             <ComingSoon>{t.account.devices.pending}</ComingSoon>
           </Panel>
         </div>
 
-        <div className="min-w-0 space-y-5">
-          <Panel title={t.account.display} icon={Palette}>
+        <div className="min-w-0 max-lg:contents lg:space-y-5">
+          <Panel title={t.account.display} icon={Palette} className="max-lg:order-1">
             <ThemeSettings theme={theme} onCustomize={onCustomize} />
           </Panel>
 
@@ -79,6 +78,7 @@ export function AccountPage({ me, loading, services, theme, onCustomize }: Accou
             icon={LayoutGrid}
             meta={<CountTag>{rich(t.account.services.count, { count: loading ? <SkeletonText className="h-3 w-3" /> : services.length })}</CountTag>}
             action={{ label: t.common.viewAll, href: hrefOf('systems') }}
+            className="max-lg:order-3"
           >
             <p className="mb-3 text-sm text-muted">{t.account.services.hint}</p>
             {loading ? (
@@ -107,7 +107,7 @@ export function AccountPage({ me, loading, services, theme, onCustomize }: Accou
             )}
           </Panel>
 
-          <section aria-labelledby="logout-title" className="glass rounded-3xl p-5 sm:p-6">
+          <section aria-labelledby="logout-title" className="glass rounded-3xl p-5 max-lg:order-5 sm:p-6">
             <h2 id="logout-title" className="text-lg font-bold tracking-[-0.015em]">
               {t.account.logout.title}
             </h2>

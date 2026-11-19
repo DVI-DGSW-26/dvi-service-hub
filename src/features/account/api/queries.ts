@@ -1,8 +1,8 @@
 // 로그인 사용자 · 계정 설정 데이터 훅.
 
 import { queryOptions } from '@tanstack/react-query'
-import { accountApi } from '../api/account'
-import { fetchMe } from '../api/auth'
+import { accountApi } from './account'
+import { fetchMe } from './auth'
 
 export const accountQueries = {
   /** /api/auth/me — 앱을 여는 동안 한 번. 세션이 끝나면 fetchMe 가 로그인으로 보낸다 */
