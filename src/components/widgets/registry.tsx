@@ -80,8 +80,9 @@ export const WIDGETS: WidgetDef[] = [
     sizes: ['m', 'l'],
     min: { w: 560, h: 300 },
     decor: 'hero',
-    render: ({ me, meLoading, services: list, favorites, hero }) => (
-      <HeroCard me={me} loading={meLoading} favoriteCount={list.filter((s) => favorites.includes(s.id)).length} image={hero} className={FILL} />
+    stack: ['s', 'm', 'l'],
+    render: ({ me, meLoading, services: list, favorites, hero, stack }) => (
+      <HeroCard me={me} loading={meLoading} favoriteCount={list.filter((s) => favorites.includes(s.id)).length} image={hero} size={stack} className={FILL} />
     ),
   },
   {
@@ -90,7 +91,7 @@ export const WIDGETS: WidgetDef[] = [
     title: (t) => t.home.quickLinks.title,
     description: (t) => t.widgets.builtin.quickLinks,
     sizes: ['s', 'm', 'l'],
-    stack: ['s', 'm'],
+    stack: ['s', 'm', 'l'],
     render: ({ stack }) => <QuickLinksPanel size={stack} className={FILL} />,
   },
   {
@@ -102,7 +103,7 @@ export const WIDGETS: WidgetDef[] = [
     sizes: ['m', 'xl'],
     // 화면에 맞춘 칸에서는 카드가 다섯 칸으로 늘어선다 — 그보다 좁으면 이름과 별이 겹친다
     min: { w: 860, h: 300 },
-    stack: ['m', 'l'],
+    stack: ['s', 'm', 'l'],
     render: (ctx) => <SystemsPanel {...ctx} loading={ctx.meLoading} className={FILL} />,
   },
   {
@@ -131,7 +132,7 @@ export const WIDGETS: WidgetDef[] = [
     title: (t) => t.home.news.title,
     description: (t) => t.widgets.builtin.news,
     sizes: ['s', 'm', 'l'],
-    stack: ['m', 'l'],
+    stack: ['s', 'm', 'l'],
     render: ({ stack }) => <NewsPanel size={stack} className={FILL} />,
   },
   {
@@ -141,7 +142,7 @@ export const WIDGETS: WidgetDef[] = [
     description: (t) => t.widgets.builtin.calendar,
     sizes: ['s', 'm', 'l'],
     min: { w: 340, h: 300 },
-    stack: ['s', 'm'],
+    stack: ['s', 'm', 'l'],
     render: ({ stack }) => <CalendarPanel size={stack} className={FILL} />,
   },
 ]

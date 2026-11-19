@@ -7,7 +7,7 @@ import type { StackSize } from '../../lib/widgetLayout'
 import { formatDate, useTitle } from '../../lib/format'
 import { newsQueries } from '../../queries/dashboard'
 import type { NewsItem } from '../../types/portal'
-import { Panel } from '../ui/Panel'
+import { Panel, SMALL_BODY, SmallPanel } from '../ui/Panel'
 import { LoadError, Skeleton } from '../ui/Skeleton'
 import { NewsModal } from './NewsModal'
 
@@ -44,6 +44,29 @@ export function NewsPanel({ size, className = '' }: { size?: StackSize; classNam
   // 소식이 늘어도 패널 높이는 같고, 나머지는 '전체 n건'(사내정보)에서 — 펼쳐 보기 창도 이 3건만 넘긴다
   const shown = news.slice(0, size === 'l' ? SHOWN * 2 : SHOWN)
   const [top, ...listed] = shown
+  const modal = <NewsModal news={shown} index={open} onIndexChange={setOpen} viewAll={{ href: hrefOf('info'), count: total }} />
+
+  // 작게 — 가장 최근 한 건을 그림과 제목으로. 누르면 펼쳐 보기
+  if (size === 's') {
+    return (
+      <SmallPanel title={t.home.news.title} icon={Newspaper} className={className}>
+        {loading ? (
+          <Skeleton className="h-28 w-full" />
+        ) : error ? (
+          <LoadError error={error} className="text-sm" />
+        ) : top ? (
+          <button type="button" onClick={() => setOpen(0)} aria-haspopup="dialog" className={SMALL_BODY}>
+            <NewsThumb item={top} className="aspect-[16/10] w-full rounded-xl" />
+            <span className="mt-2 line-clamp-2 text-sm font-semibold break-keep">{title(top.title)}</span>
+            <span className="mt-auto pt-1 text-[13px] text-muted tabular-nums">{formatDate(top.date, lang)}</span>
+          </button>
+        ) : (
+          <p className="text-[13px] text-muted">{t.home.news.empty}</p>
+        )}
+        {modal}
+      </SmallPanel>
+    )
+  }
 
   return (
     <Panel
@@ -105,7 +128,7 @@ export function NewsPanel({ size, className = '' }: { size?: StackSize; classNam
         <p className="py-4 text-base text-muted">{t.home.news.empty}</p>
       )}
 
-      <NewsModal news={shown} index={open} onIndexChange={setOpen} viewAll={{ href: hrefOf('info'), count: total }} />
+      {modal}
     </Panel>
   )
 }

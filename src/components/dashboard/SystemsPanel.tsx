@@ -6,11 +6,11 @@ import { useI18n } from '../../i18n'
 import { canSee } from '../../lib/access'
 import type { Me } from '../../types/portal'
 import type { StackSize } from '../../lib/widgetLayout'
-import { ServiceCard } from '../services/ServiceCard'
+import { ServiceCard, ServiceLogo } from '../services/ServiceCard'
 import { ServiceCardSkeleton } from '../services/ServiceSkeleton'
-import { CountTag, Panel } from '../ui/Panel'
+import { CountTag, Panel, SmallPanel } from '../ui/Panel'
 import { Segmented } from '../ui/Segmented'
-import { SkeletonText } from '../ui/Skeleton'
+import { Skeleton, SkeletonText } from '../ui/Skeleton'
 
 interface SystemsPanelProps {
   me: Me | null
@@ -22,7 +22,7 @@ interface SystemsPanelProps {
   allServices: Service[]
   favorites: string[]
   onToggleFavorite: (id: string) => void
-  /** 좁은 화면 크기 — 크게면 휴대폰에서도 카드를 모두 */
+  /** 좁은 화면 크기 — 작게는 로고 네 개, 크게면 휴대폰에서도 카드를 모두 */
   stack?: StackSize
   className?: string
 }
@@ -40,6 +40,40 @@ export function SystemsPanel({ me, loading = false, services, allServices, favor
   const { t, f, rich } = useI18n()
   const favCount = services.filter((s) => favorites.includes(s.id)).length
   const list = filter === 'all' ? allServices : filter === 'mine' ? services : services.filter((s) => favorites.includes(s.id))
+
+  // 작게 — 즐겨찾기를 앞에 두고 로고 2 × 2. 이름은 화면낭독 · 마우스 올리기로, 나머지는 업무시스템 화면에서
+  if (stack === 's') {
+    const top = [...services].sort((a, b) => Number(favorites.includes(b.id)) - Number(favorites.includes(a.id))).slice(0, 4)
+    return (
+      <SmallPanel title={t.home.systems.title} icon={LayoutGrid} className={className}>
+        {loading ? (
+          <Skeleton className="h-28 w-full" />
+        ) : top.length ? (
+          <ul className="grid flex-1 grid-cols-2 gap-2">
+            {top.map((s) => (
+              <li key={s.id}>
+                <a
+                  href={s.links[0].url}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`${s.name} ${t.common.newTab}`}
+                  title={s.name}
+                  className="grid h-full min-h-14 place-items-center rounded-2xl bg-subtle ring-1 ring-line transition-[background-color,scale] duration-200 hover:bg-raised active:scale-95"
+                >
+                  <ServiceLogo service={s} />
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-[13px] text-muted break-keep">{t.home.systems.noAccess}</p>
+        )}
+        <a href={hrefOf('systems')} className="mt-2 text-[13px] font-semibold text-accent">
+          {f(t.home.systems.mobileAll, { count: services.length })}
+        </a>
+      </SmallPanel>
+    )
+  }
 
   const filterControl = (
     <Segmented<Filter>

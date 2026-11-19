@@ -1,4 +1,4 @@
-import { Zap } from 'lucide-react'
+import { ChevronRight, Zap } from 'lucide-react'
 import { Suspense, lazy, type MouseEvent } from 'react'
 import { quickLinks } from '../../data/quickLinks'
 import type { StackSize } from '../../lib/widgetLayout'
@@ -65,14 +65,16 @@ export function QuickLinksPanel({ size, className = '' }: { size?: StackSize; cl
     )
   }
 
+  // 크게 — 한 줄에 하나씩, 아이콘 옆에 이름 · 설명을 넓게
+  const wide = size === 'l'
   return (
     <Panel title={t.home.quickLinks.title} icon={Zap} className={className}>
-      <ul className="grid grid-cols-2 gap-2.5 fit:flex-1 fit:auto-rows-fr">
+      <ul className={`grid gap-2.5 fit:flex-1 fit:auto-rows-fr ${wide ? 'grid-cols-1' : 'grid-cols-2'}`}>
         {quickLinks.map((q) => (
           <li key={q.id}>
             <a
               {...linkProps(q)}
-              className="group flex h-full items-center gap-3 rounded-2xl bg-subtle p-3 max-sm:flex-col max-sm:items-start max-sm:gap-2.5 tall:flex-col tall:items-start tall:justify-between tall:p-4 ring-1 ring-line transition-[background-color,box-shadow,scale] duration-200 hover:bg-raised hover:ring-fg/15 active:scale-[0.97]"
+              className={`group flex h-full items-center gap-3 rounded-2xl bg-subtle p-3 ${wide ? 'py-3.5' : 'max-sm:flex-col max-sm:items-start max-sm:gap-2.5'} tall:flex-col tall:items-start tall:justify-between tall:p-4 ring-1 ring-line transition-[background-color,box-shadow,scale] duration-200 hover:bg-raised hover:ring-fg/15 active:scale-[0.97]`}
             >
               <span className="grid size-10 flex-none place-items-center rounded-xl tall:size-12 bg-accent-soft text-accent transition-colors group-hover:bg-accent-fill group-hover:text-white">
                 <Icon name={q.icon} className="size-5" strokeWidth={2} />
@@ -81,6 +83,7 @@ export function QuickLinksPanel({ size, className = '' }: { size?: StackSize; cl
                 <span className="block truncate text-[15px] font-bold tall:text-base">{q.title}</span>
                 <span className="mt-1 block truncate text-[13px] text-muted">{q.description}</span>
               </span>
+              {wide && <ChevronRight className="ml-auto size-5 flex-none text-muted" aria-hidden="true" />}
             </a>
           </li>
         ))}

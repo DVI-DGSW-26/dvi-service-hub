@@ -7,6 +7,7 @@ import { formatDate, longToday, shortDate } from '../../lib/format'
 import { canWriteNotice } from '../../lib/access'
 import { toIso } from '../../lib/calendar'
 import { placeStyle, type DecorPos } from '../../lib/wallpaper'
+import type { StackSize } from '../../lib/widgetLayout'
 import { greetings, plainGreeting } from '../../lib/greetings'
 import { maintenanceQueries, noticeQueries, scheduleQueries } from '../../queries/dashboard'
 import type { Me, Notice } from '../../types/portal'
@@ -25,6 +26,8 @@ interface HeroCardProps {
   favoriteCount: number
   /** 카드 배경 그림과 자리 — 사용자가 고른 그림(data URL), 없으면 오른쪽에 건물 그림 */
   image?: { src: string; pos: DecorPos } | null
+  /** 좁은 화면 크기 — 작게는 날짜 · 인사만, 크게는 휴대폰에서도 오늘 요약까지 */
+  size?: StackSize
   className?: string
 }
 
@@ -41,24 +44,36 @@ function Pill({ icon, children }: { icon: ReactNode; children: ReactNode }) {
  * 인사 + 오늘 요약 + 전사 공지. 옅은 하늘색 배경, 오른쪽에 건물 그림 — 위젯 편집의 꾸미기에서 그림을 고르면 카드 전체에 깐다.
  * 카드가 옆 패널 높이에 맞춰 늘어나도 내용은 세로 가운데에 둔다.
  */
-export function HeroCard({ me, loading = false, favoriteCount, image, className = '' }: HeroCardProps) {
+export function HeroCard({ me, loading = false, favoriteCount, image, size, className = '' }: HeroCardProps) {
   // 자정을 넘겨 켜 두어도 날짜가 바뀌게
   const now = useNow()
   // 오늘 일정 수 — 오늘 패널과 같은 요청(오늘 + 지난 2주)의 마지막 날
   const schedule = useQuery({ ...scheduleQueries.recent(toIso(now)), select: (days) => days.at(-1)?.items ?? [] })
   const maintenance = useQuery(maintenanceQueries.list())
   const { t, lang } = useI18n()
+  // 고른 그림은 카드 전체를 덮고, 글자가 있는 왼쪽부터 바탕색으로 옅게 덮는다(styles.css 의 .hero-scrim)
+  const picture = image && (
+    <>
+      <img data-decor="hero" src={image.src} alt="" style={placeStyle(image.pos)} className="pointer-events-none absolute inset-0 size-full object-cover" />
+      <div aria-hidden="true" className="hero-scrim pointer-events-none absolute inset-0" />
+    </>
+  )
+
+  // 작게(반 칸) — 날짜와 인사만. 공지는 보통 이상에서
+  if (size === 's') {
+    return (
+      <section className={`hero relative flex flex-col overflow-hidden rounded-3xl p-4 ${className}`}>
+        {picture}
+        <p className="relative text-[13px] font-semibold text-accent">{longToday(now, lang)}</p>
+        <Greeting name={me?.name} loading={loading} small />
+      </section>
+    )
+  }
 
   return (
     <section className={`hero relative flex flex-col justify-center gap-6 overflow-hidden rounded-3xl p-6 sm:p-8 fit:gap-4 fit:px-8 fit:py-6 ${className}`}>
       {/* 카드 높이에 맞춰 잘리지 않게 그리고, 왼쪽으로 갈수록 배경에 녹인다 */}
-      {/* 고른 그림은 카드 전체를 덮고, 글자가 있는 왼쪽부터 바탕색으로 옅게 덮는다(styles.css 의 .hero-scrim) */}
-      {image ? (
-        <>
-          <img data-decor="hero" src={image.src} alt="" style={placeStyle(image.pos)} className="pointer-events-none absolute inset-0 size-full object-cover" />
-          <div aria-hidden="true" className="hero-scrim pointer-events-none absolute inset-0" />
-        </>
-      ) : (
+      {picture ?? (
         <HeroIllustration className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-auto max-w-[62%] mask-[linear-gradient(to_right,transparent,black_45%)] sm:block dark:opacity-35 dark:saturate-50" />
       )}
 
@@ -68,8 +83,8 @@ export function HeroCard({ me, loading = false, favoriteCount, image, className 
         {/* 한 칸 높이에서는 안내 문구를 뺀다 — 큰 칸(L)에서만 */}
         <p className="mt-3 text-base/relaxed text-muted max-sm:mt-2 max-sm:text-[15px]/relaxed fit:hidden tall:block">{t.home.hero.lead}</p>
 
-        {/* 휴대폰에서는 요약을 뺀다 — 일정 · 점검 위젯이 같은 숫자를 보여준다 */}
-        <div className="mt-6 flex flex-wrap gap-2.5 max-sm:hidden fit:mt-4">
+        {/* 휴대폰에서는 요약을 뺀다 — 일정 · 점검 위젯이 같은 숫자를 보여준다. 크게면 휴대폰에서도 */}
+        <div className={`mt-6 flex flex-wrap gap-2.5 fit:mt-4 ${size === 'l' ? 'max-sm:mt-4 max-sm:gap-2' : 'max-sm:hidden'}`}>
           <Pill icon={<CalendarDays className="size-[18px]" aria-hidden="true" />}>
             <Count entry={t.home.hero.schedule} value={schedule.data?.length} loading={schedule.isPending} />
           </Pill>
@@ -95,15 +110,23 @@ function Count({ entry, value, loading }: { entry: Plural; value?: number; loadi
 
 /**
  * 인사 문구 — 시간대 · 요일에 맞는 문구 중 하나를 새로고침할 때마다 골라 보여준다.
- * 문구 길이가 달라도 카드 높이가 같도록 두 줄 자리를 잡아 두고, 한 화면 모드에서는 한 줄로 맞춘다.
+ * 문구 길이가 달라도 카드 높이가 같도록 두 줄 자리를 잡아 두고, 한 화면 모드에서는 한 줄로 맞춘다. small 은 작은 인사 카드(반 칸)의 작은 글씨.
  */
-function Greeting({ name, loading }: { name?: string; loading: boolean }) {
+function Greeting({ name, loading, small = false }: { name?: string; loading: boolean; small?: boolean }) {
   // 한 번 고른 자리 · 시각은 그대로 — 이름이 늦게 와도, 켜 둔 채 시간대가 바뀌어도 같은 문구를 쓴다
   const [pick] = useState(Math.random)
   const [now] = useState(() => new Date())
   const { t } = useI18n()
   const lines = name ? greetings(now, name, t.greetings) : [plainGreeting(now, t.greetings)]
   const line = lines[Math.floor(pick * lines.length)]
+
+  if (small) {
+    return (
+      <h1 className="relative mt-1.5 line-clamp-4 text-lg/snug font-bold tracking-[-0.02em] break-keep">
+        {loading ? <SkeletonText className="h-[0.9em] w-full rounded-lg" /> : line}
+      </h1>
+    )
+  }
 
   if (loading) {
     return (
