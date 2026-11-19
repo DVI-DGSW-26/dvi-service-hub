@@ -1,0 +1,79 @@
+{
+  "edit": "Edit home",
+  "dock": "Home editing tools",
+  "undoShort": "Undo",
+  "resetShort": "Default layout",
+  "tidy": "Tidy up gaps",
+  "undo": "Undo (Ctrl + Z)",
+  "done": "Done",
+  "editHint": "Drag a widget onto another to swap them; if sizes differ, only the widgets in the way move. Drag an edge or corner to resize; the neighbor is pushed or shrinks. Hold it at the left or right edge of the screen to flip to the next page (a new one if needed) and keep placing it there. Press Ctrl + Z to undo.",
+  "editHintStack": "Tap a widget to show its frame, then drag a handle on its edge to resize it; tap it again to hide the frame. Long-press and drag to reorder. This layout is only used on narrow screens; the wide-screen layout stays as it is.",
+  "stackSize": { "1x1": "Icon 1×1", "1x2": "Column 1×2", "4x1": "Strip 4×1", "s": "Small 2×2", "3x2": "Broad 3×2", "w": "Wide 4×2", "2x3": "Tall 2×3", "m": "Medium 4×3", "l": "Large 4×4" },
+  "resizeStack": "Resize {name} — currently {size}",
+  "galleryTitle": "Add widgets",
+  "galleryHint": "Drag onto Home or press + to add to the current page. If there's no room, it goes on a new page.",
+  "search": "Search widgets",
+  "noResults": "No widgets found.",
+  "added": "Added",
+  "add": "Add {name}",
+  "remove": "Remove {name}",
+  "reset": "Reset to default layout",
+  "portal": "Portal",
+  "empty": "There are no widgets on Home.",
+  "emptyHint": "Add the widgets you need from Edit home.",
+  "position": "{name}, {index} of {total}. Use arrows to move, Shift + arrows to resize, Page Up / Page Down to change page, Delete to remove.",
+  "positionMove": "{name}, {index} of {total}. Use arrows to move, Shift + arrows to resize, Page Up / Page Down to change page.",
+  "positionStack": "{name}, {index} of {total}. Use the arrow keys to reorder; press Enter to select it and reach the resize handles.",
+  "open": "Open {name}",
+  "editCard": "Edit business card",
+  "recent": "Recent searches",
+  "state": {
+    "run": "Running",
+    "idle": "Idle",
+    "alarm": "Alarm",
+    "off": "Stopped"
+  },
+  "builtin": {
+    "hero": {
+      "title": "Greeting · Notices",
+      "description": "Today's date, greeting and company notices"
+    },
+    "quickLinks": "Frequently used company links",
+    "systems": "Systems you can use and your favorites",
+    "today": "Today's schedule from the Flow room",
+    "maintenance": "System maintenance and incident notices",
+    "news": "Company news from the event archive",
+    "calendar": "This month's events and occasions"
+  },
+  "header": {
+    "title": "Top bar",
+    "hint": "Drag to reorder, use the eye to hide",
+    "items": {
+      "search": "Search",
+      "theme": "Theme",
+      "user": "User menu"
+    },
+    "show": "Show {name}",
+    "hide": "Hide {name}",
+    "locked": "The user menu holds sign-out and cannot be hidden",
+    "move": "{name}, position {index}. Use left and right arrows to reorder"
+  },
+  "pages": "Home pages",
+  "page": "Page {page} of {total}",
+  "perPage": "This page {n} / {max}",
+  "resize": "Resize {name}",
+  "decor": {
+    "wallpaper": "Dashboard background",
+    "hero": "Greeting · notice image",
+    "button": { "wallpaper": "Background", "hero": "Change image" },
+    "default": "Default",
+    "choose": "Choose image",
+    "reset": "Use default",
+    "adjust": "Reposition",
+    "adjustHint": { "wallpaper": "Drag anywhere to move the background", "hero": "Drag anywhere to move the greeting card image" },
+    "zoom": "Zoom",
+    "cancel": "Cancel",
+    "unreadable": "Couldn't read that image. Pick a JPG, PNG or WebP.",
+    "notSaved": "Not enough browser storage — it will be gone after a refresh. Try a smaller image."
+  }
+}
