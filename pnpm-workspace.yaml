@@ -5,3 +5,4 @@ allowBuilds:
 updateConfig:
   ignoreDependencies:
     - '@babel/core'
+

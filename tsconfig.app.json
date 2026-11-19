@@ -16,7 +16,9 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     // lib/widgetLayout.ts 는 Node 테스트에서도 돈다 — Node 는 확장자 없는 가져오기를 못 찾는다
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    // 도메인 · shared 를 밖에서 가져올 때(ADR 0002). Node 테스트가 읽는 순수 파일은 상대 경로를 쓴다
+    "paths": { "@/*": ["./src/*"] }
   },
   "include": ["src"],
   // 테스트는 Node 에서 돈다 — tsconfig.node.json
