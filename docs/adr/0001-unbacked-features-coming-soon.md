@@ -18,7 +18,7 @@ iPhone · macOS 기기가, "로그인 수단"에는 등록하지 않은 OTP · �
 ## 결정
 
 1. **데이터를 줄 API 가 없는 자리는 '준비 중' 으로 둔다.** 예시 값을 운영 화면에 내보내지 않는다.
-   공용 부품 `src/components/ui/ComingSoon.tsx` 를 쓰고, 패널 제목 옆에는 '준비 중' 배지를 단다.
+   공용 부품 `src/shared/ui/ComingSoon.tsx` 를 쓰고, 패널 제목 옆에는 '준비 중' 배지를 단다.
 2. **할 수 있는 일이 있으면 그 길은 남긴다.** 로그인 수단은 목록을 보여주지 못해도 비밀번호 변경 · OTP 등록 ·
    패스키 등록은 Keycloak 의 Application Initiated Action(`kc_action`)으로 지금도 된다. 그 버튼은 둔다.
    `pnpm dev:mock` 에서는 목록까지 가짜 데이터로 나온다.
@@ -38,7 +38,7 @@ iPhone · macOS 기기가, "로그인 수단"에는 등록하지 않은 OTP · �
 '준비 중' 대상이 아닌 것:
 
 - **조직도 · 빠른 링크** — 서버 API 는 없지만 예시가 아니라 실제 내용을 화면에 둔 고정 데이터다
-  (`src/data/orgChart.ts`, `src/data/quickLinks.ts`). 조직이나 링크가 바뀌면 그 파일을 고친다.
+  (`src/features/info/lib/orgChart.ts`, `src/features/quick-links/lib/quickLinks.ts`). 조직이나 링크가 바뀌면 그 파일을 고친다.
 - **로컬 개발의 `mockMe`** (`src/mocks/info.ts`) — vite 에는 `/api/auth/*` 함수가 없어 개발 화면에서만
   쓴다. 운영 번들에서는 쓰지 않는다.
 

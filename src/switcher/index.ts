@@ -21,14 +21,14 @@
  *   예외를 밖으로 던지지 않는다. 최악의 경우 버튼만 안 보이고 서비스는 멀쩡해야 한다.
  * - 서비스 화면의 CSS 와 섞이지 않게 Shadow DOM 안에 그린다.
  * - 사람마다 쓸 수 있는 서비스가 다르다. 허브에 역할을 물어(/api/switcher/access)
- *   허브 화면과 같은 규칙(lib/access.ts)으로 거른다. 답을 못 받으면(허브에 아직 안 들어옴,
+ *   허브 화면과 같은 규칙(systems/lib/access.ts)으로 거른다. 답을 못 받으면(허브에 아직 안 들어옴,
  *   브라우저가 다른 사이트 쿠키를 막음) 전체를 보여준다 — 쓸 수 있는 서비스를 숨기는
  *   것보다 낫다. 실제 접근 차단은 각 서비스가 한다.
  */
-import { canSee } from '../lib/access'
-import { services, type Service } from '../services'
+import { canSee } from '@/features/systems'
+import { services, type Service } from '@/features/systems'
 
-type Roles = { realm: string[]; svc: Record<string, string[]> }
+interface Roles { realm: string[]; svc: Record<string, string[]> }
 
 const GLOBAL_FLAG = '__dviSwitcherLoaded'
 const HUB = 'https://dvi-service-hub.vercel.app'

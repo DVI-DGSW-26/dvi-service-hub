@@ -10,7 +10,8 @@
  *   { known: false } — switcher 는 전체 목록을 보여준다.
  */
 import { ACCESS_COOKIE, readCookie, verifySession, type Signed } from '../../lib/session.js';
-import { services } from '../../src/services';
+// 화면 도메인(src/features/systems)의 index 는 React 컴포넌트까지 끌고 와 Edge 번들에 넣지 않는다 — 순수 데이터 파일만
+import { services } from '../../src/features/systems/lib/services';
 
 export const config = { runtime: 'edge' };
 

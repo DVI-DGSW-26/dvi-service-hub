@@ -1,0 +1,6 @@
+export { DecorMenu } from './components/DecorMenu'
+export { DecorAdjust, Wallpaper } from './components/Wallpaper'
+export { useDecor } from './hooks/useDecor'
+export type { Decor, DecorKind } from './hooks/useDecor'
+export { MAX_ZOOM, placeStyle } from './lib/wallpaper'
+export type { DecorPos } from './lib/wallpaper'

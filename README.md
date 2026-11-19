@@ -50,26 +50,22 @@ vite 에서 돌지 않는다. 운영 허브에 로그인한 브라우저의 `hub
 
 ## 구성
 
-- 화면: React 19 + TypeScript + Tailwind CSS 4 (`src/styles.css` 에 색 토큰)
-- 데이터: axios(`src/api`) + TanStack Query(`src/queries`)
+- 화면: React 19 + TypeScript + Tailwind CSS 4 (`src/app/styles.css` · `src/app/styles/theme.css` 에 색 토큰)
+- 데이터: axios(`src/shared/api/http.ts`) + TanStack Query(기능마다 `api/queries.ts`)
 - 서버: Vercel Edge 함수 `api/auth/*.ts`, 미들웨어 `middleware.ts`, 공용 `lib/*.ts`
 - tsconfig 는 `tsconfig.app.json`(src) · `tsconfig.api.json`(서버) · `tsconfig.node.json`(vite 설정)로 나뉜다.
 
 ```
 src/
-  App.tsx         레이아웃 + 해시 라우팅(#/, #/systems, #/info, #/account)
-  api/
-    http.ts       axios 인스턴스 — /api/hub(허브 서버) · /api/auth(Edge). 인터셉터가 로그 · 오류 변환 · 401 처리
-    errors.ts     ApiError { status, code, message, field } — 화면 분기는 code 로
-    logger.ts     API 로그 (아래)
-    dashboard.ts  공지 · 점검 · 일정 · 캘린더 · 소식 (포털 대시보드 API 명세 v0.5)
-    hub.ts        기존 API — 서비스 목록 · 즐겨찾기 · 최근 사용 · 서비스 관리 · 플로우 글
-    auth.ts       /api/auth/me
-  queries/        TanStack Query — queryOptions · 쓰기 훅(성공하면 목록 무효화) · 기본 설정(client.ts)
-  data/           서버 API 가 없는 정적 데이터 — 빠른 바로가기 · 조직도
+  app/            진입점 main.tsx · App.tsx(레이아웃 + 해시 라우팅 #/, #/systems, #/info, #/account) · 전역 스타일
+  features/       기능 단위 — account · decor · hero · home · info · maintenance · news · quick-links · schedule · shell · systems · theme
+    <기능>/       index.ts(밖에 보이는 것) · components/ · hooks/ · lib/ · api/(API 호출 · queries.ts)
+  shared/         공용 — ui · hooks · lib · format · api(http · errors · logger) · types · constants · widget · i18n
   mocks/          로컬 로그인 사용자 · pnpm dev:mock 의 가짜 API(server.ts) · 데이터(data.ts)
-  components/ pages/ hooks/ lib/ types/ i18n/
+  switcher/       다른 서비스에 넣는 앱 전환 스크립트(따로 빌드)
 ```
+
+폴더 규칙(기능 루트에는 index.ts 만, 다른 기능은 index 로만 가져오기 등)은 `docs/adr/0002-domain-modules.md` — `pnpm lint` 가 검사한다.
 
 ### API 로그
 
@@ -85,11 +81,11 @@ src/
 - 요청마다 `X-Request-Id` 를 붙이고 로그에 `#id` 로 남긴다.
 - 개발 서버에서는 화면 왼쪽 아래 TanStack Query Devtools 로 캐시 · 요청 상태를 볼 수 있다(운영 번들에는 없다).
 
-서비스 목록은 `src/services.ts` 를 쓴다.
+서비스 목록은 `src/features/systems/lib/services.ts` 를 쓴다.
 
 ## 서비스 추가·수정
 
-`src/services.ts`의 `services` 배열만 고치면 된다.
+`src/features/systems/lib/services.ts`의 `services` 배열만 고치면 된다.
 
 - `links`: 첫 번째 링크가 카드 클릭 시 이동 대상. 링크가 2개 이상이면 카드 하단에 모두 표시.
 - `auth`: `separate`(개별 로그인) → SSO 전환 완료 시 `sso`로 변경.

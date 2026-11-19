@@ -1,0 +1,72 @@
+{
+  "title": "Settings",
+  "description": "Review your company account and sign-in methods, and adjust display settings like appearance and animation.",
+  "profile": {
+    "loading": "Loading your profile",
+    "greeting": "{name}",
+    "noDepartment": "No department",
+    "defaultDepartment": "Employee",
+    "signedIn": "Signed in with company account",
+    "name": "Name",
+    "email": "Work email",
+    "department": "Department",
+    "unassigned": "Not assigned",
+    "note": "Your name, email, and department are managed by the admin team. To change them, let the IT team know."
+  },
+  "signIn": {
+    "title": "Sign-in methods",
+    "description": "Manage how you sign in. Changes open the company sign-in page and bring you back here.",
+    "manage": "Manage in company sign-in",
+    "basic": "Basic authentication",
+    "secondFactor": "Two-factor authentication",
+    "created": "Added",
+    "delete": "Delete",
+    "register": "Add",
+    "deleteLabel": "Delete {name}",
+    "listPending": "We're working on listing your sign-in methods. You can still change and add them now.",
+    "password": {
+      "title": "Password",
+      "description": "Sign in by entering your password.",
+      "mine": "My password",
+      "change": "Change"
+    },
+    "otp": {
+      "title": "Authenticator app",
+      "description": "Enter the 6-digit code from an authenticator app (Google Authenticator, etc.).",
+      "add": "Add authenticator app",
+      "empty": "No authenticator app added.",
+      "defaultLabel": "OTP"
+    },
+    "passkey": {
+      "title": "Passkey (fingerprint · face)",
+      "description": "Sign in with your device's fingerprint or face recognition.",
+      "add": "Add passkey",
+      "empty": "No passkey added.",
+      "defaultLabel": "Passkey"
+    },
+    "result": {
+      "UPDATE_PASSWORD": "Your password was changed.",
+      "CONFIGURE_TOTP": "Authenticator app added.",
+      "webauthn-register-passwordless": "Passkey added.",
+      "delete_credential": "Deleted.",
+      "done": "Done in company sign-in.",
+      "cancelled": "Cancelled. Nothing was changed.",
+      "error": "Company sign-in couldn't finish this. Please try again in a moment."
+    }
+  },
+  "devices": {
+    "title": "Signed-in devices",
+    "pending": "We're working on a list of devices you're signed in on. If you notice a sign-in you don't recognize, change your password and let the IT team know."
+  },
+  "display": "Display",
+  "services": {
+    "title": "Your services",
+    "count": "{count}",
+    "hint": "Services shown here depend on your company account’s permissions."
+  },
+  "logout": {
+    "title": "Sign out",
+    "body": "Signs you out of the portal and every company service that uses your company account.",
+    "action": "Sign out"
+  }
+}

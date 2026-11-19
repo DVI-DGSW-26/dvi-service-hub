@@ -1,0 +1,197 @@
+/*
+ * 모달(<dialog>). 브라우저가 맨 위 층에 띄우고 초점 가두기 · Esc 를 처리한다.
+ * 열릴 때는 유리가 맺히듯(투명도+크기) 나타나고, 닫힐 때는 같은 길로 더 빠르게 사라진다. 흐림은 애니메이션하지 않는다 — 매 프레임 다시 그린다.
+ */
+@layer components {
+  .modal {
+    margin: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    max-width: none;
+    max-height: none;
+    overflow: visible;
+  }
+  .modal[open] {
+    animation: materialize 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .modal[data-closing] {
+    animation: dematerialize 170ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
+  /* 시트를 끌어 내린 정도 (0~1) — 뒤의 어두운 막이 그만큼 옅어진다. 등록해 둬야 놓을 때 부드럽게 돌아간다 */
+  @property --sheet-drag {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+  }
+  .modal::backdrop {
+    opacity: calc(1 - var(--sheet-drag, 0));
+    background: oklch(0.15 0.01 var(--accent-h) / 0.42);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    animation: backdrop-in 260ms ease;
+  }
+  :root[data-glass='off'] .modal::backdrop,
+  :root[data-motion='lite'] .modal::backdrop {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .modal::backdrop {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+  /*
+   * 나타나고 사라지는 동안은 유리 뒤를 흐리지 않는다 — 흐림 면이 움직이면(크기 · 투명도) 매 프레임 뒤를 다시 읽어 흐린다.
+   * 나타날 때는 step-end 로 애니메이션 내내 흐림 층을 숨겨 두었다가 끝나는 순간 한 번에 흐린다
+   */
+  .modal[open] > :is(.glass-chrome, .glass-strong)::before,
+  .animate-materialize:is(.glass-chrome, .glass-strong)::before {
+    animation: blur-hold 260ms step-end;
+  }
+  /* 휴대폰 시트는 내려가는 동안에도 유리 그대로(아래 '휴대폰 시트는 … 유리 그대로') — 애니메이션 '가볍게'만 흐림을 뺀다 */
+  @media (min-width: 640px) {
+    .modal[data-closing] > :is(.glass-chrome, .glass-strong)::before {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+  :root[data-motion='lite'] .modal[data-closing] > :is(.glass-chrome, .glass-strong)::before {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .modal[data-closing]::backdrop {
+    animation: backdrop-out 170ms ease forwards;
+  }
+
+  /* 휴대폰 — 화면 아래에 붙은 시트. 아래에서 올라오고 같은 길로 내려간다 */
+  @media (max-width: 639.98px) {
+    .modal {
+      margin: auto 0 0;
+      width: 100%;
+    }
+    .modal[open] {
+      animation: sheet-in 380ms cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    .modal[open] > :is(.glass-chrome, .glass-strong)::before {
+      animation-duration: 380ms;
+    }
+    .modal[data-closing] {
+      animation: sheet-out 170ms cubic-bezier(0.4, 0, 1, 1) forwards;
+    }
+    /* 손잡이로 끌어 내려 닫는 중 — 시트는 손 속도로 이미 내려가고 있다 (Modal.tsx) */
+    .modal[data-closing][data-dragged] {
+      animation: none;
+    }
+  }
+}
+
+/* backdrop-filter: none 으로 쥐면 blur(0px) saturate(1) 로 보간돼 여전히 뒤를 읽는다 — 흐림 층(::before)을 숨긴다 */
+@keyframes blur-hold {
+  from {
+    visibility: hidden;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes sheet-out {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes dematerialize {
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.96);
+  }
+}
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes backdrop-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* 휴대폰의 펼침 메뉴(Popover.tsx) — 맨 위 층에 올라가 모달 시트와 같은 모양 · 움직임으로 아래에서 올라온다 */
+@media (max-width: 639.98px) {
+  .popover-panel[open] {
+    inset: auto 0 0;
+    margin: 0;
+    width: auto;
+    max-width: none;
+    max-height: 85dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 1.5rem 1.5rem 0 0;
+    /* 위는 손잡이(PopoverPanel)가 채운다 */
+    padding-top: 0;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    animation:
+      sheet-in 380ms cubic-bezier(0.32, 0.72, 0, 1),
+      solid-hold 380ms step-end;
+  }
+  .popover-panel[open]::before {
+    animation-duration: 380ms;
+  }
+  .popover-panel::backdrop {
+    opacity: calc(1 - var(--sheet-drag, 0));
+    background: oklch(0.15 0.01 var(--accent-h) / 0.42);
+    animation: backdrop-in 260ms ease;
+  }
+}
+
+/*
+ * 유리 면이 나타나고 사라지는 동안은 흐림을 빼 둔다(blur-hold) — 그동안 반투명한 면으로 뒤 화면이 비치지 않게 불투명하게 나타났다가,
+ * 다 올라온 순간 흐림과 함께 유리가 된다. 닫힐 때도 흐림이 빠지니 불투명하게 사라진다
+ */
+.modal[open] > :is(.glass-chrome, .glass-strong) {
+  animation: solid-hold 260ms step-end;
+}
+/* 휴대폰 시트(dialog)는 위 sheet-in 이 맡는다 */
+.animate-materialize:is(.glass-chrome, .glass-strong):not(dialog) {
+  animation:
+    var(--animate-materialize),
+    solid-hold 260ms step-end;
+}
+@media (min-width: 640px) {
+  .modal[data-closing] > :is(.glass-chrome, .glass-strong) {
+    background: var(--glass-solid);
+  }
+}
+:root[data-motion='lite'] .modal[data-closing] > :is(.glass-chrome, .glass-strong) {
+  background: var(--glass-solid);
+}
+@media (max-width: 639.98px) {
+  .modal[open] > :is(.glass-chrome, .glass-strong) {
+    animation-duration: 380ms;
+  }
+}
+/*
+ * 휴대폰 시트는 올라오고 내려가는 내내 유리 그대로 — 흐림을 뺐다 넣으면(불투명 → 유리) 유리가 꺼졌다 켜지는 것처럼 보인다.
+ * 화면에 움직이는 유리가 시트 하나뿐이라 흐림이 같이 움직여도 버틴다. 애니메이션 '가볍게'는 위의 흐림 빼기를 그대로 쓴다
+ */
+@media (max-width: 639.98px) {
+  :root:not([data-motion='lite']) .modal[open] > :is(.glass-chrome, .glass-strong),
+  :root:not([data-motion='lite']) :is(.modal[open] > *, .popover-panel[open])::before {
+    animation: none;
+  }
+  :root:not([data-motion='lite']) .popover-panel[open] {
+    animation: sheet-in 380ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+}
+@keyframes solid-hold {
+  from {
+    background-color: var(--glass-solid);
+  }
+}

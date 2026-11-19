@@ -1,0 +1,37 @@
+/*
+ * 홈 위젯 판 (home/components/WidgetGrid.tsx). 넓은 화면은 react-grid-layout 이 위젯을 칸 자리에 놓는다(transform) — 그 라이브러리 CSS 는
+ * 가져오지 않고 쓰는 것만 여기 둔다(가져오면 레이어 밖이라 여기 규칙을 모두 이긴다).
+ * 페이지(.widget-page)들은 트랙에 옆으로 이어 붙이고 보고 있는 페이지(--page)만큼 옮겨 보여준다.
+ * 좁은 화면: 모든 페이지를 좁은 화면 순서로 4칸 격자에 쌓는다(갤럭시 홈 화면처럼). 칸은 정사각 — 줄 높이를 판 폭(cqw)에서 정한다.
+ * 크기마다 칸 수가 정해져 있어 높이도 고정 — 칸 수(span)는 WidgetGrid 가 lib/widgetLayout.ts 의 STACK_CELLS 로 단다.
+ * 빈칸을 뒤 위젯으로 채우지 않는다(dense 아님) — 편집 목록의 순서 그대로 보이게. 3칸 옆 1칸은 다음 위젯이 1칸짜리면 거기 들어간다.
+ */
+@layer components {
+  .widget-track {
+    display: grid;
+    gap: 1rem;
+  }
+  .widget-board {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+  }
+  .widget-board > [data-type] {
+    min-width: 0;
+    grid-column: span 4;
+    grid-row: span 3;
+  }
+
+  /* 갤러리 안의 것들이 아래에서 차례로 올라온다(--i 번째). 동작 줄이기면 base.css 의 전역 규칙이 끈다 */
+  .rise {
+    animation: rise 460ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: calc(120ms + var(--i, 0) * 45ms);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    translate: 0 32px;
+  }
+}

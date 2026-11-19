@@ -1,0 +1,31 @@
+import { Palette } from 'lucide-react'
+import type { PortalTheme } from '../hooks/usePortalTheme'
+import { usePopover } from '@/shared/hooks'
+import { useI18n } from '@/shared/i18n'
+import { ICON_BUTTON, PopoverPanel } from '@/shared/ui'
+import { ThemeSettings } from './ThemeSettings'
+
+export function ThemeMenu({ theme, onCustomize }: { theme: PortalTheme; onCustomize: () => void }) {
+  const { open, toggle, close, ref } = usePopover()
+  const { t } = useI18n()
+
+  return (
+    <div ref={ref} className="relative">
+      <button type="button" onClick={toggle} aria-expanded={open} aria-label={t.theme.title} title={t.theme.title} className={ICON_BUTTON}>
+        <Palette className="size-5" aria-hidden="true" />
+      </button>
+
+      {open && (
+        <PopoverPanel label={t.theme.title} onClose={close} className="w-[min(312px,calc(100vw-24px))] p-4">
+          <ThemeSettings
+            theme={theme}
+            onCustomize={() => {
+              close()
+              onCustomize()
+            }}
+          />
+        </PopoverPanel>
+      )}
+    </div>
+  )
+}

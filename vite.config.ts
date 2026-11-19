@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import { defineConfig, loadEnv } from 'vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
@@ -23,6 +24,8 @@ export default defineConfig(({ mode }) => {
   return {
     // React Compiler 가 컴포넌트 · 값을 알아서 메모한다 — 새 코드에 useMemo · useCallback · memo 를 손으로 쓰지 않는다
     plugins: [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss()],
+    // tsconfig.app.json 의 paths 와 같은 별칭
+    resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
     define: { 'import.meta.env.VITE_MOCK': JSON.stringify(mock) },
     server: {
       proxy: {

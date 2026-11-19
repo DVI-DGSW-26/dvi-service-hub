@@ -1,0 +1,91 @@
+@layer components {
+  /*
+   * 홈 배경 그림(decor/components/Wallpaper.tsx, 위젯 편집의 꾸미기) — 화면에 고정해 깔고 바탕색을 반쯤 덮어 옅게. 위치 · 확대는 그림의 style 로.
+   * 패널(.glass)은 뒤를 흐리지 않으니(저사양) 배경이 있을 때만 패널을 조금 더 불투명하게 해 글자가 사진에 묻히지 않게 한다
+   */
+  /* 크기는 화면 칸(inset: 0)이 아니라 100vw · 100lvh — 스크롤 막대가 잠깐 생기거나(편집 들어갈 때) 모바일 주소창이 접혀도 그림이 다시 맞춰지며 움찔하지 않게 */
+  .wallpaper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100lvh;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .wallpaper > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .wallpaper::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: color-mix(in oklch, var(--color-bg) 55%, transparent);
+  }
+  /* 인사 카드 그림 위치 조정 중(decor/components/Wallpaper.tsx) — 다른 위젯은 흐려 카드만 보이게 */
+  [data-adjust='hero'] .widget-board > :not([data-type='hero']) {
+    opacity: 0.2;
+    transition: opacity 200ms;
+  }
+  /* 인사 카드에 고른 그림 — 글자가 있는 왼쪽은 진하게, 오른쪽으로 갈수록 그림이 드러난다 */
+  .hero-scrim {
+    background: linear-gradient(
+      90deg,
+      color-mix(in oklch, var(--color-bg) 88%, transparent) 0%,
+      color-mix(in oklch, var(--color-bg) 70%, transparent) 50%,
+      color-mix(in oklch, var(--color-bg) 25%, transparent) 100%
+    );
+  }
+  :root:not([data-glass='off']):has(.wallpaper) {
+    --glass-bg: oklch(1 0 0 / 0.8);
+  }
+  :root[data-theme='dark']:not([data-glass='off']):has(.wallpaper) {
+    --glass-bg: oklch(0.21 0.008 var(--accent-h) / 0.8);
+  }
+
+  /* 인사 카드: 옅은 하늘색에서 흰색으로 — 오른쪽 건물 그림이 배경에 녹아든다 */
+  .hero {
+    background: linear-gradient(90deg, oklch(0.94 0.035 var(--accent-h)) 0%, oklch(0.975 0.014 var(--accent-h)) 45%, oklch(0.99 0.006 var(--accent-h)) 100%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+  :root[data-theme='dark'] .hero {
+    background: linear-gradient(90deg, oklch(0.27 0.05 var(--accent-h)) 0%, oklch(0.22 0.025 var(--accent-h)) 50%, oklch(0.2 0.012 var(--accent-h)) 100%);
+  }
+  /* 히어로 위 칩 · 공지 줄 — 흰 유리 */
+  .hero-glass {
+    background: oklch(1 0 0 / 0.62);
+    border: 1px solid oklch(1 0 0 / 0.8);
+    box-shadow:
+      inset 0 1px 0 oklch(1 0 0 / 0.9),
+      0 4px 14px -8px oklch(0 0 0 / 0.15);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+  }
+  :root[data-theme='dark'] .hero-glass {
+    background: oklch(1 0 0 / 0.08);
+    border-color: oklch(1 0 0 / 0.12);
+    box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.14);
+  }
+  :root[data-glass='off'] .hero-glass {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .hero-glass {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+}
+
+/* 전사 공지가 바뀔 때 — 새 글이 살짝 떠오르며 나타난다 */
+@keyframes notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
