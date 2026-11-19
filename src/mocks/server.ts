@@ -13,11 +13,10 @@
 //   예) http://localhost:5173/?mock=slow,empty#/
 
 import { AxiosError, AxiosHeaders, CanceledError, type AxiosAdapter, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
-import { auth, hub } from '../api/http'
-import { apiLog } from '../api/logger'
-import { services } from '../services'
-import type { CalendarEvent, Maintenance, MaintenanceInput, MaintenanceKind, NewsPage, Notice, NoticeInput, ScheduleDay, ScheduleItem } from '../types/portal'
-import { addDays, fromIso } from '../lib/calendar'
+import { auth, hub, apiLog } from '@/shared/api'
+import { services } from '@/features/systems'
+import type { CalendarEvent, Maintenance, MaintenanceInput, MaintenanceKind, NewsPage, Notice, NoticeInput, ScheduleDay, ScheduleItem } from '@/shared/types'
+import { addDays, fromIso } from '@/shared/lib'
 import { flowEvents, seedCredentials, seedMaintenance, seedNews, seedNotices, today, type FlowEvent } from './data'
 import { mockMe } from './info'
 
@@ -158,7 +157,7 @@ function calendarMonth(month: string): CalendarEvent[] {
 // ---------------------------------------------------------------- 길 찾기
 
 type Params = Record<string, string | number | undefined>
-type Result = { status: number; body: unknown }
+interface Result { status: number; body: unknown }
 
 function hubRoute(method: string, path: string, params: Params, input: Record<string, unknown>): Result {
   const read = method === 'get'
@@ -179,11 +178,11 @@ function hubRoute(method: string, path: string, params: Params, input: Record<st
     return ok(empty ? [] : list, '공지 조회 성공')
   }
   if (method === 'post' && path === '/notices') {
-    const n = createNotice(input as Partial<NoticeInput>)
+    const n = createNotice(input)
     db.notices.push(n)
     return ok(n, '공지 등록 성공', 201)
   }
-  let m = path.match(/^\/notices\/([^/]+)$/)
+  let m = /^\/notices\/([^/]+)$/.exec(path)
   if (method === 'delete' && m) {
     const id = decodeURIComponent(m[1])
     if (!/^\d+$/.test(id)) throw new HttpError(400, 'METHOD_ARGUMENT_TYPE_MISMATCH', 'id 형식이 올바르지 않습니다.')
@@ -202,11 +201,11 @@ function hubRoute(method: string, path: string, params: Params, input: Record<st
     return ok(empty ? [] : list, '점검 조회 성공')
   }
   if (method === 'post' && path === '/maintenance') {
-    const x = createMaintenance(input as Partial<MaintenanceInput>)
+    const x = createMaintenance(input)
     db.maintenance.push(x)
     return ok(x, '점검 등록 성공', 201)
   }
-  m = path.match(/^\/maintenance\/([^/]+)$/)
+  m = /^\/maintenance\/([^/]+)$/.exec(path)
   if (method === 'delete' && m) {
     const id = decodeURIComponent(m[1])
     if (!/^\d+$/.test(id)) throw new HttpError(400, 'METHOD_ARGUMENT_TYPE_MISMATCH', 'id 형식이 올바르지 않습니다.')

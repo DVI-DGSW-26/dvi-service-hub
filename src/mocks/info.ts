@@ -1,6 +1,6 @@
 // 로컬 개발용 로그인 사용자.
 
-import type { Me } from '../types/portal'
+import type { Me } from '@/shared/types'
 
 /**
  * 로컬 개발(vite)에서는 Edge 함수가 돌지 않아 /api/auth/me 가 없다. 그때 쓰는 사용자.
