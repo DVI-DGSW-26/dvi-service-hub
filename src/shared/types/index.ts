@@ -1,1 +1,0 @@
-export type { AccountCredentials, CalendarEvent, Credential, IconName, Maintenance, MaintenanceInput, MaintenanceKind, Me, NewsItem, NewsPage, Notice, NoticeInput, OrgChart, OrgTeam, OrgUnit, QuickLink, ScheduleDay, ScheduleItem } from './portal'
