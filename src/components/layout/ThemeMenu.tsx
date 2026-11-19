@@ -16,7 +16,7 @@ export function ThemeMenu({ theme, onCustomize }: { theme: PortalTheme; onCustom
       </button>
 
       {open && (
-        <PopoverPanel label={t.theme.title} className="w-[min(312px,calc(100vw-24px))] p-4">
+        <PopoverPanel label={t.theme.title} onClose={close} className="w-[min(312px,calc(100vw-24px))] p-4">
           <ThemeSettings
             theme={theme}
             onCustomize={() => {

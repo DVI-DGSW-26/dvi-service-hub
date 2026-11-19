@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Suspense, lazy, useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { flushSync } from 'react-dom'
 import { services } from './services'
 import { GooFilter } from './components/layout/LiquidParts'
@@ -146,8 +146,10 @@ export default function App() {
           editing={editing}
         />
 
-        <main id="main" tabIndex={-1} className={`flex-1 pt-5 outline-none ${home ? 'flex flex-col board-fit:min-h-0' : ''} ${adjusting === 'wallpaper' ? 'invisible' : ''}`}
+        {/* 화면을 옮기면 main 을 새로 그려 옮긴 방향에서 밀려 들어온다(styles.css 의 .page-in) — 앱의 탭 넘김처럼 */}
+        <main key={route.page} id="main" tabIndex={-1} className={`flex-1 pt-5 outline-none ${route.dir ? 'page-in' : ''} ${home ? 'flex flex-col board-fit:min-h-0' : ''} ${adjusting === 'wallpaper' ? 'invisible' : ''}`}
           data-adjust={adjusting ?? undefined}
+          style={route.dir ? { '--dir': Math.sign(route.dir) } as CSSProperties : undefined}
         >
           <Suspense>
             {home && (
@@ -177,7 +179,8 @@ export default function App() {
           </Suspense>
         </main>
 
-        <footer className={`px-1 pt-8 text-xs text-muted ${home ? 'board-fit:hidden' : ''}`}>© DVISION · DVI Portal</footer>
+        {/* 휴대폰은 앱처럼 바닥글 없이 — 탭 바가 화면 끝이다 */}
+        <footer className={`px-1 pt-8 text-xs text-muted max-sm:hidden ${home ? 'board-fit:hidden' : ''}`}>© DVISION · DVI Portal</footer>
       </div>
 
       {!gallery && !picking && <TabBar page={route.page} />}

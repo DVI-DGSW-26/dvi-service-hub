@@ -21,7 +21,10 @@ export function usePortalTheme() {
   useEffect(() => {
     const mq = matchMedia('(prefers-color-scheme: dark)')
     const apply = () => {
-      document.documentElement.dataset.theme = resolveMode(mode)
+      const t = resolveMode(mode)
+      document.documentElement.dataset.theme = t
+      // 폰 상태 표시줄 · 앱 전환 화면 색 — styles.css 의 --color-bg 와 맞춘다
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t === 'dark' ? '#0d0e12' : '#f3f4f7')
     }
     apply()
     if (mode !== 'system') return

@@ -28,9 +28,9 @@ export function HomePage({ ctx, layout, defs, editing, onEdit, onPick, decor }: 
     <>
       {hasNoDepartment(ctx.me) && <NoDepartmentNotice className="mb-4 flex-none" />}
       {editing && (
-        <p className="mb-3 flex-none px-1 text-sm text-muted" aria-live="polite">
-          <span className="lg:hidden">{t.widgets.editHintStack}</span>
-          <span className="max-lg:hidden">{t.widgets.editHint}</span>
+        // 좁은 화면은 안내 없이 — 화면을 가려 불편하다. 화면 낭독기에는 보드의 aria-label 로 남는다(StackBoard)
+        <p className="mb-3 flex-none px-1 text-sm text-muted max-lg:hidden" aria-live="polite">
+          {t.widgets.editHint}
         </p>
       )}
       <div className="min-h-0 flex-1">

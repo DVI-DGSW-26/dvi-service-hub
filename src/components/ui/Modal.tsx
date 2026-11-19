@@ -1,7 +1,7 @@
 import { X } from 'lucide-react'
 import { useEffect, useId, useRef, type ReactNode, type RefObject } from 'react'
 import { useI18n } from '../../i18n'
-import { project, rubberband } from '../../lib/spring'
+import { project } from '../../lib/spring'
 
 interface ModalProps {
   open: boolean
@@ -84,7 +84,8 @@ function useSheetDrag(panel: RefObject<HTMLDivElement | null>, dialog: RefObject
       s.last = p.clientY
       s.t = e.timeStamp
       const dy = p.clientY - s.y0
-      move(dy < 0 ? -rubberband(-dy, el.offsetHeight) : dy)
+      // 위로는 올라가지 않는다 — 바닥에 붙은 시트라 올리면 아래가 뜬 게 보인다
+      move(Math.max(0, dy))
     }
     const onEnd = (e: TouchEvent) => {
       const g = s
@@ -176,6 +177,7 @@ function useScrollTrap(ref: RefObject<HTMLDialogElement | null>, open: boolean) 
   useEffect(() => {
     const d = ref.current
     if (!d || !open) return
+    let touchX = 0
     let touchY = 0
     // 취소할 수 없는 입력(트랙패드 관성 등)으로 밀려도 열 때 자리로 되돌린다
     const { scrollX: x, scrollY: y } = window
@@ -186,10 +188,14 @@ function useScrollTrap(ref: RefObject<HTMLDialogElement | null>, open: boolean) 
       if (!canScroll(e.target, d, Math.sign(e.deltaY))) e.preventDefault()
     }
     const onTouchStart = (e: TouchEvent) => {
+      touchX = e.touches[0].clientX
       touchY = e.touches[0].clientY
     }
     const onTouchMove = (e: TouchEvent) => {
-      if (!canScroll(e.target, d, Math.sign(touchY - e.touches[0].clientY))) e.preventDefault()
+      const { clientX, clientY } = e.touches[0]
+      // 가로로 넘기는 목록(조직도 팀 · 오늘 일정 날짜)은 그대로 — 뒤 화면은 가로로 스크롤되지 않는다(styles.css 의 overflow-x: clip)
+      if (Math.abs(clientX - touchX) > Math.abs(clientY - touchY)) return
+      if (!canScroll(e.target, d, Math.sign(touchY - clientY))) e.preventDefault()
     }
     const onKey = (e: KeyboardEvent) => {
       const dir = SCROLL_KEYS[e.key]

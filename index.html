@@ -2,8 +2,15 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!-- 홈 화면에 추가하면 주소창 없이 앱처럼 뜬다. 상태 표시줄 색은 usePortalTheme 이 테마에 맞춰 바꾼다 -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="theme-color" content="#f3f4f7" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="DVI Portal" />
     <title>DVI Portal</title>
     <meta name="description" content="DVISION 사내 서비스를 한곳에서" />
     <!-- 첫 렌더 전에 테마를 정해 밝은 화면이 깜빡이지 않게 한다.
