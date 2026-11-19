@@ -1,25 +1,19 @@
 import { useQuery } from '@tanstack/react-query'
 import { ChevronRight, PenLine, Wrench } from 'lucide-react'
 import { Suspense, lazy, useState } from 'react'
-import { useI18n, type Lang } from '../../i18n'
-import { canWriteMaintenance } from '../../lib/access'
-import { dateTimeRange, shortDate } from '../../lib/format'
-import type { StackSize } from '../../lib/widgetLayout'
-import { maintenanceQueries } from '../../queries/dashboard'
-import type { Maintenance, MaintenanceKind, Me } from '../../types/portal'
-import { Badge, type BadgeTone } from '../ui/Badge'
-import { Panel, SMALL_BODY, SmallPanel } from '../ui/Panel'
-import { LoadError, Skeleton, SkeletonList } from '../ui/Skeleton'
-import { DetailModal } from './DetailModal'
-import { useLazyModal } from '../../hooks/useLazyModal'
+import { useI18n } from '@/shared/i18n'
+import { canWriteMaintenance } from '@/shared/lib'
+import { shortDate } from '@/shared/format'
+import { isMini, type StackSize } from '@/shared/widget'
+import { maintenanceQueries } from '../api/queries'
+import type { Me } from '@/shared/types'
+import { Badge, MiniPanel, Panel, SMALL_BODY, SmallPanel, LoadError, Skeleton, SkeletonList, DetailModal } from '@/shared/ui'
+import { useClipRows, useLazyModal } from '@/shared/hooks'
+import { MAINTENANCE_TONE } from '../lib/constants'
+import { maintenanceWhen } from '../lib/maintenanceWhen'
 
 // 눌러서 열 때 받는다 — 첫 화면 번들에서 뺀다
 const MaintenanceComposer = lazy(() => import('./MaintenanceComposer').then((m) => ({ default: m.MaintenanceComposer })))
-
-export const MAINTENANCE_TONE: Record<MaintenanceKind, BadgeTone> = { NOTICE: 'accent', MAINTENANCE: 'warn', INCIDENT: 'danger' }
-
-/** 일정 문구 — '11.22 (일) 02:00 ~ 06:00' */
-export const maintenanceWhen = (m: Maintenance, lang: Lang) => dateTimeRange(m.date, m.start, m.end, lang)
 
 /** 홈 패널에 보여줄 안내 수 — 옆 패널과 높이를 맞추려 고정하고, 나머지는 '외 n건' 에서 */
 const LISTED = 3
@@ -35,9 +29,10 @@ export function MaintenancePanel({ me, size, className = '' }: { me: Me | null; 
   const composer = useLazyModal()
   const [detail, setDetail] = useState<number | null>(null)
   const items = data ?? []
-  // 크게(좁은 화면)는 두 배까지
-  const listed = size === 'l' ? LISTED * 2 : LISTED
+  // 좁은 화면 고정 칸은 들어가는 만큼(useClipRows) — 나머지는 펼쳐 보기 창의 목록 · 다음으로
+  const listed = size ? items.length : LISTED
   const hidden = items.length - listed
+  const rows = useClipRows<HTMLUListElement>(!!size)
   const detailModal = (
     <DetailModal
       items={items}
@@ -66,6 +61,52 @@ export function MaintenancePanel({ me, size, className = '' }: { me: Me | null; 
       })}
     />
   )
+
+  // 아주 작은 칸 — 안내 수, 한 줄 띠면 가장 가까운 안내 제목까지. 누르면 펼쳐 보기(없으면 아무것도 열지 않는다)
+  if (isMini(size)) {
+    const [first] = items
+    return (
+      <MiniPanel
+        size={size}
+        title={t.home.maintenance.title}
+        icon={Wrench}
+        value={loading || error ? undefined : items.length}
+        detail={first ? `${t.home.maintenance.kind[first.kind]} · ${first.title}` : loading || error ? undefined : t.home.maintenance.empty}
+        onClick={() => first && setDetail(0)}
+        className={className}
+      >
+        {detailModal}
+      </MiniPanel>
+    )
+  }
+
+  // 넓게(4×2) — 한 줄에 하나씩 종류 · 제목 · 날짜. 누르면 펼쳐 보기
+  if (size === 'w') {
+    return (
+      <SmallPanel title={t.home.maintenance.title} icon={Wrench} className={className}>
+        {loading ? (
+          <Skeleton className="h-20 w-full" />
+        ) : error ? (
+          <LoadError error={error} className="text-sm" />
+        ) : items.length ? (
+          <ul ref={rows} className="min-h-0 flex-1 overflow-hidden">
+            {items.map((m, i) => (
+              <li key={m.id}>
+                <button type="button" onClick={() => setDetail(i)} aria-haspopup="dialog" className="flex w-full cursor-pointer items-center gap-2.5 py-1.5 text-left">
+                  <Badge tone={MAINTENANCE_TONE[m.kind]}>{t.home.maintenance.kind[m.kind]}</Badge>
+                  <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{m.title}</span>
+                  <span className="flex-none text-[13px] text-muted tabular-nums">{shortDate(m.date, lang)}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted break-keep">{t.home.maintenance.empty}</p>
+        )}
+        {detailModal}
+      </SmallPanel>
+    )
+  }
 
   // 작게 — 가장 가까운 안내 하나와 남은 수. 누르면 펼쳐 보기(그 안에서 목록 · 다음 안내로). 작성은 보통 크기에서
   if (size === 's') {
@@ -120,7 +161,7 @@ export function MaintenancePanel({ me, size, className = '' }: { me: Me | null; 
         <LoadError error={error} />
       ) : data?.length ? (
         // 낮은 한 화면(fit)에서만 줄 간격을 좁히고, 높은 화면(tall)에서는 다시 넉넉하게
-        <ul className="space-y-2 fit:space-y-1.5 tall:space-y-2.5">
+        <ul ref={rows} className={`space-y-2 fit:space-y-1.5 tall:space-y-2.5 ${size ? 'min-h-0 flex-1 overflow-hidden' : ''}`}>
           {data.slice(0, listed).map((m, i) => (
             <li key={m.id}>
               {/* 제목이 잘리고 본문 · 링크는 안 보이므로, 누르면 펼쳐 보기 — 시스템 열기는 그 안에서 */}
