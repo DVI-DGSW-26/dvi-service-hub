@@ -1,34 +1,29 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type KeyboardEvent } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react'
 import GridLayout, { type Compactor, type Layout, type LayoutItem } from 'react-grid-layout'
 import { calcGridItemPosition, setTransform } from 'react-grid-layout/core'
 import type { Decor } from '@/features/decor'
 import type { WidgetLayout } from '../hooks/useWidgetLayout'
 import { useI18n } from '@/shared/i18n'
 import { colWidth, grow, guides, nudge, place, reach, rowHeight, sizeFor, span, type Page, type Side } from '../lib/widgetLayout'
-import { type StackSize } from '@dvi/core/widget'
-import { BOARD, COLS, EDGE, FIT, FLIP_HOLD, GAP, ROW_H, ROWS, SLIDE } from '../lib/constants'
+import { COLS, EDGE, FIT, FLIP_HOLD, GAP, ROW_H, ROWS, SLIDE } from '../lib/constants'
 import { useGuides } from '../hooks/useGuides'
 import { useResumeDrag } from '../hooks/useResumeDrag'
 import { readTranslate } from '../lib/readTranslate'
 import { BoardEmpty } from './BoardEmpty'
 import { useLongPress } from '../hooks/useLongPress'
 import { usePageNav } from '../hooks/usePageNav'
+import { useUndoKeys } from '../hooks/useUndoKeys'
 import { PageDots } from './PageDots'
 import { GALLERY, galleryDrag, type WidgetContext, type WidgetDef } from '../lib/widgetDef'
 import { WidgetCell } from './WidgetCell'
-import { StackBoard } from './StackBoard'
 
-interface WidgetGridProps {
+interface DesktopBoardProps {
   layout: WidgetLayout
   /** 이 사람에게 보이는 위젯 */
   defs: WidgetDef[]
   ctx: Omit<WidgetContext, 'size'>
   editing: boolean
   onEdit: () => void
-  /** 좁은 화면 편집에서 위젯을 골랐는지(StackBoard) */
-  onPick: (picking: boolean) => void
-  /** 좁은 화면에서 위젯을 끌어 옮기고 놓으면 편집을 끝낸다(StackBoard) */
-  onDone: () => void
   /** 편집 중 인사 카드 위의 그림 바꾸기(registry 의 decor) */
   decor: Decor
 }
@@ -54,9 +49,9 @@ const point = (e: Event) => ('touches' in e ? ((e as TouchEvent).changedTouches[
  * 키보드는 위젯에 초점을 두고 화살표로 옮기고(이웃과 바꾸기 포함) Shift + 화살표로 크기, PageUp · PageDown 으로 페이지, Delete 로 뺀다(갤러리가 있을 때만).
  * 편집 중 Ctrl(⌘) + Z 로 되돌리고 Ctrl + Shift + Z · Ctrl + Y 로 다시 한다. 페이지는 빈 곳을 옆으로 밀거나(스와이프) 위젯에 초점이 없을 때 ← · → 로도 넘긴다.
  * 크기를 바꾸는 동안 잡은 변이 다른 위젯의 같은 쪽 변과 나란하면 기준선을 긋는다(피그마처럼).
- * 좁은 화면은 넓은 화면 칸 배치 없이 4칸 격자 판에 좁은 화면 순서 · 크기대로 쌓고, 편집도 그 자리에서 한다(StackBoard — 길게 눌러 옮기기, 모서리 손잡이로 크기).
+ * 넓은 화면 전용 — 좁은 화면은 MobileBoard(4칸 격자). 둘을 나눠 휴대폰은 react-grid-layout 을 받지 않는다(docs/adr/0004).
  */
-export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, onDone, decor }: WidgetGridProps) {
+export function DesktopBoard({ layout, defs, ctx, editing, onEdit, decor }: DesktopBoardProps) {
   const { t, f } = useI18n()
   const viewRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
@@ -92,7 +87,7 @@ export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, onDone,
   // 그 페이지 판 하나만(key) — 다 다시 만들면 모든 위젯이 새로 마운트돼 페이지가 넘어가는 동안 버벅인다
   const [revs, setRevs] = useState<Record<number, number>>({})
   const rebuild = (p: number) => setRevs((r) => ({ ...r, [p]: (r[p] ?? 0) + 1 }))
-  const [area, setArea] = useState({ width: 0, height: 0, lg: false, fit: false })
+  const [area, setArea] = useState({ width: 0, height: 0, fit: false })
 
   const byType = new Map(defs.map((d) => [d.type, d]))
   const { pages, page } = layout
@@ -112,9 +107,9 @@ export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, onDone,
   useLayoutEffect(() => {
     const view = viewRef.current!
     const sync = () => {
-      const a = { width: trackRef.current?.clientWidth ?? 0, height: view.clientHeight, lg: matchMedia(BOARD).matches, fit: matchMedia(FIT).matches }
+      const a = { width: trackRef.current?.clientWidth ?? 0, height: view.clientHeight, fit: matchMedia(FIT).matches }
       setArea(a)
-      if (a.lg) layout.setCell({ w: colWidth(a.width), h: a.fit ? rowHeight(a.height) : ROW_H })
+      layout.setCell({ w: colWidth(a.width), h: a.fit ? rowHeight(a.height) : ROW_H })
     }
     sync()
     const ro = new ResizeObserver(sync)
@@ -265,7 +260,8 @@ export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, onDone,
   }
 
   const longPress = useLongPress(editing, onEdit)
-  const nav = usePageNav({ layout, pageCount, area, editing, dragging, viewRef, trackRef })
+  const nav = usePageNav({ layout, pageCount, area, dragging, viewRef, trackRef })
+  useUndoKeys(editing, layout)
 
   const onKeyDown = (e: KeyboardEvent<HTMLElement>, type: string, next?: string) => {
     if (e.target !== e.currentTarget) return
@@ -290,18 +286,16 @@ export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, onDone,
     }
   }
 
-
-
-  /** 위젯 하나 — 그릴 크기는 칸이 그려진 px 로 정한다. 좁은 화면은 고른 크기(stack)와 편집 중 얹을 손잡이(overlay)도 받는다(StackBoard) */
-  const widget = (c: Page[number], index: number, list: Page, stack?: StackSize, overlay?: ReactNode) => {
+  /** 위젯 하나 — 그릴 크기는 칸이 그려진 px 로 정한다 */
+  const widget = (c: Page[number], index: number, list: Page) => {
     const def = byType.get(c.i)
     if (!def) return null
-    const size = sizeFor(def.sizes, area.lg ? span(c.w, colW) : area.width, span(c.h, rowH))
+    const size = sizeFor(def.sizes, span(c.w, colW), span(c.h, rowH))
     return (
       <WidgetCell
         key={c.i}
-        {...{ c, index, list, stack, overlay, def, size, editing, ctx, decor, longPress }}
-        onKeyDown={editing && !stack ? (e) => onKeyDown(e, c.i, (list[index + 1] ?? list[index - 1])?.i) : undefined}
+        {...{ c, index, list, def, size, editing, ctx, decor, longPress }}
+        onKeyDown={editing ? (e) => onKeyDown(e, c.i, (list[index + 1] ?? list[index - 1])?.i) : undefined}
         onRemove={() => layout.remove(c.i)}
       />
     )
@@ -375,13 +369,7 @@ export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, onDone,
           {!total && !editing ? (
             <BoardEmpty onEdit={onEdit} />
           ) : (
-            area.width > 0 &&
-            (area.lg ? (
-              Array.from({ length: pageCount }, (_, p) => board(pages[p] ?? [], p))
-            ) : (
-              // 좁은 화면 — 모든 페이지를 4칸 격자 판에, 좁은 화면 순서 · 크기대로. 편집도 그 자리에서
-              <StackBoard layout={layout} defs={defs} editing={editing} onEdit={onEdit} onPick={onPick} onDone={onDone} renderWidget={widget} />
-            ))
+            area.width > 0 && Array.from({ length: pageCount }, (_, p) => board(pages[p] ?? [], p))
           )}
         </div>
       </div>

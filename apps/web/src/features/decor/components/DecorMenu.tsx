@@ -20,7 +20,7 @@ interface DecorMenuProps {
 
 /**
  * 꾸미기 그림 하나(배경 · 인사 카드)의 메뉴 — 미리보기 · 고르기 · 위치 조정 · 기본으로.
- * 배경은 편집 독(EditDock)에, 인사 카드 그림은 편집 중 카드 위(WidgetGrid)에 둔다 — 바꿀 것 바로 곁에서 바꾸게
+ * 배경은 편집 독(EditDock)에, 인사 카드 그림은 편집 중 카드 위(WidgetCell)에 둔다 — 바꿀 것 바로 곁에서 바꾸게
  */
 export function DecorMenu({ kind, decor, className, panelClassName = '', direct = false }: DecorMenuProps) {
   const { open, toggle, close, ref } = usePopover()

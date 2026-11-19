@@ -1,4 +1,4 @@
-// 홈 위젯 판의 기준값 — 배치 규칙(lib/widgetLayout.ts) · 위젯 판(WidgetGrid) · 갤러리가 함께 쓴다.
+// 홈 위젯 판의 기준값 — 배치 규칙(lib/widgetLayout.ts) · 위젯 판(DesktopBoard · MobileBoard) · 갤러리가 함께 쓴다.
 // 화면 크기 기준(FIT · BOARD)과 틈(GAP)은 styles.css 의 board-fit · fit · tall 변형 · styles/widgets/grid.css 의 64rem · 1.25rem 에도 같은 값이 적혀 있다 — 바꾸면 같이.
 
 /** 한 페이지의 칸 — 24열 × 12행. 위젯 위치 · 크기는 이 칸의 정수라 경계가 늘 칸 선 위에 있다. 잘게 나눠 크기를 조금씩 맞출 수 있게 */
