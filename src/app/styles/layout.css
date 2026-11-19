@@ -1,0 +1,59 @@
+@layer components {
+  .fade-up {
+    animation: fade-up 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+}
+/* 편집을 켜고 끌 때 상단 바 내용 — 흐려진 채 조금 아래에서 제자리로 */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+}
+
+/*
+ * 아래 둘은 레이어 밖 — 요소에 붙은 유틸리티(w-64 · p-4 · absolute …)보다 이겨야 한다.
+ *
+ * 화면을 옮길 때(App.tsx 의 main) — 옮긴 방향(--dir: 1 뒤 · -1 앞)에서 조금 밀려 들어온다
+ */
+.page-in {
+  animation: page-in 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    translate: calc(var(--dir) * 28px) 0;
+  }
+}
+
+/*
+ * 휴대폰 상단 바 — 앱처럼 화면 맨 위에 붙는다(떠 있는 둥근 카드 대신). 맨 위에서는 바탕에 녹아 있다가
+ * 내용이 밑으로 지나가기 시작하면 유리가 깔린다(TopBar 의 data-scrolled)
+ */
+@media (max-width: 639.98px) {
+  .app-bar {
+    top: 0;
+    margin: -0.75rem -0.75rem 0;
+    height: calc(4rem + env(safe-area-inset-top));
+    padding-top: env(safe-area-inset-top);
+    border-radius: 0;
+    border-width: 0 0 1px;
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease,
+      box-shadow 200ms ease;
+  }
+  .app-bar::before,
+  .app-bar::after {
+    transition: opacity 200ms ease;
+  }
+  .app-bar:not([data-scrolled]) {
+    background-color: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+  .app-bar:not([data-scrolled])::before,
+  .app-bar:not([data-scrolled])::after {
+    opacity: 0;
+  }
+}

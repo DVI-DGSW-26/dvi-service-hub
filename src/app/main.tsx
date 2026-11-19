@@ -2,9 +2,9 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { StrictMode, Suspense, lazy } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
-import { I18nProvider } from './i18n'
-import { applySavedPrefs } from './lib/theme'
-import { queryClient } from './queries/client'
+import { I18nProvider } from '@/shared/i18n'
+import { applySavedPrefs } from '@/features/theme'
+import { queryClient } from '@/shared/api'
 import './styles.css'
 
 // 개발 서버에서만 — 캐시 · 요청 상태를 화면 구석의 꽃 단추로 들여다본다. 운영 빌드에는 들어가지 않는다
@@ -21,9 +21,9 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) navigator.serviceWorke
 async function prepare() {
   if (!import.meta.env.VITE_MOCK) return
   const [{ installMockApi }, { mockWidgets }, { WIDGETS }] = await Promise.all([
-    import('./mocks/server'),
-    import('./mocks/widgets'),
-    import('./components/widgets/registry'),
+    import('@/mocks/server'),
+    import('@/mocks/widgets'),
+    import('@/features/home'),
   ])
   installMockApi()
   WIDGETS.push(...mockWidgets)

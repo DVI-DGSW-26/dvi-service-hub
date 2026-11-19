@@ -1,0 +1,84 @@
+@layer base {
+  body {
+    @apply bg-bg text-fg antialiased;
+    /* 사이드바를 접을 때 밀려가는 본문(App.tsx)이 가로 스크롤을 만들지 않게 — clip 은 sticky 를 깨지 않는다 */
+    overflow-x: clip;
+    /* 앱처럼 — 누를 때 회색 번쩍임 · 두 번 눌러 확대를 끈다(두 손가락 확대는 남긴다) */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    /* 한글은 낱말 가운데서 줄을 바꾸지 않는다(띄어쓰기에서만) — 띄어쓰기 없이 긴 것(주소 등)만 아무 데서나 */
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  /* 화면 스크롤의 끝 튕김 · 당겨서 새로고침은 html 값을 따른다 */
+  html {
+    overscroll-behavior: none;
+  }
+
+  /* body 의 overflow 는 화면(viewport)으로 넘어가 body 자신은 자르지 않는다 — 모바일은 넘친 만큼 화면 폭을 늘려
+     100vw 로 잡은 팝오버 · 헤더까지 같이 넓어진다. 그래서 바로 안쪽에서 한 번 더 자른다 */
+  #root {
+    overflow-x: clip;
+  }
+
+  /* 손가락 화면은 hover: 가 아예 안 켜져 눌러도 아무 반응이 없다 — 누르는 동안 살짝 흐려 앱 버튼처럼 받는다.
+     :where 라 우선순위가 0 — 따로 opacity 를 준 요소는 그 값이 이긴다 */
+  @media (hover: none) {
+    :where(a[href], button:enabled, label, summary, [role='button'], [role='tab'], [role='option']) {
+      transition: opacity 150ms ease;
+    }
+    :where(a[href], button:enabled, label, summary, [role='button'], [role='tab'], [role='option']):active {
+      opacity: 0.6;
+      transition-duration: 0s;
+    }
+    /* 길게 누르면 글자가 골라지고 링크 · 이미지 미리보기가 뜨는 건 웹 페이지 티 — 앱처럼 끈다.
+       입력칸 · 글 본문(.select-text: 공지 내용처럼 복사할 만한 것)만 고를 수 있다 */
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+    :is(input, textarea, [contenteditable]) {
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    /* iOS 는 16px 보다 작은 입력칸을 누르면 화면을 확대한다 */
+    :is(input, textarea, select) {
+      font-size: max(16px, 1em) !important;
+    }
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* 밝기가 갑자기 뒤집히지 않게 테마를 바꾸는 순간에만 색을 부드럽게 넘긴다 */
+  html.theme-switching *,
+  html.theme-switching *::before,
+  html.theme-switching *::after {
+    transition:
+      background-color 0.35s ease,
+      border-color 0.35s ease,
+      color 0.35s ease,
+      box-shadow 0.35s ease !important;
+  }
+
+  /* OS 의 '동작 줄이기' · 테마 메뉴의 애니메이션 끄기 — 움직임 없이 바로 바뀐다 */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
+  :root[data-motion='off'] *,
+  :root[data-motion='off'] ::before,
+  :root[data-motion='off'] ::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

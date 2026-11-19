@@ -1,30 +1,18 @@
 import { useQuery } from '@tanstack/react-query'
-import { Suspense, lazy, useEffect, useRef, useState, type CSSProperties } from 'react'
+import { Suspense, useEffect, useRef, useState, type CSSProperties, type MouseEvent } from 'react'
 import { flushSync } from 'react-dom'
-import { services } from './services'
-import { GooFilter } from './components/layout/LiquidParts'
-import { Sidebar } from './components/layout/Sidebar'
-import { TabBar } from './components/layout/TabBar'
-import { TopBar } from './components/layout/TopBar'
-import { DecorAdjust, Wallpaper } from './components/layout/Wallpaper'
-import { EditDock } from './components/widgets/EditDock'
-import { WidgetEditBar } from './components/widgets/WidgetGallery'
-import { GALLERY, visibleWidgets } from './components/widgets/registry'
-import { useDecor } from './hooks/useDecor'
-import { useFavorites } from './hooks/useFavorites'
-import { hrefOf, useHashRoute } from './hooks/useHashRoute'
-import { usePortalTheme } from './hooks/usePortalTheme'
-import { useWidgetLayout } from './hooks/useWidgetLayout'
-import { useI18n } from './i18n'
-import { canSee, sortByFavorite } from './lib/access'
-import { KEYS, motionOff, readPref, writePref } from './lib/theme'
-import { HomePage } from './pages/HomePage'
-import { accountQueries } from './queries/account'
+import { services, useFavorites, canSee, sortByFavorite, LazySystemsPage } from '@/features/systems'
+import { GooFilter, Sidebar, EditTabBar, TabBar, TopBar } from '@/features/shell'
+import { DecorAdjust, Wallpaper, useDecor } from '@/features/decor'
+import { BOARD, EditDock, WidgetEditBar, GALLERY, visibleWidgets, useWidgetLayout, HomePage } from '@/features/home'
+import { hrefOf, useHashRoute, useMedia } from '@/shared/hooks'
+import { usePortalTheme } from '@/features/theme'
+import { useI18n } from '@/shared/i18n'
+import { KEYS, readPref, writePref, motionOff } from '@/shared/lib'
+import { LazyAccountPage, accountQueries } from '@/features/account'
+// 홈만 첫 번들에 — 나머지 화면은 처음 갈 때 받는다(Lazy*)
+import { LazyInfoPage } from '@/features/info'
 
-// 홈만 첫 번들에 — 나머지 화면은 처음 갈 때 받는다
-const SystemsPage = lazy(() => import('./pages/SystemsPage').then((m) => ({ default: m.SystemsPage })))
-const InfoPage = lazy(() => import('./pages/InfoPage').then((m) => ({ default: m.InfoPage })))
-const AccountPage = lazy(() => import('./pages/AccountPage').then((m) => ({ default: m.AccountPage })))
 
 export default function App() {
   const { t } = useI18n()
@@ -63,6 +51,16 @@ export default function App() {
   const customize = () => {
     location.hash = hrefOf('home')
     setEditing(true)
+  }
+  // 좁은 화면은 '완료' 말고도 빈 곳(위젯 · 버튼 밖)을 누르면 끝난다 — 홈 화면 앱처럼. 위젯을 골라 둔 채 누르면 그 누름은 고르기만 푼다(StackBoard)
+  const board = useMedia(BOARD)
+  const pickedAtDown = useRef(false)
+  const endOnEmpty = {
+    onPointerDownCapture: () => void (pickedAtDown.current = picking),
+    onClick: (e: MouseEvent) => {
+      if (!editing || board || pickedAtDown.current || decor.adjusting) return
+      if (!(e.target as Element).closest('[data-type], button, a, input, label, dialog, [role="toolbar"]')) setEditing(false)
+    },
   }
   // 갤러리는 목업에서만 — 운영 · dev 는 편집 중에도 사이드바 · 탭 바가 그대로다
   const gallery = editing && GALLERY
@@ -109,7 +107,8 @@ export default function App() {
       {home && decor.wallpaper && <Wallpaper src={decor.wallpaper} pos={decor.pos.wallpaper} />}
       {editing && adjusting && <DecorAdjust decor={decor} />}
       {/* 편집 도구 · 완료는 화면 아래 독에 — 상단 바는 그 항목 고치기만 */}
-      {editing && !picking && (
+      {/* 좁은 화면은 탭 바가 편집 막대가 되고(EditTabBar), 이 독은 그림 위치 조정 때만 */}
+      {editing && !picking && (board || adjusting) && (
         <EditDock
           decor={decor}
           onTidy={widgets.tidy}
@@ -146,9 +145,10 @@ export default function App() {
           editing={editing}
         />
 
-        {/* 화면을 옮기면 main 을 새로 그려 옮긴 방향에서 밀려 들어온다(styles.css 의 .page-in) — 앱의 탭 넘김처럼 */}
+        {/* 화면을 옮기면 main 을 새로 그려 옮긴 방향에서 밀려 들어온다(styles/layout.css 의 .page-in) — 앱의 탭 넘김처럼 */}
         <main key={route.page} id="main" tabIndex={-1} className={`flex-1 pt-5 outline-none ${route.dir ? 'page-in' : ''} ${home ? 'flex flex-col board-fit:min-h-0' : ''} ${adjusting === 'wallpaper' ? 'invisible' : ''}`}
           data-adjust={adjusting ?? undefined}
+          {...endOnEmpty}
           style={route.dir ? { '--dir': Math.sign(route.dir) } as CSSProperties : undefined}
         >
           <Suspense>
@@ -160,11 +160,12 @@ export default function App() {
                 editing={editing}
                 onEdit={() => setEditing(true)}
                 onPick={setPicking}
+                onDone={stopEditing}
                 decor={decor}
               />
             )}
             {route.page === 'systems' && (
-              <SystemsPage
+              <LazySystemsPage
                 me={me}
                 loading={meLoading}
                 services={mine}
@@ -174,8 +175,8 @@ export default function App() {
                 onToggleFavorite={toggleFavorite}
               />
             )}
-            {route.page === 'info' && <InfoPage categoryId={route.param} />}
-            {route.page === 'account' && <AccountPage me={me} loading={meLoading} services={mine} theme={theme} onCustomize={customize} />}
+            {route.page === 'info' && <LazyInfoPage categoryId={route.param} />}
+            {route.page === 'account' && <LazyAccountPage me={me} loading={meLoading} services={mine} theme={theme} onCustomize={customize} />}
           </Suspense>
         </main>
 
@@ -183,7 +184,7 @@ export default function App() {
         <footer className={`px-1 pt-8 text-xs text-muted max-sm:hidden ${home ? 'board-fit:hidden' : ''}`}>© DVISION · DVI Portal</footer>
       </div>
 
-      {!gallery && !picking && <TabBar page={route.page} />}
+      {!editing ? <TabBar page={route.page} /> : !board && !adjusting && !picking && <EditTabBar decor={decor} onReset={widgets.reset} onDone={stopEditing} />}
       <GooFilter />
     </>
   )
