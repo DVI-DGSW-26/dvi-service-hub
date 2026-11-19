@@ -1,15 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
-import { useI18n } from '../../i18n'
-import { fromIso, toIso } from '../../lib/calendar'
-import { longToday, shortDate, toMinutes } from '../../lib/format'
-import { scheduleQueries } from '../../queries/dashboard'
-import type { ScheduleItem } from '../../types/portal'
-import { SearchBox } from '../layout/SearchBox'
-import { Modal } from '../ui/Modal'
-import { SourceTag } from '../ui/Panel'
-import { Skeleton } from '../ui/Skeleton'
-import { NowGuide, ScheduleRow, statusOf } from './ScheduleRow'
+import { useI18n } from '@/shared/i18n'
+import { fromIso, toIso } from '@/shared/lib'
+import { longToday, shortDate, toMinutes } from '@/shared/format'
+import { scheduleQueries } from '../api/queries'
+import type { ScheduleItem } from '@/shared/types'
+import { SearchBox, Modal, SourceTag, Skeleton } from '@/shared/ui'
+import { statusOf } from '../lib/status'
+import { NowGuide, ScheduleRow } from './ScheduleRow'
 
 interface TodayModalProps {
   /** 오늘 일정 — 지난 일정을 불러오는 동안에도 바로 보여준다 */

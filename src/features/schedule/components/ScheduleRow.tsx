@@ -1,33 +1,12 @@
 import { Check, Clock } from 'lucide-react'
-import { useI18n } from '../../i18n'
-import { clockTime, duration, monthDay, toMinutes, useTitle } from '../../lib/format'
-import type { ScheduleItem } from '../../types/portal'
-
-/** 종일 · 여러 날 일정은 시각이 없어 진행 상태 대신 '종일' 로 둔다 */
-export type ScheduleStatus = 'done' | 'now' | 'upcoming' | 'allDay'
-
-// 시간 일정에는 start · end 가 늘 있다 (명세 4.2). 빠져 오면 하루 끝으로 본다
-const startOf = (s: ScheduleItem) => toMinutes(s.start ?? '00:00')
-const DAY = 24 * 60
-/**
- * 자정에 끝나는 일정(22:00 ~ 00:00)은 end 가 start 보다 작게 온다 (명세 4.1) — 그날 끝(24:00)으로 본다.
- * 그대로 두면 00:00 = 0분이라 시작하기도 전에 '끝남' 이 된다.
- */
-const endOf = (s: ScheduleItem) => {
-  const end = toMinutes(s.end ?? '23:59')
-  return end < startOf(s) ? end + DAY : end
-}
-
-export function statusOf(s: ScheduleItem, now: number): ScheduleStatus {
-  if (s.allDay) return 'allDay'
-  if (now >= endOf(s)) return 'done'
-  if (now >= startOf(s)) return 'now'
-  return 'upcoming'
-}
+import { useI18n } from '@/shared/i18n'
+import { clockTime, duration, monthDay,  useTitle } from '@/shared/format'
+import type { ScheduleItem } from '@/shared/types'
+import { endOf, startOf, statusOf, type ScheduleStatus } from '../lib/status'
 
 /**
  * 상태 표시 — 색만으로 구분하지 않고 글자로 적되(사전 schedule.status), 무게를 셋으로 나눈다.
- * 목록에서 색이 있는 건 진행 중 하나뿐이다 — 꽉 찬 초록(강조색이 초록이면 파랑, styles.css --color-live) + 퍼지는 점. 예정은 색 없는 회색 테두리, 끝남은 바탕 없이 물러난다.
+ * 목록에서 색이 있는 건 진행 중 하나뿐이다 — 꽉 찬 초록(강조색이 초록이면 파랑, styles/theme.css 의 --color-live) + 퍼지는 점. 예정은 색 없는 회색 테두리, 끝남은 바탕 없이 물러난다.
  * 상태 색은 강조색을 따르지 않는다: 버튼 · 링크와 같은 색이면 묻히고, 테마마다 바뀌면 '초록 = 지금' 을 익힐 수 없다.
  */
 function StatusBadge({ status }: { status: ScheduleStatus }) {

@@ -1,16 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
 import { CalendarDays, ChevronRight } from 'lucide-react'
 import { Suspense, lazy } from 'react'
-import { useNow } from '../../hooks/useNow'
-import { useI18n } from '../../i18n'
-import { toIso } from '../../lib/calendar'
-import { clockTime, nowMinutes, useTitle } from '../../lib/format'
-import type { StackSize } from '../../lib/widgetLayout'
-import { scheduleQueries } from '../../queries/dashboard'
-import { PANEL_LINK, Panel, SMALL_BODY, SmallPanel, SourceTag } from '../ui/Panel'
-import { LoadError, Skeleton, SkeletonList } from '../ui/Skeleton'
-import { NowGuide, ScheduleRow, statusOf } from './ScheduleRow'
-import { useLazyModal } from '../../hooks/useLazyModal'
+import { useNow, useClipRows, useLazyModal } from '@/shared/hooks'
+import { useI18n } from '@/shared/i18n'
+import { toIso } from '@/shared/lib'
+import { clockTime, nowMinutes, useTitle } from '@/shared/format'
+import { isMini, type StackSize } from '@/shared/widget'
+import { scheduleQueries } from '../api/queries'
+import { MiniPanel, PANEL_LINK, Panel, SMALL_BODY, SmallPanel, SourceTag, LoadError, Skeleton, SkeletonList } from '@/shared/ui'
+import { statusOf } from '../lib/status'
+import { NowGuide, ScheduleRow } from './ScheduleRow'
 
 // 눌러서 열 때 받는다 — 첫 화면 번들에서 뺀다
 const TodayModal = lazy(() => import('./TodayModal').then((m) => ({ default: m.TodayModal })))
@@ -34,8 +33,9 @@ export function TodayPanel({ size, className = '' }: { size?: StackSize; classNa
   const { data, isPending: loading, error } = useQuery({ ...scheduleQueries.recent(toIso(date)), select: (days) => days.at(-1)?.items })
   const items = data ?? []
 
-  // 크게(좁은 화면)는 두 배까지
-  const visible = size === 'l' ? VISIBLE * 2 : VISIBLE
+  // 좁은 화면 고정 칸은 들어가는 만큼(useClipRows) — 넓게 · 보통 · 크게 순으로 더 보인다
+  const visible = size ? 12 : VISIBLE
+  const rows = useClipRows<HTMLOListElement>(!!size)
   const firstOpen = items.findIndex((s) => statusOf(s, now) !== 'done')
   const last = Math.max(0, items.length - visible)
   const from = firstOpen < 0 ? last : Math.min(firstOpen, last)
@@ -47,11 +47,63 @@ export function TodayPanel({ size, className = '' }: { size?: StackSize; classNa
     </Suspense>
   )
 
+  // 진행 중 → 시간이 정해진 다음 일정 → 종일 순으로 하나(작게 · 아주 작은 칸)
+  const pick = (['now', 'upcoming', 'allDay'] as const).map((k) => items.find((s) => statusOf(s, now) === k)).find(Boolean)
+  const st = pick && statusOf(pick, now)
+
+  // 아주 작은 칸 — 오늘 일정 수, 한 줄 띠면 그 일정의 시각 · 제목까지
+  if (isMini(size)) {
+    return (
+      <MiniPanel
+        size={size}
+        title={t.schedule.title}
+        icon={CalendarDays}
+        value={loading || error ? undefined : items.length}
+        detail={pick ? `${pick.allDay || !pick.start ? t.schedule.allDay : clockTime(pick.start, lang)} · ${title(pick.title)}` : loading || error ? undefined : items.length ? t.schedule.allDone : t.schedule.empty}
+        onClick={() => modal.show()}
+        className={className}
+      >
+        {listModal}
+      </MiniPanel>
+    )
+  }
+
+  // 넓게(4×2) — 지금부터 한 줄씩 시각 · 제목. 누르면 전체 일정 창
+  if (size === 'w') {
+    return (
+      <SmallPanel title={t.schedule.title} icon={CalendarDays} className={className}>
+        {loading ? (
+          <Skeleton className="h-20 w-full" />
+        ) : error ? (
+          <LoadError error={error} className="text-sm" />
+        ) : (
+          <button type="button" onClick={() => modal.show()} aria-haspopup="dialog" className={`${SMALL_BODY} w-full`}>
+            {shown.length ? (
+              <ol ref={rows} className="min-h-0 w-full flex-1 overflow-hidden">
+                {shown.map((s) => {
+                  const st = statusOf(s, now)
+                  return (
+                    <li key={s.id} className={`flex items-baseline gap-3 py-1 ${st === 'done' ? 'text-muted' : ''}`}>
+                      <span className={`w-[4.5rem] flex-none text-[13px] font-bold tabular-nums ${st === 'now' ? 'text-live' : 'text-muted'}`}>
+                        {s.allDay || !s.start ? t.schedule.allDay : clockTime(s.start, lang)}
+                      </span>
+                      <span className="min-w-0 truncate text-[15px] font-semibold">{title(s.title)}</span>
+                    </li>
+                  )
+                })}
+              </ol>
+            ) : (
+              <span className="text-[15px] font-semibold break-keep text-muted">{t.schedule.empty}</span>
+            )}
+          </button>
+        )}
+        {listModal}
+      </SmallPanel>
+    )
+  }
+
   // 작게 — 진행 중(없으면 다음) 일정 하나를 크게. 누르면 전체 일정 창
   if (size === 's') {
-    // 진행 중 → 시간이 정해진 다음 일정 → 종일 순으로 하나
-    const pick = (['now', 'upcoming', 'allDay'] as const).map((k) => items.find((s) => statusOf(s, now) === k)).find(Boolean)
-    const st = pick && statusOf(pick, now)
     return (
       <SmallPanel title={t.schedule.title} icon={CalendarDays} className={className}>
         {loading ? (
@@ -107,7 +159,7 @@ export function TodayPanel({ size, className = '' }: { size?: StackSize; classNa
       ) : items.length ? (
         <>
           <NowGuide items={items} now={now} date={date} compact className="mb-3 fit:mb-1.5 fit:py-2" />
-          <ol className="space-y-1.5 fit:space-y-0.5" aria-label={more ? f(t.schedule.listLabel, { count: items.length, shown: shown.length }) : undefined}>
+          <ol ref={rows} className={`space-y-1.5 fit:space-y-0.5 ${size ? 'min-h-0 flex-1 overflow-hidden' : ''}`} aria-label={more ? f(t.schedule.listLabel, { count: items.length, shown: shown.length }) : undefined}>
             {shown.map((s) => (
               <ScheduleRow key={s.id} item={s} now={now} className="fit:py-1.5" />
             ))}
