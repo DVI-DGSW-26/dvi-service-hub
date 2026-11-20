@@ -1,6 +1,6 @@
 # ADR 0003. 웹 · 모바일을 pnpm 모노레포로 — apps/web · apps/mobile · packages/core
 
-- 상태: 채택
+- 상태: 일부 되돌림 — 2026-11-20 apps/mobile · packages/core 를 지웠다. 웹 src 를 37347fd 로 맞춰 web 이 core 를 안 쓰게 됐고, 앱도 없어 쓰는 곳이 없다. 앱을 다시 만들 때 web 과 앱이 실제로 같이 쓰는 것만 새로 뺀다(지운 core 는 git 기록 · wip/mobile-login 에)
 - 날짜: 2026-11-19
 - 관련: ADR 0002(기능 모듈), Expo 문서 [Work with monorepos](https://docs.expo.dev/guides/monorepos/)
 

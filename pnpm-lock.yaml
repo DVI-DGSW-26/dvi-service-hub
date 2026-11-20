@@ -179,9 +179,6 @@ importers:
 
   apps/web:
     dependencies:
-      '@dvi/core':
-        specifier: workspace:*
-        version: link:../../packages/core
       '@tanstack/react-query':
         specifier: ^5.107.1
         version: 5.107.1(@types/react@19.3.0)(react@19.3.1)
@@ -270,24 +267,6 @@ importers:
       vite:
         specifier: ^8.3.8
         version: 8.3.8(@types/node@26.6.6)(jiti@2.7.0)(terser@5.51.2)
-
-  packages/core:
-    devDependencies:
-      '@eslint/js':
-        specifier: ^9.39.5
-        version: 9.39.5
-      '@types/node':
-        specifier: ^26.6.6
-        version: 26.6.6
-      eslint:
-        specifier: ^9.39.5
-        version: 9.39.5(jiti@2.7.0)(supports-color@7.2.0)
-      typescript:
-        specifier: ^7.0.2
-        version: 7.0.2
-      typescript-eslint:
-        specifier: ^8.73.0
-        version: 8.73.0(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)
 
 packages:
 

@@ -1,6 +1,6 @@
 name: check
 
-# PR · push 마다 모든 패키지의 typecheck · test 와 core lint 를 돌린다.
+# PR · push 마다 모든 패키지의 typecheck · test 를 돌린다.
 # - secret 을 쓰지 않아 공개 저장소의 포크 PR(pull_request)에 열어도 된다. pull_request_target 은 쓰지 않는다.
 # - 액션은 태그가 아니라 커밋 SHA 로 고정한다(publish-switcher.yml 과 같다).
 on:
@@ -30,6 +30,5 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
-      # shortcut: web lint 는 기존 지적 ~311건(ADR 0002)이 남아 빼 둔다, 0 이 되면 pnpm lint 로 바꾼다
-      - run: pnpm --filter '!@dvi/web' lint
+      # shortcut: web lint 는 기존 지적 ~311건(ADR 0002)이 남아 빼 둔다, 0 이 되면 pnpm lint 를 넣는다
       - run: pnpm test

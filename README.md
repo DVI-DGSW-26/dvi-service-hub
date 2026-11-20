@@ -8,7 +8,6 @@ pnpm 모노레포다 (`package.json` 의 `packageManager` 버전, Node 26 LTS). 
 
 ```
 apps/web/       허브 웹 — Vite + React, Vercel Edge 함수(api/ · lib/ · middleware.ts), switcher
-packages/core/  @dvi/core — 웹 · (나중의) 앱이 같이 쓰는 타입 · 서비스 목록 · 권한 · 화면 문구
 ```
 
 ```bash
@@ -91,11 +90,11 @@ src/
 - 요청마다 `X-Request-Id` 를 붙이고 로그에 `#id` 로 남긴다.
 - 개발 서버에서는 화면 왼쪽 아래 TanStack Query Devtools 로 캐시 · 요청 상태를 볼 수 있다(운영 번들에는 없다).
 
-서비스 목록은 `packages/core/src/services.ts` 를 쓴다.
+서비스 목록은 `src/features/systems/lib/services.ts` 를 쓴다.
 
 ## 서비스 추가·수정
 
-`packages/core/src/services.ts`의 `services` 배열만 고치면 된다.
+`src/features/systems/lib/services.ts`의 `services` 배열만 고치면 된다.
 
 - `links`: 첫 번째 링크가 카드 클릭 시 이동 대상. 링크가 2개 이상이면 카드 하단에 모두 표시.
 - `auth`: `separate`(개별 로그인) → SSO 전환 완료 시 `sso`로 변경.
