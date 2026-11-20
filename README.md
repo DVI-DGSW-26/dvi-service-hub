@@ -8,8 +8,7 @@ pnpm 모노레포다 (`package.json` 의 `packageManager` 버전, Node 26 LTS). 
 
 ```
 apps/web/       허브 웹 — Vite + React, Vercel Edge 함수(api/ · lib/ · middleware.ts), switcher
-apps/mobile/    휴대폰 앱 — Expo + React Native
-packages/core/  @dvi/core — 웹 · 앱이 같이 쓰는 타입 · 서비스 목록 · 권한 · 화면 문구
+packages/core/  @dvi/core — 웹 · (나중의) 앱이 같이 쓰는 타입 · 서비스 목록 · 권한 · 화면 문구
 ```
 
 ```bash
@@ -20,7 +19,7 @@ pnpm build      # apps/web/dist 생성
 pnpm check      # 모든 패키지 typecheck · lint · test
 ```
 
-앱은 `pnpm --filter @dvi/mobile start` 로 띄운다 — 자세한 것은 `apps/mobile/README.md`.
+휴대폰 앱(apps/mobile)은 웹을 다시 맞춘 뒤 새로 만든다 — 그 전 시도는 `wip/mobile-login` 브랜치(ADR 0006).
 
 Vercel 프로젝트의 Root Directory 는 `apps/web` 이다 (docs/adr/0003-monorepo.md).
 아래에서 `src/` · `api/` 등 경로는 `apps/web/` 기준이다.
