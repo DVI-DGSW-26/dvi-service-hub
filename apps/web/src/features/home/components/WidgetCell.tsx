@@ -71,6 +71,8 @@ export function WidgetCell({ c, index, list, stack, overlay, def, size, editing,
       onPointerCancel={longPress.cancelPress}
       onKeyDown={onKeyDown}
       onClickCapture={longPress.onClickCapture}
+      // 길게 눌러 편집을 켠 채 끌면 처음 누른 링크 · 이미지를 브라우저가 끌어 가 위젯 끌기가 끊긴다
+      onDragStart={editing ? (e) => e.preventDefault() : undefined}
       onContextMenu={(e) => {
         if (editing || stack || longPress.press.current) e.preventDefault()
       }}

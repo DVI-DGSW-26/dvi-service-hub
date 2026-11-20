@@ -6,7 +6,7 @@ import { type StackSize } from '@/shared/widget'
 import { FIT, ROW_H } from '../lib/constants'
 import { BOARD } from '@/shared/constants'
 import { BoardEmpty } from './BoardEmpty'
-import { useLongPress } from '../hooks/useLongPress'
+import { useLongPress, type PickUp } from '../hooks/useLongPress'
 import { usePageNav } from '../hooks/usePageNav'
 import { PageDots } from './PageDots'
 import { type WidgetContext, type WidgetDef } from '../lib/widgetDef'
@@ -23,7 +23,7 @@ interface WidgetGridProps {
   onEdit: () => void
   /** 좁은 화면 편집에서 위젯을 골랐는지(StackBoard) */
   onPick: (picking: boolean) => void
-  /** 좁은 화면에서 위젯을 끌어 옮기고 놓으면 편집을 끝낸다(StackBoard) */
+  /** 길게 눌러 편집을 켜고 위젯을 끌어 옮기고 놓으면 편집을 끝낸다(StackBoard · WideBoard) */
   onDone: () => void
   /** 편집 중 인사 카드 위의 그림 바꾸기(registry 의 decor) */
   decor: Decor
@@ -67,7 +67,9 @@ export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, onDone,
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 처음 한 번만 걸고, 크기는 ResizeObserver 가 알린다
   }, [])
 
-  const longPress = useLongPress(editing, onEdit)
+  // 마우스로 길게 눌러 편집을 켰으면 그 위젯을 넓은 판이 이어 끈다
+  const pickUp = useRef<PickUp | null>(null)
+  const longPress = useLongPress(editing, onEdit, pickUp)
   const nav = usePageNav({ layout, pageCount, area, editing, dragging, viewRef, trackRef })
 
   /**
@@ -113,6 +115,8 @@ export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, onDone,
               <WideBoard
                 {...{ layout, pageCount, colW, rowH, editing, viewRef }}
                 downAtRef={downAt}
+                pickUpRef={pickUp}
+                onDone={onDone}
                 draggingRef={dragging}
                 width={area.width}
                 onEdge={setEdge}

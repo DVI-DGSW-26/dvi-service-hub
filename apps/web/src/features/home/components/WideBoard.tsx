@@ -7,6 +7,7 @@ import { grow, guides, nudge, place, reach, span, type Page, type Side } from '.
 import { COLS, EDGE, FLIP_HOLD, GAP, ROWS, SLIDE } from '../lib/constants'
 import { useGuides } from '../hooks/useGuides'
 import { useResumeDrag } from '../hooks/useResumeDrag'
+import type { PickUp } from '../hooks/useLongPress'
 import { readTranslate } from '../lib/readTranslate'
 import { GALLERY, galleryDrag } from '../lib/widgetDef'
 
@@ -22,6 +23,10 @@ interface WideBoardProps {
   viewRef: RefObject<HTMLDivElement | null>
   /** 누른 자리 — 틀이 누를 때마다 적는다 */
   downAtRef: RefObject<{ x: number; y: number }>
+  /** 마우스로 길게 눌러 편집을 켠 위젯 — 편집이 켜지면 그 자리에서 이어 끈다(useLongPress) */
+  pickUpRef: RefObject<PickUp | null>
+  /** 길게 눌러 집어 든 위젯을 옮기고 놓으면 편집을 끝낸다 */
+  onDone: () => void
   /** 위젯을 끄는 중 — 그동안 틀의 휠 페이지 넘기기를 쉰다(usePageNav) */
   draggingRef: RefObject<boolean>
   /** 끄는 위젯이 판 왼쪽(-1) · 오른쪽(1) 끝에 닿았다 — 틀이 끝을 비춘다 */
@@ -50,7 +55,7 @@ const point = (e: Event) => ('touches' in e ? ((e as TouchEvent).changedTouches.
  * 키보드는 위젯에 초점을 두고 화살표로 옮기고(이웃과 바꾸기 포함) Shift + 화살표로 크기, PageUp · PageDown 으로 페이지, Delete 로 뺀다(갤러리가 있을 때만).
  * 크기를 바꾸는 동안 잡은 변이 다른 위젯의 같은 쪽 변과 나란하면 기준선을 긋는다(피그마처럼).
  */
-export function WideBoard({ layout, pageCount, width, colW, rowH, editing, viewRef, downAtRef, draggingRef, onEdge, renderWidget }: WideBoardProps) {
+export function WideBoard({ layout, pageCount, width, colW, rowH, editing, viewRef, downAtRef, pickUpRef, onDone, draggingRef, onEdge, renderWidget }: WideBoardProps) {
   const { t, f } = useI18n()
   const edgeRef = useRef(0)
   /** 끝에 대고 기다리는 중인 페이지 넘기기 · 마지막 손 위치 · 넘긴 뒤 새 페이지에서 이어 끌 위젯 */
@@ -160,6 +165,20 @@ export function WideBoard({ layout, pageCount, width, colW, rowH, editing, viewR
     rebuild(page)
   }
   useResumeDrag({ resume, hand, grab, downAt: downAtRef, viewRef })
+  /** 길게 눌러 집어 든 위젯의 누른 자리 — 옮기고 놓으면 편집을 끝낸다(좁은 화면 StackBoard 와 같다) */
+  const held = useRef<{ x: number; y: number } | null>(null)
+  // 마우스로 길게 눌러 편집을 켰으면 손을 떼기 전에 그 위젯을 그 자리에서 다시 눌러 바로 끌게 한다(useResumeDrag 와 같은 방법).
+  // 편집이 켜진 렌더 뒤라 react-grid-layout 의 끌기가 켜져 있다
+  useEffect(() => {
+    const p = pickUpRef.current
+    if (!editing || !p) return
+    pickUpRef.current = null
+    const el = viewRef.current?.querySelector<HTMLElement>(`.widget-page:not(.invisible) [data-type="${p.i}"]`)
+    if (!el) return
+    held.current = { x: p.x, y: p.y }
+    downAtRef.current = { x: p.x, y: p.y }
+    el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: p.x, clientY: p.y, button: 0, buttons: 1 }))
+  }, [editing, pickUpRef, viewRef, downAtRef])
   /**
    * 손에 붙였던 위젯을 놓인 칸 자리 · 크기로 — react-grid-layout 은 칸 자리 · 크기가 그대로면 다시 그리지 않아,
    * 놓을 수 없던 자리에서 놓으면 손에 붙인 transform · 크기가 남아 이웃을 덮는다(편집을 마쳐야 돌아왔다)
@@ -178,15 +197,21 @@ export function WideBoard({ layout, pageCount, width, colW, rowH, editing, viewR
     edgeRef.current = 0
     onEdge(0)
     active.current = null
+    // 옆 페이지로 넘겨 이어 끄는 동안은 집어 든 그대로
+    const h = held.current
+    if (!dir) held.current = null
     if (!item) return
     // 옆 페이지의 손 아래 칸으로(안 되면 첫 빈칸) — 들어갈 자리가 없으면 되돌린다
     if (dir) {
       if (layout.toPage(item.i, page + dir, cellAt(point(e).clientX, point(e).clientY))) return
       resume.current = null
+      held.current = null
       rebuild(page); return;
     }
     if (!layout.commitPage(clean(l), item.i)) { rebuild(page); return; }
     settle(node, l, item.i)
+    // 그 자리에서 놓기만 했으면 편집 그대로 — 크기를 바꾸거나 다시 옮길 수 있게
+    if (h && Math.hypot(point(e).clientX - h.x, point(e).clientY - h.y) > 8) onDone()
   }
   // 크기도 손에 붙인다 — 끌기와 같은 까닭(react-grid-layout 은 칸 수가 바뀔 때만 다시 그리고, 이웃이 비킬 곳이 없으면 칸 수가 머문다).
   // 다만 이웃은 덮지 않는다 — 받아들여질 배치에서 이웃 · 판 끝에 닿으면 거기서 살짝만 버티고 멈춘다. 놓으면 자리표시 크기로 내려앉는다

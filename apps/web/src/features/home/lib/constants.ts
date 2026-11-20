@@ -20,5 +20,5 @@ export const EDGE = 72
 export const FLIP_HOLD = 500
 /** 페이지가 옆으로 미끄러지는 시간(ms) — styles/widgets/grid.css 의 .widget-track transition(0.45s)보다 조금 길게. 그 뒤에 옆 페이지를 그리고 · 숨기고 · 이어 끈다 */
 export const SLIDE = 460
-/** 편집 중이 아닐 때 터치로 이만큼(ms) 길게 누르면 편집이 시작된다 */
+/** 편집 중이 아닐 때 위젯을 이만큼(ms) 누르고 있으면(터치 · 마우스) 편집이 시작된다 */
 export const EDIT_HOLD = 550
