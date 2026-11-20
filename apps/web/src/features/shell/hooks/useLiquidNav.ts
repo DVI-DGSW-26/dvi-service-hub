@@ -7,7 +7,8 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 import { settle, snap, spring, step, motionOff } from '@/shared/lib'
-import { DRAG_START, EDGE_SPEED, MAX_LIFT, MAX_STRETCH, aimAt, followTo, nearestMenu, type Drag } from '../lib/liquid'
+import { EDGE_SPEED, MAX_LIFT, MAX_STRETCH, aimAt, followTo, nearestMenu, type Drag } from '../lib/liquid'
+import { DRAG_START } from '@/shared/constants'
 
 interface Options {
   /** 메뉴가 늘어선 방향 — 사이드바는 세로(y), 하단 탭바는 가로(x) */

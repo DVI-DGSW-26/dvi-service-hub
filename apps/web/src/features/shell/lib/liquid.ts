@@ -1,5 +1,6 @@
 // 내비 물방울(useLiquidNav)의 계산 — 끌기 상태 · 한도 · 놓을 메뉴 고르기. DOM · React 없이 값만 다룬다.
 import { project, rubberband } from '@/shared/lib'
+import { VELOCITY_WINDOW } from '@/shared/constants'
 
 export interface Drag {
   /** 터치는 포인터 id, 마우스(브라우저 끌어놓기)는 -1 */
@@ -17,7 +18,6 @@ export interface Drag {
   history: { t: number; p: number }[]
 }
 
-export const DRAG_START = 6
 // 아래 한도들은 모두 px — 비율로만 두면 넓은 칸(하단 탭 84px)에서 방울이 메뉴 판 밖으로 나간다.
 // 탭바 안쪽 여백(6px) 안에 들어오도록: 끝 넘김 4 + 들어 올림 한쪽 1.5 < 6
 /** 끝을 넘겨 끌어도 방울은 이만큼까지만 밀려난다 — 그 뒤로는 버티기만 한다 */
@@ -28,8 +28,6 @@ export const MAX_LIFT = 3
 export const MAX_STRETCH = 10
 /** 끝 메뉴로 내려앉을 때 바깥쪽으로 남겨 둘 속도(px/s) — 이보다 빠르면 스프링이 끝을 넘어 튀어나간다 */
 export const EDGE_SPEED = 150
-/** 놓는 순간의 속도는 이 시간(ms) 안의 움직임으로만 잰다 */
-const VELOCITY_WINDOW = 100
 
 /** 손가락 위치를 방울 목표로 — 끝(0 ~ max)을 넘으면 고무줄처럼. 속도를 재려고 지난 위치를 쌓는다 */
 export function followTo(d: Drag, client: number, t: number, max: number) {

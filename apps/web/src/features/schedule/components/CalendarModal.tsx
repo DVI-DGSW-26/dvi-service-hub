@@ -5,6 +5,7 @@ import { flushSync } from 'react-dom'
 import { useI18n } from '@/shared/i18n'
 import { addMonths, eventsOn, fromIso, inMonth, monthKey, monthOf, monthTitle, type Month } from '@/shared/lib'
 import { project, settle, snap, spring, step, motionOff } from '@/shared/lib'
+import { DRAG_START, VELOCITY_WINDOW } from '@/shared/constants'
 import { longToday, shortDate, useTitle } from '@/shared/format'
 import { calendarQueries } from '../api/queries'
 import type { CalendarEvent } from '@/shared/types'
@@ -21,9 +22,6 @@ interface CalendarModalProps {
 
 type Dir = -1 | 1
 
-const DRAG_START = 6
-/** 놓는 순간의 속도는 이 시간(ms) 안의 움직임으로만 잰다 */
-const VELOCITY_WINDOW = 100
 /** 가로 휠(트랙패드)을 이만큼 굴리면 한 달 넘긴다 */
 const WHEEL_STEP = 60
 

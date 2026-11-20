@@ -3,6 +3,7 @@ import { flushSync } from 'react-dom'
 import type { StackLayout } from '../hooks/useStackLayout'
 import { useI18n } from '@/shared/i18n'
 import { motionOff } from '@/shared/lib'
+import { EASE } from '@/shared/constants'
 import { type Item } from '../lib/widgetLayout'
 import { STACK_CELLS, stackSizeOf, nearest } from '../lib/stackLayout'
 import { type StackSize } from '@/shared/widget'
@@ -26,7 +27,6 @@ const HOLD = 350
 /** 끄는 위젯이 화면 위 · 아래 끝 이만큼(px) 안에 오면 화면이 따라 스크롤된다 — 끝에 가까울수록 빠르게, 맨 끝에서 초당 SCROLL_MAX(px) */
 const EDGE = 100
 const SCROLL_MAX = 1100
-const EASE = 'cubic-bezier(0.32, 0.72, 0, 1)'
 /** 테두리 손잡이 자리 — 변 한가운데, 테두리 선 위에(누르는 칸 44px) */
 const HANDLE = {
   l: 'top-1/2 -left-[22px] -translate-y-1/2 cursor-ew-resize',

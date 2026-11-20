@@ -4,8 +4,9 @@ import { flushSync } from 'react-dom'
 import { services, useFavorites, canSee, sortByFavorite, LazySystemsPage } from '@/features/systems'
 import { GooFilter, Sidebar, EditTabBar, TabBar, TopBar } from '@/features/shell'
 import { DecorAdjust, Wallpaper, useDecor } from '@/features/decor'
-import { BOARD, EditDock, WidgetEditBar, GALLERY, visibleWidgets, useWidgetLayout, HomePage } from '@/features/home'
+import { EditDock, WidgetEditBar, GALLERY, visibleWidgets, useWidgetLayout, HomePage } from '@/features/home'
 import { hrefOf, useHashRoute, useMedia } from '@/shared/hooks'
+import { BOARD, EASE } from '@/shared/constants'
 import { usePortalTheme } from '@/features/theme'
 import { useI18n } from '@/shared/i18n'
 import { KEYS, readPref, writePref, motionOff } from '@/shared/lib'
@@ -88,7 +89,7 @@ export default function App() {
     flushSync(() => setCollapsed(!collapsed))
     const dx = el ? from - parseFloat(getComputedStyle(el).paddingLeft) : 0
     if (el && dx && !motionOff()) {
-      el.animate([{ transform: `translateX(${dx}px)` }, { transform: 'none' }], { duration: 300, easing: 'cubic-bezier(0.32, 0.72, 0, 1)' })
+      el.animate([{ transform: `translateX(${dx}px)` }, { transform: 'none' }], { duration: 300, easing: EASE })
     }
   }
 

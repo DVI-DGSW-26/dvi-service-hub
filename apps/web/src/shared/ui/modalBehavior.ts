@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef,  type RefObject } from 'react'
 import { project } from '@/shared/lib'
+import { EASE } from '@/shared/constants'
 
 /** 끌어 내려 닫을 때 남은 거리를 내려가는 최대 시간 */
 export const SHEET_MS = 240
@@ -36,7 +37,7 @@ export function useSheetDrag(panel: RefObject<HTMLElement | null>, dialog: RefOb
       el.style.transform = `translateY(${y})`
       d.style.setProperty('--sheet-drag', y === '0' ? '0' : '1')
     }
-    const back = () => settle('0', 420, 'cubic-bezier(0.32, 0.72, 0, 1)')
+    const back = () => settle('0', 420, EASE)
 
     const onStart = (e: TouchEvent) => {
       if (e.touches.length > 1 || !matchMedia(SHEET_QUERY).matches) {

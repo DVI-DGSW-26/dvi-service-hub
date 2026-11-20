@@ -1,6 +1,7 @@
 import { useEffect, type RefObject } from 'react'
 import { SLIDE } from '../lib/constants'
 import { readTranslate } from '../lib/readTranslate'
+import { reducedMotion } from '@/shared/lib'
 
 interface ResumeDragRefs {
   /** 옆 페이지로 넘긴 뒤 새 판에서 이어 끌 위젯 — 읽고 비운다 */
@@ -25,7 +26,7 @@ export function useResumeDrag({ resume, hand, grab, downAt, viewRef }: ResumeDra
     const r = resume.current
     resume.current = null
     if (!r) return
-    const slide = matchMedia('(prefers-reduced-motion: reduce)').matches ? 50 : SLIDE
+    const slide = reducedMotion() ? 50 : SLIDE
     // 새 판의 위젯을 처음 잡은 점이 손 아래 오게 옮겨 둔다
     const stick = () => {
       const el = viewRef.current?.querySelector<HTMLElement>(`.widget-page:not(.invisible) [data-type="${r}"]`)
