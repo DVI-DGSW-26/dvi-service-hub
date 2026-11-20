@@ -209,11 +209,15 @@ export function CalendarPanel({ size, className = '' }: { size?: StackSize; clas
 function WeekStrip({ events, now, today, onSelect }: { events: CalendarEvent[]; now: Date; today: string; onSelect: (iso: string) => void }) {
   const { t, f, lang } = useI18n()
   const days = Array.from({ length: 7 }, (_, i) => new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + i))
+  // 주가 달을 걸치면 이웃 달 일정도 — 두 달에 걸친 일정은 양쪽에 다 오니 id 로 한 번만
+  const edge = [days[0], days[6]].find((d) => d.getMonth() !== now.getMonth())
+  const { data: edgeEvents } = useQuery({ ...calendarQueries.month(monthKey(monthOf(edge ?? now))), enabled: !!edge })
+  const all = edge && edgeEvents ? [...new Map([...events, ...edgeEvents].map((e) => [e.id, e])).values()] : events
   return (
     <div className="grid grid-cols-7">
       {days.map((d) => {
         const iso = toIso(d)
-        const items = eventsOn(events, iso)
+        const items = eventsOn(all, iso)
         return (
           <button
             key={iso}
