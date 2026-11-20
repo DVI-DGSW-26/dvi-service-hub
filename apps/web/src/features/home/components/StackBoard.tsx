@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react'
 import { flushSync } from 'react-dom'
-import type { WidgetLayout } from '../hooks/useWidgetLayout'
+import type { StackLayout } from '../hooks/useStackLayout'
 import { useI18n } from '@/shared/i18n'
 import { motionOff } from '@/shared/lib'
 import { type Item } from '../lib/widgetLayout'
@@ -8,7 +8,7 @@ import { STACK_CELLS, stackSizeOf, nearest } from '../lib/stackLayout'
 import { type StackSize } from '@/shared/widget'
 import { text, type WidgetDef } from '../lib/widgetDef'
 interface StackBoardProps {
-  layout: WidgetLayout
+  layout: StackLayout
   defs: WidgetDef[]
   editing: boolean
   /** 홈 편집을 켠다 — 쉴 때 위젯을 길게 누르면 상단 바의 홈 편집과 같은 편집으로 들어간다 */
@@ -17,8 +17,8 @@ interface StackBoardProps {
   onPick: (picking: boolean) => void
   /** 끌어 옮긴 위젯을 놓았다 — 놓기를 완료로 보고 편집을 끝낸다 */
   onDone: () => void
-  /** 위젯 하나 — WidgetGrid 의 것을 그대로 쓴다. overlay 는 고른 위젯 위에 얹는 테두리 · 손잡이 */
-  renderWidget: (c: Item, index: number, list: Item[], stack: StackSize, overlay?: ReactNode) => ReactNode
+  /** 위젯 하나 — WidgetGrid 의 것을 그대로 쓴다. stack 은 고른 크기, overlay 는 고른 위젯 위에 얹는 테두리 · 손잡이 */
+  renderWidget: (c: Item, index: number, list: Item[], opts: { stack: StackSize; overlay?: ReactNode }) => ReactNode
 }
 
 /** 이만큼(ms) 누르고 있으면 위젯이 들린다(쉴 때는 편집이 켜지며) — 그 전에 움직이면 스크롤(터치) · 글자 고르기(마우스) */
@@ -65,9 +65,9 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, onDone, rend
     order.current = next
     setPreview(next)
   }
-  const ids = preview ?? layout.stack.map((c) => c.i)
-  const items = ids.map((i) => layout.stack.find((c) => c.i === i)!).filter((c) => c && byType.has(c.i))
-  const sizeOf = (i: string) => stackSizeOf(byType.get(i)?.stack ?? ['m'], layout.stackSizes[i])
+  const ids = preview ?? layout.items.map((c) => c.i)
+  const items = ids.map((i) => layout.items.find((c) => c.i === i)!).filter((c) => c && byType.has(c.i))
+  const sizeOf = (i: string) => stackSizeOf(byType.get(i)?.stack ?? ['m'], layout.sizes[i])
 
   const el = (i: string) => boardRef.current?.querySelector<HTMLElement>(`:scope > [data-type="${i}"]`)
   const children = () => [...(boardRef.current?.querySelectorAll<HTMLElement>(':scope > [data-type]') ?? [])]
@@ -195,7 +195,7 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, onDone, rend
     if (!h || !node) return
     h.moved = true
     node.dataset.lifted = ''
-    show(layout.stack.map((c) => c.i))
+    show(layout.items.map((c) => c.i))
     // 화면 끝에 대고 있으면 따라 스크롤 — 들어간 깊이의 제곱으로 빨라지고, 프레임 간격(dt)만큼 움직여 화면 빠르기와 상관없이 고르다.
     // 스크롤된 만큼 손 아래 위젯이 바뀌니 다시 견준다
     let last = performance.now()
@@ -230,7 +230,7 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, onDone, rend
       node.style.translate = ''
       if (!motionOff()) node.animate([{ translate: from }, { translate: '0 0' }], { duration: 220, easing: EASE })
     }
-    if (order.current) layout.moveInStack(h.i, order.current.indexOf(h.i))
+    if (order.current) layout.move(h.i, order.current.indexOf(h.i))
     show(null)
     // 옮기고 놓으면 그대로 완료 — 고른 채 남겨 두지 않고 편집을 끝낸다(길게 눌러 고르기만 했으면 크기 손잡이를 쓰게 편집 그대로)
     onDone()
@@ -268,7 +268,7 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, onDone, rend
     const pick = (s: StackSize) => {
       if (s === sizeOf(i)) return
       navigator.vibrate?.(8)
-      morph(() => layout.resizeInStack(i, s))
+      morph(() => layout.resize(i, s))
     }
     const widths = new Set(sizes.map((s) => STACK_CELLS[s][0]))
     const heights = new Set(sizes.map((s) => STACK_CELLS[s][1]))
@@ -332,7 +332,7 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, onDone, rend
     }
     if (!d) return
     e.preventDefault()
-    layout.moveInStack(i, ids.indexOf(i) + d)
+    layout.move(i, ids.indexOf(i) + d)
     requestAnimationFrame(() => el(i)?.focus())
   }
 
@@ -365,7 +365,7 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, onDone, rend
       >
         {items.map((c, index) => {
           const def = byType.get(c.i)!
-          return renderWidget(c, index, items, sizeOf(c.i), picked === c.i ? frame(c.i, def.stack ?? ['m'], text(def.title, t)) : undefined)
+          return renderWidget(c, index, items, { stack: sizeOf(c.i), overlay: picked === c.i ? frame(c.i, def.stack ?? ['m'], text(def.title, t)) : undefined })
         })}
         {/* 옮기는 중 놓일 칸 — follow 가 자리 · 크기를 맞춘다 */}
         {preview && <div ref={slotRef} aria-hidden="true" className="stack-slot" />}

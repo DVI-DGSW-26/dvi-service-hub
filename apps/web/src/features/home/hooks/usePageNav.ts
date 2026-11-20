@@ -1,8 +1,8 @@
 import { useEffect, useRef, type MouseEvent as ReactMouseEvent, type PointerEvent, type RefObject, type WheelEvent } from 'react'
-import type { WidgetLayout } from './useWidgetLayout'
+import type { WideLayout } from './useWideLayout'
 
 interface PageNavOptions {
-  layout: WidgetLayout
+  layout: Pick<WideLayout, 'page' | 'setPage' | 'undo' | 'redo'>
   pageCount: number
   /** 넓은 화면(칸 판)인지 · 판 폭 */
   area: { lg: boolean; width: number }
