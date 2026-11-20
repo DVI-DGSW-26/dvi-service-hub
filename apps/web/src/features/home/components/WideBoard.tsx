@@ -3,7 +3,7 @@ import GridLayout, { type Compactor, type Layout, type LayoutItem } from 'react-
 import { calcGridItemPosition, setTransform } from 'react-grid-layout/core'
 import type { WideLayout } from '../hooks/useWideLayout'
 import { useI18n } from '@/shared/i18n'
-import { grow, guides, nudge, place, reach, span, type Page, type Side } from '../lib/widgetLayout'
+import { grow, guides, nudge, place, reach, span, type Cell, type Page, type Side } from '../lib/widgetLayout'
 import { COLS, EDGE, FLIP_HOLD, GAP, ROWS, SLIDE } from '../lib/constants'
 import { useGuides } from '../hooks/useGuides'
 import { useResumeDrag } from '../hooks/useResumeDrag'
@@ -64,7 +64,7 @@ export function WideBoard({ layout, pageCount, width, colW, rowH, editing, viewR
   const resume = useRef<string | null>(null)
   const { guideRef, drawGuides } = useGuides()
   /** 끌거나 크기를 바꾸는 위젯, 그때의 배치(base) · 마지막으로 놓을 수 있던 배치(last) · 크기 조절이면 잡은 변(sides) */
-  const active = useRef<{ i: string; drag: boolean; base: LayoutItem[]; last: LayoutItem[]; sides: Side[] } | null>(null)
+  const active = useRef<{ i: string; drag: boolean; base: LayoutItem[]; last: LayoutItem[]; sides: Side[]; aim?: Cell } | null>(null)
   // 우리 규칙(lib/widgetLayout.ts 의 place)을 react-grid-layout 의 compactor 로 — 끄는 동안 미리보기가 놓은 결과와 같다.
   // allowOverlap 이면 react-grid-layout 은 손 아래 칸에 위젯을 옮기기만 하고 겹친 위젯을 밀지 않는다. 비키는 것은 place 가 끌기 시작한 배치에서 매번 다시 정한다.
   // 놓을 수 없는 자리면 마지막으로 놓을 수 있던 배치를 돌려준다(놓일 자리가 거기 머문다). 끌지 않을 때는 손대지 않는다.
@@ -76,7 +76,7 @@ export function WideBoard({ layout, pageCount, width, colW, rowH, editing, viewR
       const a = active.current
       const me = a && l.find((c) => c.i === a.i)
       if (!a || !me) return l
-      a.last = place(a.base, { ...me }, a.drag) ?? a.last
+      a.last = place(a.base, { ...me }, a.drag, a.aim) ?? a.last
       // 기준선은 크기를 맞출 때만, 잡은 변만 — 옮길 때는 자리표시로 충분하다
       if (!a.drag) drawGuides(guides(a.last, a.i, a.sides))
       // react-grid-layout 이 돌려받은 배치를 고쳐 쓴다(moveElement) — 늘 새 객체로
@@ -127,6 +127,8 @@ export function WideBoard({ layout, pageCount, width, colW, rowH, editing, viewR
     hand.current = { x: p.clientX, y: p.clientY, touch: 'touches' in e }
     const g = grab.current
     if (node) node.style.transform = `translate(${g.left + p.clientX - g.x}px, ${g.top + p.clientY - g.y}px)`
+    // 손이 가리키는 칸 — 놓을 자리는 이것으로 고른다(compactor 가 이 뒤에 돈다)
+    if (active.current) active.current.aim = { x: Math.floor((g.left + g.ox + p.clientX - g.x) / (colW + GAP)), y: Math.floor((g.top + g.oy + p.clientY - g.y) / (rowH + GAP)) }
     const v = viewRef.current?.getBoundingClientRect()
     if (!v) return
     const x = p.clientX

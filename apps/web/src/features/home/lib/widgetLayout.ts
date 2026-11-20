@@ -7,6 +7,8 @@
 //    크기가 달라 그대로 못 바꾸면(8칸을 16칸 자리로) 덮인 위젯을 떠난 자리 쪽으로 옮기고, 거기 걸리는 위젯만 가장 가까운 빈칸으로 보낸다.
 //    그래도 안 되면 판 어디든 가장 가까운 빈칸으로. 덮인 위젯을 절반도 안 덮었거나 비킬 곳이 정말 없을 때만 놓을 수 없는 자리.
 //    끌기 시작한 배치를 기준으로 매번 다시 계산하므로 손을 되돌리면 배치도 되돌아온다.
+//    끄는 손이 다른 위젯 위면 그 위젯과 바꾼다(아이폰 · 안드로이드 홈 화면처럼 손 아래가 바꿀 대상) — 끄는 위젯은 그 위젯 자리에 맞추고,
+//    절반 기준 없이 위 순서대로 비킨다. 손이 빈칸이면 손 아래 칸을 품는 가장 가까운 빈자리로.
 // 3. 크기 조절은 빈칸으로는 자유롭게. 이웃을 덮으면 이웃을 그쪽으로 밀고(크기 그대로), 밀 데가 없으면 이웃이 그쪽에서 줄어든다(이웃의 최소 크기까지,
 //    분할 창처럼). 그것도 안 되면 가장 가까운 빈칸으로 비키고, 비킬 곳이 없으면 거기서 멈춘다.
 // 4. 페이지 사이 이동 · 추가는 그 페이지에서 처음 들어가는 빈칸(위 → 아래, 왼쪽 → 오른쪽)에. 없으면 받지 않는다.
@@ -102,7 +104,9 @@ function nearest<T extends Item>(taken: Item[], c: T, box?: Item): T | null {
  * drag 는 끌기(바꾸기 · 절반 기준을 쓴다), 아니면 크기 조절(이웃을 밀거나 줄인다 — 이웃의 minW · minH 가 있으면 그만큼은 남긴다). 놓을 수 없는 자리면 null.
  * react-grid-layout 이 붙인 것(minW 등)은 그대로 둔다
  */
-export function place<T extends Item>(page: T[], to: T, drag = true): T[] | null {
+export function place<T extends Item>(page: T[], to: T, drag = true, hand?: Cell): T[] | null {
+  const aimed = hand && drag ? byHand(page, to, hand) : null
+  if (aimed) return aimed
   const next = settle(page, to, drag)
   if (next || !drag) return next
   // 절반 넘게 덮었는데 손 아래 자리에 안 맞으면 덮인 위젯 자리에 맞춰 본다 — 다 덮을 때까지 끌지 않아도 바뀐다
@@ -110,14 +114,53 @@ export function place<T extends Item>(page: T[], to: T, drag = true): T[] | null
   const b = hit.length && hit.every((c) => enough(c, to)) ? hit.reduce<Item>(around, hit[0]) : null
   const aligned = b && (b.x !== to.x || b.y !== to.y) ? settle(page, { ...to, x: b.x, y: b.y }, drag) : null
   // 마지막으로 — 덮인 위젯을 판 어디든 가장 가까운 빈칸으로
-  return aligned ?? settle(page, to, drag, true)
+  return aligned ?? settle(page, to, drag, 'far')
+}
+
+/** 손이 가리키는 칸으로 고르기 — 다른 위젯 위면 그 위젯과 바꾸고(절반 기준 없이), 빈칸이면 그 칸을 품는 가장 가까운 빈자리로. 안 되면 null */
+function byHand<T extends Item>(page: T[], to: T, hand: Cell): T[] | null {
+  const rest = page.filter((c) => c.i !== to.i)
+  const under = rest.find((c) => holds(c, hand))
+  if (!under) {
+    const gap = holding(rest, to, hand)
+    return gap && [...rest, gap]
+  }
+  for (const at of aims(to, under)) {
+    const swapped = settle(page, at, true, 'aimed')
+    if (swapped) return swapped
+  }
+  return null
+}
+
+/** 칸 하나 — 끄는 손이 가리키는 칸 */
+export type Cell = Pick<Item, 'x' | 'y'>
+/** 손 아래 위젯 u 와 바꿀 때 끄는 위젯을 놓아 볼 자리 — u 자리 안 손 쪽(u 보다 크면 u 왼쪽 위), 안 되면 u 왼쪽 위. 판 안으로 당긴다 */
+function aims<T extends Item>(to: T, u: Item): T[] {
+  // 한 축에서 길이 s 를 p 근처, a 부터 길이 as 안으로 — 더 길면 a 에
+  const fit = (p: number, s: number, a: number, as: number) => Math.max(a, Math.min(p, a + as - s))
+  const at = (x: number, y: number) => ({ ...to, x: Math.min(x, COLS - to.w), y: Math.min(y, ROWS - to.h) })
+  return [at(fit(to.x, to.w, u.x, u.w), fit(to.y, to.h, u.y, u.h)), at(u.x, u.y)]
+}
+const holds = (c: Item, p: Cell) => p.x >= c.x && p.x < c.x + c.w && p.y >= c.y && p.y < c.y + c.h
+
+/** taken 을 피해 c 가 들어갈, 칸 p 를 품는 자리 중 지금 자리에서 가장 가까운 것. 없으면 null */
+function holding<T extends Item>(taken: Item[], c: T, p: Cell): T | null {
+  let best: T | null = null
+  let d = Infinity
+  for (let y = Math.max(0, p.y - c.h + 1); y <= Math.min(p.y, ROWS - c.h); y++)
+    for (let x = Math.max(0, p.x - c.w + 1); x <= Math.min(p.x, COLS - c.w); x++) {
+      const k = (x - c.x) ** 2 + (y - c.y) ** 2
+      const at = { ...c, x, y }
+      if (k < d && free(taken, at)) [best, d] = [at, k]
+    }
+  return best
 }
 
 /** 끝만 걸친 것은 바꾸려는 뜻으로 보지 않는다 — 둘 중 작은 쪽의 절반은 덮어야 */
 const enough = (c: Item, to: Item) => overlap(c, to) * 2 >= Math.min(c.w * c.h, to.w * to.h)
 
-/** far 면 끌기에서 덮인 위젯을 판 어디든 가장 가까운 빈칸으로도 보낸다(마지막 수단) */
-function settle<T extends Item>(page: T[], to: T, drag: boolean, far = false): T[] | null {
+/** far 면 끌기에서 덮인 위젯을 판 어디든 가장 가까운 빈칸으로도 보낸다(마지막 수단). aimed 는 손이 고른 대상이라 절반 기준 없이 far 처럼 */
+function settle<T extends Item>(page: T[], to: T, drag: boolean, mode?: 'far' | 'aimed'): T[] | null {
   if (!inside(to)) return null
   const from = page.find((c) => c.i === to.i)
   const rest = page.filter((c) => c !== from)
@@ -125,7 +168,7 @@ function settle<T extends Item>(page: T[], to: T, drag: boolean, far = false): T
   if (!hit.length) return [...rest, to]
   const taken = [...rest.filter((c) => !hit.includes(c)), to]
   if (!drag) return scatter(taken, hit, (t, c) => yieldTo(t, c, to) ?? nearest(t, c))
-  if (!hit.every((c) => enough(c, to))) return null
+  if (mode !== 'aimed' && !hit.every((c) => enough(c, to))) return null
   if (from) {
     // 바꾸기 — 덮인 위젯들을 놓인 모양 그대로 떠난 자리로
     const moved = hit.map((c) => ({ ...c, x: c.x + from.x - to.x, y: c.y + from.y - to.y }))
@@ -133,14 +176,15 @@ function settle<T extends Item>(page: T[], to: T, drag: boolean, far = false): T
     // 가까운 빈칸으로 — 떠난 자리와 간 자리를 아우르는 상자 안에서만(Cloudscape 의 boundaries 점수)
     const near = scatter(taken, hit, (t, c) => nearest(t, c, around(from, to)))
     if (near) return near
-    // 크기가 달라 못 바꾸면 — 덮인 위젯은 떠난 자리 쪽으로 옮기고, 거기 걸리는 위젯만 가장 가까운 빈칸으로
-    if (moved.every((c) => inside(c) && overlap(c, to) === 0)) {
-      const out = taken.filter((t) => t !== to && moved.some((m) => overlap(m, t) > 0))
-      const pushed = scatter([...taken.filter((t) => !out.includes(t)), ...moved], out, (t, c) => nearest(t, c))
+    // 크기가 달라 못 바꾸면 — 덮인 위젯은 떠난 자리 쪽으로(판 밖으로 나가면 안으로 당겨) 옮기고, 거기 걸리는 위젯만 가장 가까운 빈칸으로
+    const toward = moved.map((c) => ({ ...c, x: Math.max(0, Math.min(c.x, COLS - c.w)), y: Math.max(0, Math.min(c.y, ROWS - c.h)) }))
+    if (toward.every((c) => overlap(c, to) === 0)) {
+      const out = taken.filter((t) => t !== to && toward.some((m) => overlap(m, t) > 0))
+      const pushed = scatter([...taken.filter((t) => !out.includes(t)), ...toward], out, (t, c) => nearest(t, c))
       if (pushed) return pushed
     }
   }
-  return far || !from ? scatter(taken, hit, (t, c) => nearest(t, c)) : null
+  return mode || !from ? scatter(taken, hit, (t, c) => nearest(t, c)) : null
 }
 
 /** cs 를 taken 을 피해 하나씩 놓는다(spot 이 자리를 고른다) — 큰 위젯부터(작은 것이 먼저 큰 빈칸을 쪼개지 않게). 하나라도 못 놓으면 null */

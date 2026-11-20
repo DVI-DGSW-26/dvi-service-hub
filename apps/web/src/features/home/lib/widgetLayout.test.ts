@@ -73,6 +73,19 @@ test('place — 크기가 달라 그대로 못 바꾸면 덮인 위젯은 떠난
   assert.deepEqual(byId(next), byId([it('hero', 0, 0, 16, 4), it('links', 16, 0, 8, 4), it('maint', 0, 4, 8, 4), it('news', 8, 4, 8, 4), it('today', 16, 4, 8, 4), it('sys', 0, 8, 16, 4), it('cal', 16, 8, 8, 4)]))
 })
 
+test('place — 손이 다른 위젯 위면 조금만 걸쳐도 그 위젯과 바꾸고, 손이 빈칸이면 손 아래 칸을 품는 가장 가까운 빈자리로', () => {
+  // 오늘 일정을 바로가기 쪽으로 — 바로가기 · 인사 카드에 조금씩만 걸쳐 절반 기준으로는 놓을 수 없지만 손은 바로가기 위
+  const to = it('today', 14, 1, 8, 4)
+  assert.equal(place(HOME, to), null)
+  const swapped = place(HOME, to, true, { x: 19, y: 2 })
+  assert.ok(swapped)
+  assert.deepEqual(byId(swapped), { ...byId(HOME), today: '16,0 8x4', links: '16,4 8x4' })
+  // 인사 카드에 끝만 걸쳤는데 손은 그 아래 빈칸 — 손 아래 칸을 품는 가장 가까운 자리로
+  const two = [it('hero', 0, 0, 16, 4), it('links', 16, 0, 8, 4)]
+  const gap = place(two, it('links', 10, 3, 8, 4), true, { x: 14, y: 5 })
+  assert.deepEqual(gap && at(gap, 'links'), it('links', 10, 4, 8, 4))
+})
+
 test('tidy — 빈칸 정리는 읽는 순서대로 위 · 왼쪽으로 당겨 붙이고, 남은 가로 빈칸은 넓혀 채운다', () => {
   assert.deepEqual(tidy([it('b', 12, 0, 12, 4), it('c', 0, 8, 12, 4)]), [it('b', 0, 0, 12, 4), it('c', 12, 0, 12, 4)])
   // 16칸 옆 8칸 빈칸에 뒤의 8칸 위젯이 올라오고(16칸 위젯은 다음 행), 홀로 남은 16칸 위젯은 줄 끝까지 넓어진다

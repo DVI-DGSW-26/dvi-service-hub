@@ -27,6 +27,8 @@ export function useLongPress(editing: boolean, onEdit: () => void, pickUpRef?: R
         press.current = null
         pressed.current = true
         if ('vibrate' in navigator) navigator.vibrate(10) // iOS Safari 에는 없다
+        // 누르는 동안 브라우저가 시작한 글자 선택을 지운다 — 그대로 두면 이어 끄는 동안 선택이 번진다
+        getSelection()?.removeAllRanges()
         if (pickUpRef && i && pointerType === 'mouse') pickUpRef.current = { i, x, y }
         onEdit()
       }, EDIT_HOLD),

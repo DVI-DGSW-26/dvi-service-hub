@@ -92,7 +92,8 @@ export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, onDone,
   }
 
   return (
-    <div className="flex flex-col gap-3 lg:h-full">
+    // 편집 중에는 글자가 선택되지 않게 — 끌다 보면 위젯 사이 · 페이지 점의 글자가 파랗게 잡힌다
+    <div className={`flex flex-col gap-3 lg:h-full ${editing ? 'select-none' : ''}`}>
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- 휠 · 스와이프로 페이지를 넘기는 틀. 키보드 ← · → 는 usePageNav 가 문서에서 받는다 */}
       <div
         ref={viewRef}
