@@ -1,0 +1,35 @@
+name: check
+
+# PR · push 마다 모든 패키지의 typecheck · test 와 core · mobile lint 를 돌린다.
+# - secret 을 쓰지 않아 공개 저장소의 포크 PR(pull_request)에 열어도 된다. pull_request_target 은 쓰지 않는다.
+# - 액션은 태그가 아니라 커밋 SHA 로 고정한다(publish-switcher.yml 과 같다).
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      # v6.1.1 — 버전은 package.json 의 packageManager 를 따른다
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115
+      # v7.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 26
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      # shortcut: web lint 는 기존 지적 ~311건(ADR 0002)이 남아 빼 둔다, 0 이 되면 pnpm lint 로 바꾼다
+      - run: pnpm --filter '!@dvi/web' lint
+      - run: pnpm test
