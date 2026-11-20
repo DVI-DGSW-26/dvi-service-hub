@@ -39,6 +39,7 @@ export function Panel({ title, icon: IconC, meta, description, toolbar, action, 
             {meta}
           </div>
         </div>
+        {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- ReactNode 라 false · '' 도 없는 것 */}
         {(toolbar || action) && (
           <div className="flex flex-none items-center gap-2">
             {toolbar}

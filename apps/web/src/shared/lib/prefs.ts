@@ -32,5 +32,5 @@ export function writePref(key: string, value: string | null) {
   try {
     if (value === null) localStorage.removeItem(key)
     else localStorage.setItem(key, value)
-  } catch {}
+  } catch { /* 저장 공간을 못 쓰면 그냥 넘어간다 */ }
 }

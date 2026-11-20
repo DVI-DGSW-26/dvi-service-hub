@@ -38,7 +38,7 @@ type Side = keyof typeof HANDLE
 
 /** 크기를 바꾼다 — 칸이 늘고 주는 모습을 이어 그린다(View Transition, styles/widgets/stack.css 의 ::view-transition-*). 모르는 브라우저 · 애니메이션 끄기는 바로 */
 function morph(change: () => void) {
-  if (motionOff() || !document.startViewTransition) { change(); return; }
+  if (motionOff() || !('startViewTransition' in document)) { change(); return; }
   document.startViewTransition(() => flushSync(change))
 }
 
@@ -66,7 +66,7 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, onDone, rend
     setPreview(next)
   }
   const ids = preview ?? layout.items.map((c) => c.i)
-  const items = ids.map((i) => layout.items.find((c) => c.i === i)!).filter((c) => c && byType.has(c.i))
+  const items = ids.map((i) => layout.items.find((c) => c.i === i)).filter((c): c is Item => c !== undefined && byType.has(c.i))
   const sizeOf = (i: string) => stackSizeOf(byType.get(i)?.stack ?? ['m'], layout.sizes[i])
 
   const el = (i: string) => boardRef.current?.querySelector<HTMLElement>(`:scope > [data-type="${i}"]`)
@@ -75,7 +75,7 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, onDone, rend
   /** 누른 위젯 — lifted 는 길게 눌러 골라졌는지, moved 는 그 뒤 움직여 옮기는 중인지. ox · oy 는 잡은 점이 위젯 왼쪽 위에서 떨어진 거리 */
   const held = useRef<{ i: string; id: number; x: number; y: number; lifted: boolean; moved: boolean; timer: number; ox: number; oy: number } | null>(null)
   /** 순서를 바꾸기 직전 위젯 자리 — 다시 그린 뒤 그만큼 미끄러지게 */
-  const before = useRef<Map<string, DOMRect> | null>(null)
+  const before = useRef<Map<string | undefined, DOMRect> | null>(null)
   const scroll = useRef(0)
   /** 길게 눌러 편집을 켰으면 손을 뗄 때의 누르기(링크 열기 등)는 버린다 — 다음에 누를 때 푼다 */
   const swallow = useRef(false)
@@ -122,7 +122,7 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, onDone, rend
   /** 들린 위젯을 손에 붙이고, 놓일 칸에 점선 자리를 둔다 — offset 값은 translate(FLIP 포함)를 빼고 잰 칸 자리 */
   const follow = () => {
     const h = held.current
-    const node = h && el(h.i)
+    const node = h ? el(h.i) : undefined
     const board = boardRef.current
     if (!h?.moved || !node || !board) return
     const b = board.getBoundingClientRect()
@@ -139,14 +139,17 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, onDone, rend
       const r = c.getBoundingClientRect()
       return h.x >= r.left && h.x <= r.right && h.y >= r.top && h.y <= r.bottom
     })
-    if (!target) return
+    const type = target?.dataset.type
+    if (!target || type === undefined) return
     const r = target.getBoundingClientRect()
-    const narrow = STACK_CELLS[target.dataset.stack as StackSize]?.[0] < 4
+    // data-stack 은 DOM 에서 읽어 모르는 값일 수 있다
+    const cells = STACK_CELLS[target.dataset.stack as StackSize] as [number, number] | undefined
+    const narrow = cells !== undefined && cells[0] < 4
     const after = narrow ? h.x > r.left + r.width / 2 : h.y > r.top + r.height / 2
     const next = cur.filter((i) => i !== h.i)
-    next.splice(next.indexOf(target.dataset.type!) + (after ? 1 : 0), 0, h.i)
+    next.splice(next.indexOf(type) + (after ? 1 : 0), 0, h.i)
     if (next.join() === cur.join()) return
-    before.current = new Map(children().map((c) => [c.dataset.type!, c.getBoundingClientRect()]))
+    before.current = new Map(children().map((c) => [c.dataset.type, c.getBoundingClientRect()]))
     show(next)
   }
   // 순서가 바뀐 뒤 — 비킨 위젯은 옛 자리에서 미끄러져 오고, 들린 위젯 · 점선 자리는 새 칸 기준으로 다시
@@ -155,7 +158,7 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, onDone, rend
     before.current = null
     if (old && !motionOff()) {
       for (const c of children()) {
-        const from = old.get(c.dataset.type!)
+        const from = old.get(c.dataset.type)
         if (!from || c.dataset.type === held.current?.i) continue
         const to = c.getBoundingClientRect()
         const [dx, dy] = [from.left - to.left, from.top - to.top]
@@ -186,12 +189,12 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, onDone, rend
       onEdit()
     }
     setPicked(h.i)
-    navigator.vibrate?.(10)
+    if ('vibrate' in navigator) navigator.vibrate(10) // iOS Safari 에는 없다
   }
   /** 골라진 채 움직이기 시작 — 옮기는 중으로 */
   const startMove = () => {
     const h = held.current
-    const node = h && el(h.i)
+    const node = h ? el(h.i) : undefined
     if (!h || !node) return
     h.moved = true
     node.dataset.lifted = ''
@@ -238,16 +241,19 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, onDone, rend
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     swallow.current = false
-    const node = (e.target as Element).closest<HTMLElement>('[data-type]')
-    if (e.button !== 0 || !node || (e.target as Element).closest('button, input, .no-drag')) return
-    held.current = { i: node.dataset.type!, id: e.pointerId, x: e.clientX, y: e.clientY, lifted: false, moved: false, timer: window.setTimeout(lift, HOLD), ox: 0, oy: 0 }
+    const i = (e.target as Element).closest<HTMLElement>('[data-type]')?.dataset.type
+    if (e.button !== 0 || i === undefined || (e.target as Element).closest('button, input, .no-drag')) return
+    held.current = { i, id: e.pointerId, x: e.clientX, y: e.clientY, lifted: false, moved: false, timer: window.setTimeout(lift, HOLD), ox: 0, oy: 0 }
   }
   const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
     const h = held.current
-    if (!h || h.id !== e.pointerId) return
+    if (h?.id !== e.pointerId) return
     const far = Math.hypot(e.clientX - h.x, e.clientY - h.y) >= 6
     // 골라지기 전에 움직이면 스크롤 · 글자 고르기 — 길게 누르기를 그만둔다
-    if (!h.lifted) return void (far && drop())
+    if (!h.lifted) {
+      if (far) drop()
+      return
+    }
     if (!h.moved) {
       if (!far) return
       if (e.pointerType !== 'touch') e.currentTarget.setPointerCapture(e.pointerId)
@@ -267,7 +273,7 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, onDone, rend
     const current = sizeOf(i)
     const pick = (s: StackSize) => {
       if (s === sizeOf(i)) return
-      navigator.vibrate?.(8)
+      if ('vibrate' in navigator) navigator.vibrate(8)
       morph(() => layout.resize(i, s))
     }
     const widths = new Set(sizes.map((s) => STACK_CELLS[s][0]))
@@ -339,6 +345,7 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, onDone, rend
   return (
     // 칸 폭을 판 폭에서 정하려고 한 겹 감싼다(styles/widgets/stack.css 의 .stack-wrap)
     <div className="stack-wrap">
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- 위젯(listitem)에서 올라온 누르기 · 키를 판이 한꺼번에 받는다. 초점은 위젯에 간다 */}
       <div
         ref={boardRef}
         role="list"
@@ -364,7 +371,8 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, onDone, rend
         onKeyDown={onKeyDown}
       >
         {items.map((c, index) => {
-          const def = byType.get(c.i)!
+          const def = byType.get(c.i)
+          if (!def) return null
           return renderWidget(c, index, items, { stack: sizeOf(c.i), overlay: picked === c.i ? frame(c.i, def.stack ?? ['m'], text(def.title, t)) : undefined })
         })}
         {/* 옮기는 중 놓일 칸 — follow 가 자리 · 크기를 맞춘다 */}

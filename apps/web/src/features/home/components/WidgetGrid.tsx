@@ -53,7 +53,8 @@ export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, onDone,
   const colW = colWidth(area.width)
 
   useLayoutEffect(() => {
-    const view = viewRef.current!
+    const view = viewRef.current
+    if (!view) return
     const sync = () => {
       const a = { width: trackRef.current?.clientWidth ?? 0, height: view.clientHeight, lg: matchMedia(BOARD).matches, fit: matchMedia(FIT).matches }
       setArea(a)
@@ -90,6 +91,7 @@ export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, onDone,
 
   return (
     <div className="flex flex-col gap-3 lg:h-full">
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- 휠 · 스와이프로 페이지를 넘기는 틀. 키보드 ← · → 는 usePageNav 가 문서에서 받는다 */}
       <div
         ref={viewRef}
         onWheel={nav.onWheel}

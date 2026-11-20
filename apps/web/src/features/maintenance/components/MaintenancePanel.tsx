@@ -64,7 +64,7 @@ export function MaintenancePanel({ me, size, className = '' }: { me: Me | null; 
 
   // 아주 작은 칸 — 안내 수, 한 줄 띠면 가장 가까운 안내 제목까지. 누르면 펼쳐 보기(없으면 아무것도 열지 않는다)
   if (isMini(size)) {
-    const [first] = items
+    const first = items.at(0)
     return (
       <MiniPanel
         size={size}
@@ -110,7 +110,7 @@ export function MaintenancePanel({ me, size, className = '' }: { me: Me | null; 
 
   // 작게 — 가장 가까운 안내 하나와 남은 수. 누르면 펼쳐 보기(그 안에서 목록 · 다음 안내로). 작성은 보통 크기에서
   if (size === 's') {
-    const [first] = items
+    const first = items.at(0)
     return (
       <SmallPanel title={t.home.maintenance.title} icon={Wrench} className={className}>
         {loading ? (
@@ -159,7 +159,7 @@ export function MaintenancePanel({ me, size, className = '' }: { me: Me | null; 
         <SkeletonList rows={2} className="h-16" />
       ) : error ? (
         <LoadError error={error} />
-      ) : data?.length ? (
+      ) : data.length ? (
         // 낮은 한 화면(fit)에서만 줄 간격을 좁히고, 높은 화면(tall)에서는 다시 넉넉하게
         <ul ref={rows} className={`space-y-2 fit:space-y-1.5 tall:space-y-2.5 ${size ? 'min-h-0 flex-1 overflow-hidden' : ''}`}>
           {data.slice(0, listed).map((m, i) => (

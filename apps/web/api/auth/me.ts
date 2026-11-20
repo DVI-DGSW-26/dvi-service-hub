@@ -5,13 +5,14 @@
  * realm(employee 등)과 서비스별 역할은 링크 필터링에 필요해서 내려준다
  * — 허브는 부서 이름이 아니라 역할로 판단한다 (docs/service-hub.md §2).
  */
-import { SESSION_COOKIE, buildAccessCookie, readCookie, verifySession } from '../../lib/session.js';
+import { SESSION_COOKIE, buildAccessCookie, readCookie, verifySession, type Session, type Signed } from '../../lib/session.js';
 
 export const config = { runtime: 'edge' };
 
 export default async function handler(req: Request): Promise<Response> {
   const secret = process.env.SESSION_SECRET;
-  const session = await verifySession(readCookie(req, SESSION_COOKIE), secret);
+  // 예전에 만든 세션 쿠키에는 없는 필드가 있다
+  const session = await verifySession<Signed & Partial<Session>>(readCookie(req, SESSION_COOKIE), secret);
   const json = (body: unknown, status: number, cookie?: string) =>
     new Response(JSON.stringify(body), {
       status,

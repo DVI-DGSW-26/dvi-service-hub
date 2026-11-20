@@ -88,7 +88,7 @@ export function useLiquidNav({ axis = 'y', active, onCommit }: Options) {
     const list = listRef.current
     if (!list) return
     const items = [...list.children] as HTMLElement[]
-    const first = items[0]
+    const first = items[0] as HTMLElement | undefined
     sim.starts = items.map((li) => (horizontal ? li.offsetLeft : li.offsetTop))
     sim.size = (horizontal ? first?.offsetWidth : first?.offsetHeight) ?? 0
     // 방울 크기 = 메뉴 한 칸 (세로 메뉴는 목록 폭을 꽉 채운다)
@@ -133,8 +133,8 @@ export function useLiquidNav({ axis = 'y', active, onCommit }: Options) {
     const { drop, lift, anchors, drag, size } = sim
     const reduce = reduceMotion()
 
-    if (following()) {
-      drop.to = drag!.to
+    if (drag && following()) {
+      drop.to = drag.to
       step(drop, dt, 1, 0.1)
     } else {
       // 메뉴 판 밖으로 나갔으면 방울은 제자리로 돌아온다
@@ -185,6 +185,7 @@ export function useLiquidNav({ axis = 'y', active, onCommit }: Options) {
       cancelAnimationFrame(sim.raf)
       sim.raf = 0
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 처음 한 번만 건다. 함수들은 sim · ref 만 다뤄 첫 것으로 충분하다
   }, [])
 
   // 화면이 바뀌면: 떠나는 자리의 방울은 줄어 사라지고, 새 자리에 새 방울이 맺힌다
@@ -203,12 +204,15 @@ export function useLiquidNav({ axis = 'y', active, onCommit }: Options) {
       if (performance.now() - sim.releasedAt > 120) sim.feel = [0.9, 0.38]
     }
     kick()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 화면(active)이 바뀔 때만. 함수들은 sim · ref 만 다룬다
   }, [active])
 
   /** 끌기 시작 — 누른 메뉴와 잡은 자리를 기억한다 */
   function begin(index: number, id: number, x: number, y: number, live: boolean) {
     measure()
-    const box = listRef.current!.getBoundingClientRect()
+    const list = listRef.current
+    if (!list) return
+    const box = list.getBoundingClientRect()
     const listStart = horizontal ? box.left : box.top
     const start = sim.starts[index]
     if (sim.active < 0) snap(sim.drop, start)
@@ -217,7 +221,7 @@ export function useLiquidNav({ axis = 'y', active, onCommit }: Options) {
   }
 
   /** 손가락 위치를 방울 목표로 — 끝을 넘으면 고무줄처럼 */
-  const follow = (d: Drag, client: number, t: number) => followTo(d, client, t, sim.starts[sim.starts.length - 1] ?? 0)
+  const follow = (d: Drag, client: number, t: number) => followTo(d, client, t, sim.starts.at(-1) ?? 0)
 
   /** 놓기 — 놓는 순간 속도를 넘겨받고, 그 속도로 멈출 자리에 가장 가까운 메뉴로 */
   function land(d: Drag, t: number) {
@@ -234,7 +238,7 @@ export function useLiquidNav({ axis = 'y', active, onCommit }: Options) {
 
   function onMove(e: PointerEvent) {
     const d = sim.drag
-    if (!d || e.pointerId !== d.id) return
+    if (d?.id !== e.pointerId) return
     if (!d.live) {
       if (Math.hypot(e.clientX - d.startX, e.clientY - d.startY) < DRAG_START) return
       d.live = true
@@ -242,7 +246,9 @@ export function useLiquidNav({ axis = 'y', active, onCommit }: Options) {
       // 메뉴 밖으로 나가도 계속 따라오게. 이미 끝난 포인터면 브라우저가 거절하므로 무시한다
       try {
         listRef.current?.setPointerCapture(e.pointerId)
-      } catch {}
+      } catch {
+        // 위와 같다 — 무시
+      }
     }
     follow(d, along(e), e.timeStamp)
     kick()
@@ -250,7 +256,7 @@ export function useLiquidNav({ axis = 'y', active, onCommit }: Options) {
 
   function onUp(e: PointerEvent) {
     const d = sim.drag
-    if (!d || e.pointerId !== d.id) return
+    if (d?.id !== e.pointerId) return
     detach()
     sim.drag = null
     if (!d.live) return // 끌지 않았으면 그냥 링크 누름
@@ -377,6 +383,7 @@ export function useLiquidNav({ axis = 'y', active, onCommit }: Options) {
   useEffect(
     // sim 은 렌더마다 같은 객체라 첫 렌더의 정리 함수로도 지금 붙은 리스너를 뗄 수 있다
     () => () => detach(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 위와 같다. 넣으면 렌더마다 떼었다 붙인다
     [],
   )
 

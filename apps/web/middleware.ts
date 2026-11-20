@@ -31,7 +31,7 @@ export default async function middleware(req: Request): Promise<Response> {
   if (session) return next();
 
   // 페이지가 아니라 파일 요청이면 리다이렉트 대신 401 을 준다.
-  const wantsHtml = (req.headers.get('accept') || '').includes('text/html');
+  const wantsHtml = (req.headers.get('accept') ?? '').includes('text/html');
   if (!wantsHtml) {
     return new Response('로그인이 필요합니다.', {
       status: 401,

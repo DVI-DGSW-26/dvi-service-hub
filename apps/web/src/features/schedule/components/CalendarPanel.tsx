@@ -32,7 +32,7 @@ export function CalendarPanel({ size, className = '' }: { size?: StackSize; clas
   const [start, setStart] = useState(today)
   const events = data ?? []
   // 오늘부터 이달 끝까지. 아래 줄은 높이가 늘 같도록 가장 가까운 하나만 쓰고 나머지는 '외 n건' 으로 — 전체는 크게 보기에서
-  const [next, ...later] = events.filter((e) => (e.end ?? e.date) >= today)
+  const [next, ...later] = events.filter((e) => (e.end ?? e.date) >= today) as [CalendarEvent?, ...CalendarEvent[]]
 
   const openAt = (iso: string) => {
     setStart(iso)

@@ -53,6 +53,7 @@ export default async function handler(req: Request): Promise<Response> {
   auth.searchParams.set('response_type', 'code');
   auth.searchParams.set('client_id', clientId);
   auth.searchParams.set('redirect_uri', `${url.origin}/api/auth/callback`);
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- 비어 있는 환경변수도 기본값으로
   auth.searchParams.set('scope', process.env.OIDC_SCOPE || 'openid profile email');
   auth.searchParams.set('state', state);
   auth.searchParams.set('nonce', nonce);

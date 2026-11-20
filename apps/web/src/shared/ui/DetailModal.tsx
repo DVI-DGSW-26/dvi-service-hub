@@ -90,7 +90,7 @@ export function DetailModal<T>({ items, index, onIndexChange, content, prevLabel
         {c.body && <p className="mt-6 border-t border-line pt-6 text-[17px]/[1.75] whitespace-pre-line text-fg/90 break-keep select-text">{c.body}</p>}
       </div>
 
-      {(c.link || items.length > 1) && (
+      {(c.link ?? items.length > 1) && (
         <div className="flex flex-none flex-wrap items-center justify-between gap-3 border-t border-line px-6 py-4 sm:px-8">
           {c.link ? <OpenLink href={c.link.url} label={c.link.label} /> : <span />}
           {items.length > 1 && <Pager index={shown} count={items.length} onChange={onIndexChange} prevLabel={prevLabel} nextLabel={nextLabel} />}

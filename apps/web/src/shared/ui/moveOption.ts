@@ -7,7 +7,7 @@ import {      type KeyboardEvent } from 'react'
 export function moveOption(e: KeyboardEvent, list: HTMLElement | null) {
   const items = [...(list?.querySelectorAll<HTMLElement>('[role=option]') ?? [])]
   const i = items.indexOf(document.activeElement as HTMLElement)
-  const next = ({ ArrowDown: i + 1, ArrowUp: i - 1, Home: 0, End: items.length - 1 } as Record<string, number>)[e.key]
+  const next = ({ ArrowDown: i + 1, ArrowUp: i - 1, Home: 0, End: items.length - 1 } as Partial<Record<string, number>>)[e.key]
   if (next === undefined) return
   e.preventDefault()
   items[Math.max(0, Math.min(items.length - 1, next))]?.focus()

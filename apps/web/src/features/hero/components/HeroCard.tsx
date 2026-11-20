@@ -186,7 +186,7 @@ function NoticeTicker({ canWrite, compact = false, className = '' }: { canWrite:
   const composer = useLazyModal()
   const [detail, setDetail] = useState<number | null>(null)
   const notices = data ?? []
-  const n = notices[index]
+  const n = notices[index] as Notice | undefined
   // 새로 받으면(공지를 올린 뒤 포함) 맨 앞 — 가장 최근 공지부터
   const [seen, setSeen] = useState(data)
   if (seen !== data) {

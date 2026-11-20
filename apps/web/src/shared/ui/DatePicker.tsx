@@ -70,6 +70,7 @@ export function DatePicker({ value, onChange, label, invalid = false }: DatePick
 
   return (
     <>
+      {/* eslint-disable-next-line jsx-a11y/role-supports-aria-props -- 이 단추가 날짜 입력칸 노릇을 해서 잘못된 값(aria-invalid)을 알린다 */}
       <button
         ref={anchor}
         type="button"
@@ -104,6 +105,7 @@ export function DatePicker({ value, onChange, label, invalid = false }: DatePick
             </span>
           ))}
         </div>
+        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- 날짜 단추에서 올라온 화살표 키를 판이 한꺼번에 받는다. 초점은 단추에 간다 */}
         <div ref={gridRef} onKeyDown={onGridKey} className="grid grid-cols-7 gap-0.5">
           {monthWeeks(view, true)
             .flat()

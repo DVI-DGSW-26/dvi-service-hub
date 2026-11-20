@@ -91,7 +91,7 @@ function DecorRow({ kind, decor, onAdjust }: { kind: DecorKind; decor: Decor; on
           </button>
         )}
         {image && (
-          <button type="button" onClick={() => pick(null)} className={BUTTON}>
+          <button type="button" onClick={() => void pick(null)} className={BUTTON}>
             {t.widgets.decor.reset}
           </button>
         )}
@@ -135,7 +135,7 @@ function usePicker(kind: DecorKind, decor: Decor, onPicked: () => void) {
         const file = e.target.files?.[0]
         // 같은 파일을 다시 골라도 바뀌게
         e.target.value = ''
-        if (file) pick(file)
+        if (file) void pick(file)
       }}
     />
   )

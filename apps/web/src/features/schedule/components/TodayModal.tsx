@@ -20,13 +20,13 @@ interface TodayModalProps {
 
 const END_OF_DAY = 24 * 60
 const matches = (s: ScheduleItem, q: string) => s.title.toLowerCase().includes(q)
-const timed = (s: ScheduleItem) => !s.allDay && !!s.start
+const timed = (s: ScheduleItem): s is ScheduleItem & { start: string } => !s.allDay && !!s.start
 /** 종일 → 오전 → 오후 묶음 (서버도 종일을 먼저 준다) */
 const halves = (items: ScheduleItem[], labels: { allDay: string; morning: string; afternoon: string }) =>
   [
     { label: labels.allDay, items: items.filter((s) => !timed(s)) },
-    { label: labels.morning, items: items.filter((s) => timed(s) && toMinutes(s.start!) < 12 * 60) },
-    { label: labels.afternoon, items: items.filter((s) => timed(s) && toMinutes(s.start!) >= 12 * 60) },
+    { label: labels.morning, items: items.filter((s) => timed(s) && toMinutes(s.start) < 12 * 60) },
+    { label: labels.afternoon, items: items.filter((s) => timed(s) && toMinutes(s.start) >= 12 * 60) },
   ].filter((g) => g.items.length)
 
 /**

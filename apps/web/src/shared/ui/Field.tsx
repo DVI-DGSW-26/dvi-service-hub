@@ -32,6 +32,7 @@ export function Field({ label, required = false, hint, error, group = false, cla
         )}
       </span>
       {children}
+      {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- 빈 문자열 오류는 없는 것 */}
       {(error || hint) && <span className={`mt-1.5 block text-[13px] ${error ? 'font-semibold text-danger' : 'text-muted'}`}>{error ?? hint}</span>}
     </Tag>
   )

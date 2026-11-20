@@ -20,11 +20,11 @@ interface ResumeDragRefs {
  * 새 페이지가 다 미끄러져 들어온 뒤에, 그때의 손 자리에서 — 미끄러지는 중에 누르면 react-grid-layout 이 움직이는 판 기준으로 재어
  * 판이 온 만큼 위젯이 튄다. 바로 누르면 끌기가 시작만 되고 따라오지 않았다(동작 줄이기면 미끄러짐이 없어 조금 일찍 이어진다)
  */
-export function useResumeDrag({ resume, hand, grab, downAt, viewRef }: ResumeDragRefs) {
+export function useResumeDrag({ resume: resumeRef, hand, grab, downAt, viewRef }: ResumeDragRefs) {
   // 렌더마다 본다 — resume 은 넘긴 렌더에만 차 있다
   useEffect(() => {
-    const r = resume.current
-    resume.current = null
+    const r = resumeRef.current
+    resumeRef.current = null
     if (!r) return
     const slide = reducedMotion() ? 50 : SLIDE
     // 새 판의 위젯을 처음 잡은 점이 손 아래 오게 옮겨 둔다

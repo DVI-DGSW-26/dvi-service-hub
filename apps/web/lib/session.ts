@@ -62,6 +62,7 @@ const hmacKey = (secret: string) =>
   crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
 
 /** 세션 값을 서명해 쿠키 문자열로 만든다 */
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- T 가 있어야 객체 리터럴에 쿠키 형식 밖의 필드가 섞이면 잡힌다
 export async function signSession<T extends Signed>(payload: T, secret: string): Promise<string> {
   const body = toB64url(enc.encode(JSON.stringify(payload)));
   const sig = toB64url(await crypto.subtle.sign('HMAC', await hmacKey(secret), enc.encode(body)));
@@ -115,7 +116,7 @@ export function buildCookie(name: string, value: string, maxAge: number): string
 }
 
 /** 세션에서 역할만 떼어 서명한 쿠키. 세션과 같은 시각에 끝난다 */
-export async function buildAccessCookie(session: Session, secret: string): Promise<string> {
+export async function buildAccessCookie(session: Signed & Partial<Pick<Session, 'realm' | 'svc'>>, secret: string): Promise<string> {
   const maxAge = Math.max(0, session.exp - Math.floor(Date.now() / 1000));
   return buildCookie(ACCESS_COOKIE, await signSession({ realm: session.realm, svc: session.svc, exp: session.exp }, secret), maxAge);
 }

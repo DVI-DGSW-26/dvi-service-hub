@@ -45,7 +45,7 @@ export function Modal({ open, onClose, labelledBy, wide = false, full = false, c
       // 애니메이션을 껐으면 길이가 0 이라 바로 닫힌다
       let cancelled = false
       const running = [...d.getAnimations(), ...(panelRef.current?.getAnimations() ?? [])]
-      Promise.allSettled(running.map((a) => a.finished)).then(() => {
+      void Promise.allSettled(running.map((a) => a.finished)).then(() => {
         if (cancelled) return
         d.close()
         delete d.dataset.closing
@@ -62,6 +62,7 @@ export function Modal({ open, onClose, labelledBy, wide = false, full = false, c
   }, [open])
 
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- 바깥(막) 누르기로 닫기. 키보드는 Esc(onCancel)로 닫는다
     <dialog
       ref={ref}
       aria-labelledby={labelledBy}

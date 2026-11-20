@@ -19,7 +19,7 @@ const ITEM =
 export function EditTabBar({ decor, onReset, onDone }: { decor: Decor; onReset: () => void; onDone: () => void }) {
   const { t } = useI18n()
   return (
-    <nav role="toolbar" aria-label={t.widgets.dock} className={BAR}>
+    <div role="toolbar" aria-label={t.widgets.dock} className={BAR}>
       <ul className="grid grid-cols-4">
         <li>
           <DecorMenu kind="wallpaper" decor={decor} className={`${ITEM} text-muted`} />
@@ -40,7 +40,7 @@ export function EditTabBar({ decor, onReset, onDone }: { decor: Decor; onReset: 
           </button>
         </li>
       </ul>
-    </nav>
+    </div>
   )
 }
 

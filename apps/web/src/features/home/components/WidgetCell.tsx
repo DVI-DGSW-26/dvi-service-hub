@@ -40,6 +40,7 @@ export function WidgetCell({ c, index, list, stack, overlay, def, size, editing,
   const { t, f } = useI18n()
   const name = text(def.title, t)
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- 길게 눌러 편집 켜기 · 끌기를 받는 목록 칸. 키보드는 편집 중 초점(tabIndex)과 onKeyDown 으로
     <div
       {...grid}
       ref={ref}
@@ -60,6 +61,7 @@ export function WidgetCell({ c, index, list, stack, overlay, def, size, editing,
           : style
       }
       className={`${className} rounded-3xl ${editing || stack ? 'cursor-grab touch-manipulation select-none [-webkit-touch-callout:none]' : ''}`}
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- 편집 중에는 위젯에 초점을 두고 화살표로 옮긴다
       tabIndex={editing ? 0 : undefined}
       aria-label={editing ? f(stack ? t.widgets.positionStack : GALLERY ? t.widgets.position : t.widgets.positionMove, { name, index: index + 1, total: list.length }) : undefined}
       // 좁은 화면의 길게 누르기(편집 켜고 위젯 들기)는 StackBoard 가 맡는다
@@ -68,14 +70,10 @@ export function WidgetCell({ c, index, list, stack, overlay, def, size, editing,
       onPointerUp={longPress.cancelPress}
       onPointerCancel={longPress.cancelPress}
       onKeyDown={onKeyDown}
-      // 길게 눌러 편집을 시작했으면 손을 뗄 때의 누르기(링크 열기 등)는 버린다
-      onClickCapture={(e) => {
-        if (!longPress.pressed.current) return
-        longPress.pressed.current = false
-        e.preventDefault()
-        e.stopPropagation()
+      onClickCapture={longPress.onClickCapture}
+      onContextMenu={(e) => {
+        if (editing || stack || longPress.press.current) e.preventDefault()
       }}
-      onContextMenu={(e) => (editing || stack || longPress.press.current) && e.preventDefault()}
     >
       <div className="widget-body relative h-full">
         <div inert={editing} className="h-full">

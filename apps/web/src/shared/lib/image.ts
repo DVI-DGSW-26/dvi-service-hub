@@ -9,7 +9,9 @@ export async function fitImage(file: File, max: number): Promise<string> {
   const canvas = document.createElement('canvas')
   canvas.width = Math.round(bmp.width * k)
   canvas.height = Math.round(bmp.height * k)
-  canvas.getContext('2d')!.drawImage(bmp, 0, 0, canvas.width, canvas.height)
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('no 2d context')
+  ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height)
   bmp.close()
   const webp = canvas.toDataURL('image/webp', 0.82)
   // shortcut: JPEG 로 떨어지면 투명한 부분이 검게 된다, WebP 를 못 만드는 브라우저가 많아지면 PNG 로

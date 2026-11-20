@@ -36,7 +36,7 @@ export function Select<T extends string>({ value, onChange, options, label }: Se
   useEffect(() => {
     if (!open) return
     const items = [...(listRef.current?.querySelectorAll<HTMLButtonElement>('[role=option]') ?? [])]
-    const target = items[Math.max(0, options.findIndex((o) => o.value === value))]
+    const target = items[Math.max(0, options.findIndex((o) => o.value === value))] as HTMLButtonElement | undefined
     target?.scrollIntoView({ block: 'nearest' })
     target?.focus({ preventScroll: true })
   }, [open, options, value])
@@ -69,6 +69,7 @@ export function Select<T extends string>({ value, onChange, options, label }: Se
       </button>
 
       <PickerPopover open={open} anchor={anchor} onClose={close} label={label} matchWidth className="p-1.5">
+        {/* eslint-disable-next-line jsx-a11y/interactive-supports-focus -- 초점은 안의 항목 단추가 받는다(화살표로 옮긴다) */}
         <div
           ref={listRef}
           role="listbox"

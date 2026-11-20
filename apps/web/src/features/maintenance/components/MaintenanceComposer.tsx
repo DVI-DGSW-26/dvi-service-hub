@@ -38,7 +38,8 @@ export function MaintenanceComposer({ open, onClose, items }: MaintenanceCompose
   const serverServices = useQuery({ ...serviceQueries.list(), enabled: open })
   const services = serverServices.data ?? bundledServices
   const firstId = services[0]?.id ?? OTHER
-  const { form, set, error, shown, submit } = useComposeForm(() => blank(firstId))
+  const compose = useComposeForm(() => blank(firstId))
+  const { form, set, error, shown } = compose
   const create = useCreateMaintenance()
   const remove = useDeleteMaintenance()
   // 시각 칸에 읽을 수 없는 글을 적어 둔 상태
@@ -73,7 +74,7 @@ export function MaintenanceComposer({ open, onClose, items }: MaintenanceCompose
   const err = (key: string) => shown(errors, key)
 
   const onSubmit = () =>
-    submit(badStart || badEnd || Object.values(errors).some(Boolean), async () => {
+    void compose.submit(badStart || badEnd || Object.values(errors).some(Boolean), async () => {
       await create.mutateAsync({
         kind: form.kind,
         serviceId: service?.id ?? null,

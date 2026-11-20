@@ -109,7 +109,7 @@ export function useWideLayout(defs: WidgetDef[]) {
     },
     /** 다른 페이지로 — at 을 주면 그 칸에(덮인 위젯은 비킨다), 안 되거나 없으면 첫 빈칸에. 자리가 없으면 false(없는 페이지면 새로 만들어) */
     toPage: (type: string, p: number, at?: { x: number; y: number }) => {
-      const next = (at && placeAt(pages, type, p, at.x, at.y)) || placeOn(pages, type, p, minCells(type))
+      const next = (at && placeAt(pages, type, p, at.x, at.y)) ?? placeOn(pages, type, p, minCells(type))
       return !!next && (commit(next, type), true)
     },
     remove: (type: string) => commit(without(pages, type)),

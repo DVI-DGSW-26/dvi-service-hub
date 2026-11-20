@@ -29,6 +29,7 @@ export function OrgChartModal({ open, onClose, team }: { open: boolean; onClose:
   // 열 때마다 빈 검색 — 팀을 정해 열었으면 조직도가 그려진 뒤 그 팀으로
   useEffect(() => {
     if (!open) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 열 때마다 검색 · 고른 팀을 처음으로 되돌린다
     setQuery('')
     setActive(team)
     if (!team) return

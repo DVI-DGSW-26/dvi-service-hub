@@ -53,6 +53,7 @@ const validDate = (s: string) => DATE.test(s) && addDays(s, 0) === s
 /** 앞뒤 공백을 지우고 비면 없는 것. 있으면 http(s):// 로 시작 · 500자 이하 */
 function cleanUrl(url: unknown): string | undefined {
   if (url == null) return undefined
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- 목업 — 들어온 값을 서버처럼 문자열로 받는다
   const u = String(url).trim()
   if (!u) return undefined
   if (!/^https?:\/\//.test(u)) throw bad('url', '주소는 http:// 또는 https:// 로 시작해야 합니다.')
@@ -92,13 +93,15 @@ function createMaintenance(input: Partial<MaintenanceInput>): Maintenance {
   if (!KINDS.includes(input.kind)) throw new HttpError(400, 'HTTP_MESSAGE_NOT_READABLE', '요청 본문을 읽을 수 없습니다.')
   if (input.date == null) throw bad('date', '날짜를 입력해 주세요.')
   if (!validDate(input.date)) throw new HttpError(400, 'HTTP_MESSAGE_NOT_READABLE', '요청 본문을 읽을 수 없습니다.')
+  /* eslint-disable @typescript-eslint/prefer-nullish-coalescing -- 빈 문자열도 시각이 없는 것 */
   const start = input.start || undefined
   const end = input.end || undefined
+  /* eslint-enable @typescript-eslint/prefer-nullish-coalescing */
   if ((start && !TIME.test(start)) || (end && !TIME.test(end))) throw new HttpError(400, 'HTTP_MESSAGE_NOT_READABLE', '요청 본문을 읽을 수 없습니다.')
 
   const title = requireText(i, 'title', '제목', 100)
   const body = requireText(i, 'body', '내용', 2000, false)
-  const serviceId = blank(input.serviceId) ? undefined : input.serviceId!
+  const serviceId = blank(input.serviceId) ? undefined : input.serviceId
   const url = serviceId ? undefined : cleanUrl(input.url)
 
   if (end && !start) throw new HttpError(400, 'MAINTENANCE_TIME_INVALID', '종료 시각만 입력할 수 없습니다.', 'start')
@@ -126,7 +129,7 @@ function scheduleRange(from: string, to: string): ScheduleDay[] {
     const items: ScheduleItem[] = events
       .filter((e) => e.startDate <= date && date <= e.endDate)
       .map((e) => toScheduleItem(e))
-      .sort((a, b) => Number(b.allDay) - Number(a.allDay) || (a.allDay ? 0 : byText(a.start!, b.start!)) || byText(a.title, b.title) || byText(a.id, b.id))
+      .sort((a, b) => Number(b.allDay) - Number(a.allDay) || (a.allDay ? 0 : byText(a.start ?? '', b.start ?? '')) || byText(a.title, b.title) || byText(a.id, b.id))
     days.push({ date, items })
   }
   return days
@@ -275,7 +278,7 @@ function authRoute(method: string, path: string): Result {
 function wait(config: InternalAxiosRequestConfig) {
   const ms = scenarios.has('slow') ? 2500 : 150 + Math.random() * 300
   return new Promise<void>((resolve, reject) => {
-    const signal = config.signal as AbortSignal | undefined
+    const signal = config.signal
     const timer = setTimeout(resolve, ms)
     signal?.addEventListener?.('abort', () => {
       clearTimeout(timer)
@@ -289,7 +292,7 @@ function adapterFor(route: (method: string, path: string, params: Params, input:
     await wait(config)
     const method = (config.method ?? 'get').toLowerCase()
     const path = new URL(config.url ?? '/', 'http://mock').pathname
-    const input = typeof config.data === 'string' && config.data ? JSON.parse(config.data) : {}
+    const input = typeof config.data === 'string' && config.data ? (JSON.parse(config.data) as Record<string, unknown>) : {}
     const headers = new AxiosHeaders({ 'content-type': 'application/json' })
     try {
       const { status, body } = route(method, path, (config.params ?? {}) as Params, input)

@@ -49,7 +49,7 @@ export function useDecor() {
       return true
     } catch {
       // 예전 그림이 남아 새로고침 때 되살아나지 않게
-      try { localStorage.removeItem(KEY[kind]) } catch {}
+      try { localStorage.removeItem(KEY[kind]) } catch { /* 저장소를 못 쓰면 지울 것도 없다 */ }
       return false
     }
   }

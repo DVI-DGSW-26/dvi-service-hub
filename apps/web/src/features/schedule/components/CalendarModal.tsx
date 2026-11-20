@@ -52,6 +52,7 @@ function useMonthSwipe(onCommit: (dir: Dir) => void, keyboard: boolean) {
   })
   useEffect(() => () => cancelAnimationFrame(raf.current), [])
 
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- 숨겨져 폭이 0 이어도 1 (넘김 거리가 0 이 되지 않게)
   const width = () => viewportRef.current?.clientWidth || 1
   const paint = () => {
     if (trackRef.current) trackRef.current.style.transform = `translate3d(calc(-100% + ${s.current.x}px),0,0)`
@@ -106,7 +107,7 @@ function useMonthSwipe(onCommit: (dir: Dir) => void, keyboard: boolean) {
 
   const onPointerMove = (e: ReactPointerEvent) => {
     const d = drag.current
-    if (!d || d.id !== e.pointerId) return
+    if (d?.id !== e.pointerId) return
     const dx = e.clientX - d.x0
     if (!d.live) {
       if (Math.abs(e.clientY - d.y0) > DRAG_START && Math.abs(e.clientY - d.y0) > Math.abs(dx)) drag.current = null // 세로 스크롤
@@ -127,12 +128,13 @@ function useMonthSwipe(onCommit: (dir: Dir) => void, keyboard: boolean) {
 
   const onPointerUp = (e: ReactPointerEvent) => {
     const d = drag.current
-    if (!d || d.id !== e.pointerId) return
+    if (d?.id !== e.pointerId) return
     drag.current = null
     if (!d.live) return
     dragged.current = true
     const recent = d.history.filter((h) => e.timeStamp - h.t <= VELOCITY_WINDOW)
-    const v = recent.length > 1 ? ((recent.at(-1)!.p - recent[0].p) / (recent.at(-1)!.t - recent[0].t || 1)) * 1000 : 0
+    const last = recent[recent.length - 1]
+    const v = recent.length > 1 ? ((last.p - recent[0].p) / (last.t - recent[0].t || 1)) * 1000 : 0
     const w = width()
     const landing = s.current.x + project(v)
     const dir: 0 | Dir = landing < -w / 2 ? 1 : landing > w / 2 ? -1 : 0
@@ -160,12 +162,13 @@ function useMonthSwipe(onCommit: (dir: Dir) => void, keyboard: boolean) {
     if (!keyboard) return
     const onKey = (e: KeyboardEvent) => {
       if ((e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') || e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return
-      if ((e.target as HTMLElement).closest?.('input, textarea, select, [contenteditable]')) return
+      if ((e.target as Partial<HTMLElement>).closest?.('input, textarea, select, [contenteditable]')) return
       e.preventDefault()
       go(e.key === 'ArrowLeft' ? -1 : 1)
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- go 는 ref 만 다뤄 처음 것으로 충분하다. 넣으면 렌더마다 다시 건다
   }, [keyboard])
 
   // 트랙패드 가로 밀기 — 한 번 밀면 잠깐 잠가서 관성으로 여러 달이 넘어가지 않게 한다

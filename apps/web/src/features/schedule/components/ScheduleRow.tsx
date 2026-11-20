@@ -84,7 +84,7 @@ function TimeCell({ item: s }: { item: ScheduleItem }) {
     return (
       <>
         <span className="block text-[17px] font-bold">{t.schedule.allDay}</span>
-        {multi && <span className="mt-0.5 block text-sm text-muted tabular-nums">~ {monthDay(s.endDate!, lang)}</span>}
+        {multi && s.endDate && <span className="mt-0.5 block text-sm text-muted tabular-nums">~ {monthDay(s.endDate, lang)}</span>}
       </>
     )
   }

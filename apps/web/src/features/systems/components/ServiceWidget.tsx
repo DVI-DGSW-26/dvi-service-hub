@@ -30,7 +30,8 @@ const ROWS: Record<WidgetSize, number> = { s: 4, m: 4, l: 9, xl: 9 }
 /** 서비스 위젯의 겉틀 — 로고 · 제목 · 서비스 이름, 오른쪽 위에 그 서비스로 가는 단추 */
 export function ServiceWidget({ app, title, size, view }: { app: string; title: string; size: WidgetSize; view: WidgetView }) {
   const { t, f } = useI18n()
-  const service = services.find((s) => s.id === app)!
+  const service = services.find((s) => s.id === app)
+  if (!service) throw new Error(`Unknown service: ${app}`)
   const url = service.links[0].url
 
   return (

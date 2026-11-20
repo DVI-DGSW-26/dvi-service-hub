@@ -16,7 +16,8 @@ const TIMES = Array.from({ length: 48 }, (_, i) => `${pad(Math.floor(i / 2))}:${
 function parseTime(text: string): string | null {
   const s = text.trim().toLowerCase()
   if (!s) return ''
-  const m = /^(오전|오후|am|pm)?\s*(\d{1,2})(?::?(\d{2}))?\s*(오전|오후|am|pm)?$/.exec(s)
+  // 빠진 선택 그룹은 undefined
+  const m: (string | undefined)[] | null = /^(오전|오후|am|pm)?\s*(\d{1,2})(?::?(\d{2}))?\s*(오전|오후|am|pm)?$/.exec(s)
   if (!m) return null
   const half = m[1] ?? m[4]
   let h = Number(m[2])
@@ -147,6 +148,7 @@ export function TimePicker({ value, onChange, onInvalidChange, label, invalid = 
       </div>
 
       <PickerPopover open={open} anchor={anchor} onClose={close} label={label} returnFocus={clockRef} className="w-48 p-1.5">
+        {/* eslint-disable-next-line jsx-a11y/interactive-supports-focus -- 초점은 안의 항목 단추가 받는다(화살표로 옮긴다) */}
         <div ref={listRef} role="listbox" aria-label={label} onKeyDown={(e) => moveOption(e, listRef.current)} className="max-h-64 overflow-y-auto overscroll-contain">
           {clearable && (
             <button type="button" role="option" aria-selected={!value} data-value="" onClick={() => pick('')} className={`${option(!value)} text-muted`}>

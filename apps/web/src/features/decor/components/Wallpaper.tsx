@@ -37,7 +37,7 @@ export function DecorAdjust({ decor }: { decor: Decor }) {
   const onMove = (e: PointerEvent<HTMLDivElement>) => {
     const d = drag.current
     const el = document.querySelector<HTMLImageElement>(`[data-decor="${kind}"]`)
-    if (!d || d.id !== e.pointerId || !el?.naturalWidth) return
+    if (d?.id !== e.pointerId || !el?.naturalWidth) return
     // 칸 크기 — scale 은 transform 이라 clientWidth 에 들지 않는다
     const view = { w: el.clientWidth, h: el.clientHeight }
     decor.movePos(panBy(d.from, e.clientX - d.x, e.clientY - d.y, view, { w: el.naturalWidth, h: el.naturalHeight }))

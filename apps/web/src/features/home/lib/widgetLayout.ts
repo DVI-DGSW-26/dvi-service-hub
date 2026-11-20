@@ -43,7 +43,7 @@ export const minSize = (sizes: WidgetSize[]) => PX[SIZES.find((s) => sizes.inclu
 /** 칸 크기(px)에 맞는 그릴 크기 — 들어가는 것 중 가장 큰 것, 하나도 안 들어가면 가장 작은 것 */
 export function sizeFor(sizes: WidgetSize[], w: number, h: number): WidgetSize {
   const ok = SIZES.filter((s) => sizes.includes(s))
-  return ok.filter((s) => PX[s].w <= w && PX[s].h <= h).at(-1) ?? ok[0] ?? 's'
+  return ok.filter((s) => PX[s].w <= w && PX[s].h <= h).at(-1) ?? ok.at(0) ?? 's'
 }
 
 /** 칸 n 개의 px — 칸 사이 틈 포함 */
@@ -191,7 +191,7 @@ export function tidy(page: Page): Page {
     c.x = r.x0
     c.w = r.x1 - r.x0
   }
-  return page.map((c) => placed.find((p) => p.i === c.i)!)
+  return page.map((c) => placed.find((p) => p.i === c.i) ?? c)
 }
 
 /** react-grid-layout 이 붙이는 것(moved · static · minW 등)을 떼고 자리만 남긴다 — 저장하는 모양 */
@@ -259,7 +259,7 @@ export function grow(page: Page, i: string, dw: number, dh: number, min: { w: nu
 }
 
 const isItem = (c: unknown): c is Item => {
-  const v = c as Item
+  const v = c as Item | null | undefined
   return typeof v?.i === 'string' && [v.x, v.y, v.w, v.h].every((n) => Number.isInteger(n) && n >= 0) && v.w >= 1 && v.h >= 1 && v.x + v.w <= COLS && v.y + v.h <= ROWS
 }
 
@@ -271,7 +271,7 @@ export function parsePages(saved: unknown): Page[] | null {
 /** 12 × 6 칸으로 저장하던 배치를 지금 칸(24 × 12)으로 — 칸이 반으로 잘게 나뉘어 모두 두 배. 모양이 틀리면 null */
 export function fromHalf(saved: unknown): Page[] | null {
   const pages = parsePages(saved)
-  return pages && pages.map((p) => p.map((c) => ({ i: c.i, x: c.x * 2, y: c.y * 2, w: c.w * 2, h: c.h * 2 })))
+  return pages?.map((p) => p.map((c) => ({ i: c.i, x: c.x * 2, y: c.y * 2, w: c.w * 2, h: c.h * 2 }))) ?? null
 }
 
 /** 위젯 i 가 지금 자리에서 다른 위젯이나 판 끝에 닿기 전까지 넓힐 수 있는 칸 경계 — 왼쪽 x0 · 오른쪽 x1 · 위 y0 · 아래 y1(지금 높이 · 폭으로) */
@@ -327,8 +327,8 @@ export function guides(page: Page, i: string, sides: Side[]): Guide[] {
 /** 예전 형식(페이지마다 줄 목록 — 줄 높이 h · 위젯 폭 w 가 3 × 3 칸 비율)을 칸 자리로. 모양이 틀리면 null */
 export function fromRows(saved: unknown): Page[] | null {
   interface Row { h: number; items: { type: string; w: number }[] }
-  const ok = (n: unknown) => typeof n === 'number' && n > 0 && Number.isFinite(n)
-  const isRow = (r: Row) => ok(r?.h) && Array.isArray(r.items) && r.items.length > 0 && r.items.every((c) => typeof c?.type === 'string' && ok(c.w))
+  const ok = (n: unknown): n is number => typeof n === 'number' && n > 0 && Number.isFinite(n)
+  const isRow = (r: Row | null) => ok(r?.h) && Array.isArray(r.items) && r.items.length > 0 && r.items.every((c: Row['items'][number] | null) => typeof c?.type === 'string' && ok(c.w))
   if (!Array.isArray(saved) || !saved.length) return null
   const pages = (saved.every((p) => !Array.isArray(p)) ? [saved] : saved) as Row[][]
   if (!pages.every((p) => Array.isArray(p) && p.every(isRow))) return null

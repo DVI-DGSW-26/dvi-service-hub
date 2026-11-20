@@ -34,7 +34,7 @@ export interface JwtClaims {
   aud?: string | string[];
   exp?: number;
   nonce?: string;
-  email?: string;
+  email?: unknown; // 문자열이 아닌 값이 와도 callback 에서 String() 으로 받는다
   name?: string;
   preferred_username?: string;
   realm_access?: { roles?: string[] };
@@ -45,7 +45,7 @@ let cached: Promise<OidcMetadata> | undefined;
 
 /** discovery 문서에서 엔드포인트를 읽는다. 같은 인스턴스 안에서는 한 번만 받고, 실패는 기억하지 않는다 */
 export function discover(issuer: string): Promise<OidcMetadata> {
-  return (cached ??= fetchMetadata(issuer).catch((e) => { cached = undefined; throw e; }));
+  return (cached ??= fetchMetadata(issuer).catch((e: unknown) => { cached = undefined; throw e; }));
 }
 
 async function fetchMetadata(issuer: string): Promise<OidcMetadata> {
@@ -76,16 +76,19 @@ export async function pkceChallenge(verifier: string): Promise<string> {
  * JWT 본문을 읽는다.
  * 토큰 엔드포인트에서 TLS 로 직접 받은 것이라 서명 재검증은 하지 않는다.
  * 대신 호출부에서 iss · aud · nonce · exp 를 반드시 확인한다.
+ * 응답 JSON 에서 바로 받은 값이라 문자열이 아닐 수도 있다.
  */
-export function decodeJwt(token: string): JwtClaims {
+export function decodeJwt(token: unknown): JwtClaims {
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string, @typescript-eslint/prefer-nullish-coalescing -- 빈 값 · 무엇이 와도 String() 으로 받아 아래 형식 검사에 맡긴다
   const parts = String(token || '').split('.');
   if (parts.length !== 3) throw new Error('토큰 형식이 올바르지 않습니다.');
-  return JSON.parse(new TextDecoder().decode(fromB64url(parts[1])));
+  return JSON.parse(new TextDecoder().decode(fromB64url(parts[1]))) as JwtClaims;
 }
 
 /** 같은 사이트 안의 경로만 허용한다 (열린 리다이렉트 방지) */
 export function safePath(p: unknown): string {
   // URL 파서는 `\` 를 `/` 로 읽고 탭 · 줄바꿈을 지워서 "/\evil.com" 도 //evil.com 이 된다
+  // eslint-disable-next-line no-control-regex -- 제어 문자를 막으려고 일부러 넣었다
   return typeof p === 'string' && p.startsWith('/') && !p.startsWith('//') && !/[\\\x00-\x1f\x7f]/.test(p) ? p : '/';
 }
 

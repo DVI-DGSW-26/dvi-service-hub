@@ -29,7 +29,8 @@ interface Envelope<T> {
   data: T
 }
 
-const newId = () => (crypto.randomUUID?.() ?? Math.random().toString(36).slice(2)).slice(0, 8)
+// randomUUID 는 보안 연결(https · localhost)에서만 있다
+const newId = () => ((crypto as Partial<Crypto>).randomUUID?.() ?? Math.random().toString(36).slice(2)).slice(0, 8)
 
 const entryOf = (config: InternalAxiosRequestConfig | undefined): LogEntry => ({
   id: config?.meta?.id ?? '-',
@@ -42,7 +43,7 @@ const entryOf = (config: InternalAxiosRequestConfig | undefined): LogEntry => ({
 
 function safeJson(text: string) {
   try {
-    return JSON.parse(text)
+    return JSON.parse(text) as unknown
   } catch {
     return text
   }
@@ -72,8 +73,8 @@ function onUnauthorized() {
   }
   auth.get('/me').then(
     () => apiLog.hint('401 — 허브 로그인은 살아 있는데 허브 서버가 쿠키를 받지 않습니다. 서버의 SESSION_SECRET 이 Vercel 과 같은지 확인하세요.'),
-    (e: ApiError) => {
-      if (e.status !== 401) return
+    (e: unknown) => {
+      if (!(e instanceof ApiError) || e.status !== 401) return
       toLogin()
     },
   )
@@ -114,7 +115,8 @@ export const hub = withInterceptors(
   { redirectOn401: true },
 )
 
-const unwrap = <T>(res: AxiosResponse<Envelope<T>>) => res.data?.data
+// 본문이 빈 응답(204 등)도 있다
+const unwrap = <T>(res: AxiosResponse<Envelope<T> | undefined>) => res.data?.data as T
 
 /** 감싼 응답에서 data 만 꺼내 주는 호출 함수 */
 export const hubApi = {

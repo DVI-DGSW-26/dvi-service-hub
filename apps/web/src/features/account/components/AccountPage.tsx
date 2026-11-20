@@ -163,6 +163,7 @@ function ProfileCard({ me, loading }: { me: Me | null; loading: boolean }) {
 
   const noDept = hasNoDepartment(me)
   // 부서는 아직 토큰에 실려 오지 않는다 — 재직자면 '준비 중', employee 가 없으면 정말 미지정
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- 빈 문자열 부서도 아직 없는 것으로 본다
   const department = me.department || (noDept ? t.account.profile.unassigned : <span className="font-normal text-muted">{t.common.comingSoon}</span>)
 
   return (

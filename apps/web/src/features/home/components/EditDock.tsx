@@ -58,7 +58,7 @@ export function EditDock({ decor, onTidy, onUndo, onReset, onDone, side }: EditD
             type="button"
             onClick={() => {
               decor.endAdjust(false)
-              decor.set(kind, null)
+              void decor.set(kind, null)
             }}
             className={TOOL}
           >

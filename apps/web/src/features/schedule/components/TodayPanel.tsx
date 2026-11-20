@@ -115,7 +115,7 @@ export function TodayPanel({ size, className = '' }: { size?: StackSize; classNa
             {pick ? (
               <>
                 {/* 종일은 아래 시각 자리에 '종일' 이 들어가니 상태는 뺀다 */}
-                {st !== 'allDay' && <span className={`text-[13px] font-bold ${st === 'now' ? 'text-live' : 'text-muted'}`}>{t.schedule.status[st!]}</span>}
+                {st && st !== 'allDay' && <span className={`text-[13px] font-bold ${st === 'now' ? 'text-live' : 'text-muted'}`}>{t.schedule.status[st]}</span>}
                 <span className={`text-xl font-bold tabular-nums ${st === 'now' ? 'text-live' : ''}`}>{pick.allDay || !pick.start ? t.schedule.allDay : clockTime(pick.start, lang)}</span>
                 <span className="mt-1 line-clamp-2 text-[15px] font-semibold break-keep">{title(pick.title)}</span>
               </>

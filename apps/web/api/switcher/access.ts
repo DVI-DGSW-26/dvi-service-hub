@@ -24,9 +24,10 @@ const ORIGINS = new Set(
   ),
 );
 
+// 서명한 쿠키라도 예전 형식이면 빠진 필드가 있을 수 있다
 interface Access extends Signed {
-  realm: string[];
-  svc: Record<string, string[]>;
+  realm?: string[];
+  svc?: Record<string, string[]>;
 }
 
 export default async function handler(req: Request): Promise<Response> {

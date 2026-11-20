@@ -25,7 +25,8 @@ export function NewsModal({ news, index, onIndexChange, viewAll }: NewsModalProp
   const { t, f, lang } = useI18n()
   const title = useTitle()
   const shown = useLastIndex(index, news.length)
-  const item = news[shown]
+  // 소식이 없으면 shown 이 -1 이다
+  const item = news[shown] as NewsItem | undefined
 
   return (
     <Modal open={index !== null} onClose={() => onIndexChange(null)} labelledBy={titleId} wide className="lg:h-[min(720px,calc(100dvh-32px))]">
@@ -42,6 +43,7 @@ export function NewsModal({ news, index, onIndexChange, viewAll }: NewsModalProp
               </h2>
               {/* 요약은 행사 설명, 본문은 행사 메모(notes)를 줄바꿈(\n)으로 이은 일반 글자 — 서로 다른 내용이라 둘 다(명세 6.2).
                   요약이 비면 서버가 본문 앞 150자를 요약으로 주니, 그때는 본문만 한 번 */}
+              {/* eslint-disable-next-line @typescript-eslint/prefer-optional-chain -- ?. 는 빈 본문('')을 거르지 못한다 */}
               {item.body && item.body.startsWith(item.summary) ? (
                 <p className="mt-4 text-[17px]/[1.75] whitespace-pre-line text-fg/90 select-text">{item.body}</p>
               ) : (

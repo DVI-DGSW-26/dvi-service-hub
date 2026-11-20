@@ -23,6 +23,7 @@ export function PickerPopover({ open, anchor, onClose, label, matchWidth = false
 
   // 첫 그림은 숨긴 채 크기를 재고, 칠하기 전에 자리를 잡는다
   useLayoutEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 닫으면 다음에 열 때 다시 재도록 자리를 지운다
     if (!open) { setPos(undefined); return; }
     const a = anchor.current?.getBoundingClientRect()
     const el = ref.current
@@ -39,6 +40,7 @@ export function PickerPopover({ open, anchor, onClose, label, matchWidth = false
 
   useEffect(() => {
     if (!open) return
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- 판 밖(false)이면 단추 쪽도 봐야 한다
     const inside = (t: EventTarget | null) => ref.current?.contains(t as Node) || anchor.current?.contains(t as Node)
     const onPointer = (e: PointerEvent) => !inside(e.target) && onClose()
     const onScroll = (e: Event) => !ref.current?.contains(e.target as Node) && onClose()
@@ -54,6 +56,7 @@ export function PickerPopover({ open, anchor, onClose, label, matchWidth = false
 
   if (!open) return null
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- 안의 칸에서 올라온 Esc 를 판이 받아 판만 닫는다
     <div
       ref={ref}
       role="dialog"

@@ -41,7 +41,7 @@ const DROP = '__drop__'
 /** 갤러리 자리표시를 뺀 위젯들 */
 const clean = (l: Layout): Page => l.filter((c) => c.i !== DROP)
 
-const point = (e: Event) => ('touches' in e ? ((e as TouchEvent).changedTouches[0] ?? { clientX: 0, clientY: 0 }) : (e as MouseEvent))
+const point = (e: Event) => ('touches' in e ? ((e as TouchEvent).changedTouches.item(0) ?? { clientX: 0, clientY: 0 }) : (e as MouseEvent))
 
 /**
  * 넓은 화면(PC) 위젯 판 — 페이지마다 COLS × ROWS 칸에 위젯을 놓인 그대로 둔다(lib/widgetLayout.ts 의 기준 — 손댄 위젯과 그 자리 위젯만 움직인다). 끌기 · 크기 조절 손놀림은 react-grid-layout 이 한다.
@@ -103,7 +103,7 @@ export function WideBoard({ layout, pageCount, width, colW, rowH, editing, viewR
     const base = l.map((c) => ({ ...c }))
     // 크기 조절의 node 는 손잡이다 — 이름(react-resizable-handle-se 등)의 n · e · s · w 가 잡은 변
     const axis = drag ? '' : (/handle-(\w+)/.exec(node?.className ?? '')?.[1] ?? '')
-    const sides = [...axis].map((k) => ({ n: 't', e: 'r', s: 'b', w: 'l' })[k] as Side)
+    const sides = Array.from(axis).map((k) => ({ n: 't', e: 'r', s: 'b', w: 'l' })[k] as Side)
     active.current = item ? { i: item.i, drag, base, last: base, sides } : null
     const el = drag ? node : node?.closest<HTMLElement>('.react-grid-item')
     if (!e || !el) return
@@ -120,7 +120,8 @@ export function WideBoard({ layout, pageCount, width, colW, rowH, editing, viewR
     hand.current = { x: p.clientX, y: p.clientY, touch: 'touches' in e }
     const g = grab.current
     if (node) node.style.transform = `translate(${g.left + p.clientX - g.x}px, ${g.top + p.clientY - g.y}px)`
-    const v = viewRef.current!.getBoundingClientRect()
+    const v = viewRef.current?.getBoundingClientRect()
+    if (!v) return
     const x = p.clientX
     const dir = x > v.right - EDGE ? 1 : x < v.left + EDGE && page > 0 ? -1 : 0
     // 끝에 FLIP_HOLD 동안 대고 있으면 놓지 않아도 옆 페이지로 넘긴다(반자동) — 혼자 있는 위젯을 마지막 페이지 뒤로 보내는 것은 같은 판이라 빼고
@@ -189,7 +190,7 @@ export function WideBoard({ layout, pageCount, width, colW, rowH, editing, viewR
   const onResize = (_l: Layout, _o: unknown, item: LayoutItem | null, ph: LayoutItem | null, e: Event, node: HTMLElement | null) => {
     const el = node?.closest<HTMLElement>('.react-grid-item')
     const a = active.current
-    if (!el || !item || !a) return
+    if (!node || !el || !item || !a) return
     const next = place(a.base, { ...item }, false) ?? a.last
     // 자리표시는 react-grid-layout 이 손이 바란 자리 · 크기로 그린다 — 받아들여질 것(place, 안 되면 마지막으로 되던 것)으로 바꿔 둔다
     const ok = next.find((c) => c.i === item.i)
@@ -208,7 +209,7 @@ export function WideBoard({ layout, pageCount, width, colW, rowH, editing, viewR
     const downTo = (want: number, edge: number) => (want >= edge ? want : edge - rubber(edge - want))
     let [l, t, r, b] = [g.left, g.top, g.left + g.width, g.top + g.height]
     // 손잡이 쪽 — n · e · s · w 와 모서리
-    const axis = /handle-(\w+)/.exec(node!.className)?.[1] ?? ''
+    const axis = /handle-(\w+)/.exec(node.className)?.[1] ?? ''
     if (axis.includes('e')) r = Math.max(l + span(min.w, colW), upTo(r + dx, room.x1 * cw - GAP))
     if (axis.includes('w')) l = Math.min(r - span(min.w, colW), downTo(l + dx, room.x0 * cw))
     if (axis.includes('s')) b = Math.max(t + span(min.h, rowH), upTo(b + dy, room.y1 * rh - GAP))
@@ -297,7 +298,7 @@ export function WideBoard({ layout, pageCount, width, colW, rowH, editing, viewR
         onResizeStop={onResizeStop}
         onDrop={onDrop}
       >
-        {order.map((c, i) => renderWidget(c, i, order, { width: span(c.w, colW), onKeyDown: editing ? (e) => onKeyDown(e, c.i, (order[i + 1] ?? order[i - 1])?.i) : undefined }))}
+        {order.map((c, i) => renderWidget(c, i, order, { width: span(c.w, colW), onKeyDown: editing ? (e) => onKeyDown(e, c.i, order[i + 1]?.i ?? order[i - 1]?.i) : undefined }))}
       </GridLayout>
       {/* 기준선 — 칸 한 개 + 틈(px)을 변수로 주고 선마다 칸 좌표(--at · --from · --to)를 붙인다 */}
       {p === page && (

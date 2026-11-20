@@ -28,6 +28,7 @@ export function UserMenu({ me }: { me: Me }) {
         </span>
         <span className="hidden text-left leading-tight md:block" aria-hidden="true">
           <span className="block text-sm font-semibold">{f(t.layout.user.name, { name: me.name })}</span>
+          {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- 부서가 빈 글자로 와도 메일을 보인다 */}
           <span className="block max-w-36 truncate text-xs text-muted">{me.department || me.email}</span>
         </span>
         <ChevronDown className={`size-4 text-muted transition-transform duration-200 ${open ? 'rotate-180' : ''}`} aria-hidden="true" />

@@ -72,6 +72,7 @@ export default async function handler(req: Request): Promise<Response> {
     if (back?.action && back.state === url.searchParams.get('state')) {
       return redirect(withActionResult(back, status, url.origin), buildCookie(AUTH_COOKIE, '', 0));
     }
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- 빈 설명이면 error 코드를 보인다
     const desc = url.searchParams.get('error_description') || url.searchParams.get('error');
     return htmlError('로그인하지 못했습니다', `통합 로그인에서 거절되었습니다. (${desc})`);
   }
@@ -113,6 +114,7 @@ export default async function handler(req: Request): Promise<Response> {
     let detail = '';
     try {
       const err = (await res.json()) as { error?: string; error_description?: string };
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- 빈 문자열도 다음 값으로 넘긴다
       detail = err.error_description || err.error || '';
     } catch { /* 본문이 JSON 이 아니면 상태코드만 쓴다 */ }
     // 미리보기 배포는 주소가 매번 달라 redirect_uri 를 등록할 수 없다
@@ -144,7 +146,9 @@ export default async function handler(req: Request): Promise<Response> {
   const roles = collectRoles([claims, access]);
   const session: Session = {
     sub: claims.sub,
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string, @typescript-eslint/prefer-nullish-coalescing -- 토큰 JSON 값이라 빈 값 · 무엇이 와도 String() 으로 받는다
     email: String(claims.email || '').toLowerCase(),
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- 빈 이름도 다음 값으로 넘긴다
     name: claims.name || claims.preferred_username || '사내 계정',
     realm: roles.realm,
     svc: roles.svc,

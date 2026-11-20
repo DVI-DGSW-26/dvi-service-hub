@@ -45,7 +45,7 @@ export function GooFilter() {
  */
 export function CarryChip({ chipRef, index }: { chipRef: RefObject<HTMLDivElement | null>; index: number }) {
   const { t } = useI18n()
-  const carried = NAV_ITEMS[index]
+  const carried = NAV_ITEMS[index] as (typeof NAV_ITEMS)[number] | undefined
   return (
     <div ref={chipRef} aria-hidden="true" className="group pointer-events-none fixed top-0 left-0 z-50">
       <div className="glass-strong flex scale-90 items-center gap-2 rounded-xl py-2 pr-3.5 pl-2.5 text-sm font-semibold opacity-0 transition-[opacity,scale] duration-150 group-data-[show]:scale-100 group-data-[show]:opacity-100">

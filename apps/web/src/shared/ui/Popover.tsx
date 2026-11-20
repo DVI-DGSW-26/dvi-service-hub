@@ -19,7 +19,7 @@ export function PopoverPanel({ label, onClose, className = '', children }: { lab
   const Tag = sheet ? 'dialog' : 'div'
   // 끌어 내려 닫으면 손 속도로 내려가는 transition 이 끝난 뒤에 지운다 — 바로 지우면 시트가 그 자리에서 사라진다
   useSheetDrag(ref, ref, sheet, () => {
-    Promise.allSettled(ref.current?.getAnimations().map((a) => a.finished) ?? []).then(onClose)
+    void Promise.allSettled(ref.current?.getAnimations().map((a) => a.finished) ?? []).then(onClose)
   })
   useBackToClose(sheet, onClose)
   useScrollTrap(ref, sheet)

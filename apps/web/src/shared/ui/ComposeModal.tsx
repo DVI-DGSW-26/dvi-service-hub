@@ -1,5 +1,5 @@
 import { Trash2 } from 'lucide-react'
-import { useId, useState, type FormEvent, type ReactNode } from 'react'
+import { useId, useState, type ReactNode, type SubmitEvent } from 'react'
 import { useI18n } from '@/shared/i18n'
 import { Field, controlClass } from './Field'
 import { Modal } from './Modal'
@@ -29,7 +29,7 @@ interface ComposeModalProps {
 export function ComposeModal({ open, onClose, eyebrow, title, description, asideTitle, asideHint, aside, onSubmit, submitting, error, children }: ComposeModalProps) {
   const titleId = useId()
   const { t } = useI18n()
-  const submit = (e: FormEvent) => {
+  const submit = (e: SubmitEvent) => {
     e.preventDefault()
     if (!submitting) onSubmit()
   }
@@ -128,9 +128,10 @@ export function DeletableItem({ title, onDelete, children }: { title: string; on
           </button>
           <button
             type="button"
-            onClick={remove}
+            onClick={() => void remove()}
             disabled={busy}
             // 묻는 줄이 뜨면 바로 누를 수 있게
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- 지우기를 물은 바로 그 자리라 초점을 옮기는 것이 맞다
             autoFocus
             className="cursor-pointer rounded-lg bg-danger-fill px-2.5 py-1 text-[13px] font-bold text-white transition-opacity disabled:opacity-60"
           >

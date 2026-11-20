@@ -115,7 +115,9 @@ export function TopBar({ me, meLoading, page, query, onQueryChange, theme, onEdi
 
   const onDragStart = (e: PointerEvent<HTMLLIElement>, from: number) => {
     if (e.button !== 0 || (e.target as Element).closest('button')) return
-    const rects = [...e.currentTarget.parentElement!.children].map((li) => li.getBoundingClientRect())
+    const list = e.currentTarget.parentElement
+    if (!list) return
+    const rects = [...list.children].map((li) => li.getBoundingClientRect())
     const me = rects[from]
     const gap = rects.length > 1 ? rects[1].left - rects[0].right : 0
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -176,8 +178,11 @@ export function TopBar({ me, meLoading, page, query, onQueryChange, theme, onEdi
               const toggle = f(off ? t.widgets.header.show : t.widgets.header.hide, { name })
               const lifted = drag?.from === index
               return (
+                // 드래그 · ← → 로 옮기는 항목이라 초점을 받는다 (버튼으로 바꾸면 안의 눈 버튼과 겹친다)
+                // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- 위와 같다
                 <li
                   key={item}
+                  // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- 위와 같다
                   tabIndex={0}
                   aria-label={f(t.widgets.header.move, { name, index: index + 1 })}
                   onPointerDown={(e) => onDragStart(e, index)}
@@ -236,7 +241,7 @@ export function TopBar({ me, meLoading, page, query, onQueryChange, theme, onEdi
           {/* 알림은 서버 API 가 생길 때까지 숨긴다. 사용자 메뉴 앞에는 구분선(맨 앞이면 없음) */}
           {shown.map((item, i) => (
             <Fragment key={item}>
-              {item === 'user' && i > 0 && (me || meLoading) && <span className="mx-1 hidden h-6 w-px bg-line sm:block" aria-hidden="true" />}
+              {item === 'user' && i > 0 && (me ?? meLoading) && <span className="mx-1 hidden h-6 w-px bg-line sm:block" aria-hidden="true" />}
               {parts[item]}
             </Fragment>
           ))}

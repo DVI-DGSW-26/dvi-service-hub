@@ -86,7 +86,7 @@ function ActionResult() {
   if (!result) return null
 
   const message =
-    result.status === 'cancelled' ? r.cancelled : result.status === 'error' ? r.error : (r[result.action as keyof typeof r] ?? r.done)
+    result.status === 'cancelled' ? r.cancelled : result.status === 'error' ? r.error : ((r as Partial<Record<string, string>>)[result.action] ?? r.done)
   const tone = result.status === 'success' ? 'bg-ok-soft text-ok' : result.status === 'error' ? 'bg-danger-soft text-danger' : 'bg-subtle text-muted'
   return (
     <p role="status" className={`rounded-2xl px-4 py-3 text-sm font-semibold ${tone}`}>
@@ -131,6 +131,7 @@ function CredentialList({ items, loading, fallbackLabel, empty }: { items?: Cred
   return (
     <ul className="divide-y divide-line">
       {items.map((cr) => {
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- 이름이 빈 문자열이어도 기본 이름으로
         const name = cr.label || fallbackLabel
         return (
           <li key={cr.id} className="flex items-center gap-3 py-3 pr-4 pl-16">

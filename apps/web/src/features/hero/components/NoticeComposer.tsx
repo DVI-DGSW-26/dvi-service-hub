@@ -20,7 +20,8 @@ interface NoticeComposerProps {
 export function NoticeComposer({ open, onClose, items }: NoticeComposerProps) {
   const { t, lang } = useI18n()
   const c = t.compose.notice
-  const { form, set, error, shown, submit } = useComposeForm(blank)
+  const compose = useComposeForm(blank)
+  const { form, set, error, shown } = compose
   const create = useCreateNotice()
   const remove = useDeleteNotice()
 
@@ -33,7 +34,7 @@ export function NoticeComposer({ open, onClose, items }: NoticeComposerProps) {
   const err = (key: keyof typeof errors) => shown(errors, key)
 
   const onSubmit = () =>
-    submit(Object.values(errors).some(Boolean), async () => {
+    void compose.submit(Object.values(errors).some(Boolean), async () => {
       await create.mutateAsync({
         title: form.title.trim(),
         summary: form.summary.trim(),
@@ -79,6 +80,7 @@ export function NoticeComposer({ open, onClose, items }: NoticeComposerProps) {
       <TextField label={c.summary} required hint={c.summaryHint} error={err('summary')} value={form.summary} onChange={(v) => set('summary', v)} placeholder={c.summaryPlaceholder} max={MAX.summary} />
       <TextField label={c.body} required error={err('body')} value={form.body} onChange={(v) => set('body', v)} placeholder={c.bodyPlaceholder} max={MAX.body} rows={6} />
 
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- 글은 span 두 겹 안(깊이 3)이라 규칙이 못 본다. input 을 감싸 이름은 붙는다 */}
       <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-subtle p-3.5 ring-1 ring-line transition-colors hover:bg-raised">
         <input
           type="checkbox"

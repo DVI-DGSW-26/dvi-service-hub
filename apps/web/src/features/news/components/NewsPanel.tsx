@@ -31,7 +31,8 @@ export function NewsPanel({ size, className = '' }: { size?: StackSize; classNam
   const rows = useClipRows<HTMLUListElement>(!!size)
   // 좁은 화면 보통(4×3) · 넓게(4×2)는 대표 소식을 그림 옆에 글로 — 위에 그림을 깔 높이가 없다
   const beside = size === 'm' || size === 'w'
-  const [top, ...listed] = shown
+  const top = shown.at(0)
+  const listed = shown.slice(1)
   const modal = <NewsModal news={shown} index={open} onIndexChange={setOpen} viewAll={{ href: hrefOf('info'), count: total }} />
 
   // 아주 작은 칸 — 아이콘, 한 줄 띠면 가장 최근 소식 제목. 누르면 펼쳐 보기

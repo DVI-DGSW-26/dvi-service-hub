@@ -15,7 +15,7 @@ const QueryDevtools = import.meta.env.DEV
 applySavedPrefs()
 
 // 앱 껍데기 캐시(public/sw.js) — 배포본에서만. 개발 서버는 /assets 가 없고 고친 것이 바로 보여야 한다
-if (import.meta.env.PROD && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js')
+if (import.meta.env.PROD && 'serviceWorker' in navigator) void navigator.serviceWorker.register('/sw.js')
 
 // 새 배포 뒤 첫 실행은 받아 둔 옛 껍데기로 떠서, 아직 안 연 지연 로딩 화면(지난 해시 파일)이 서버에 없어 못 연다 — 한 번 새로 고친다.
 // sw.js 가 새 index.html 을 아직 못 받았을 수 있어, 받아 둔 껍데기를 비우고 서버 것으로 뜨게 한다. 10초 안에 또 나면 그냥 둔다(계속 새로 고치지 않게)
@@ -44,10 +44,12 @@ async function prepare() {
   WIDGETS.push(...mockWidgets)
 }
 
-prepare().then(render)
+void prepare().then(render)
 
 function render() {
-  createRoot(document.getElementById('root')!).render(
+  const root = document.getElementById('root')
+  if (!root) throw new Error('#root 가 없습니다')
+  createRoot(root).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <I18nProvider>

@@ -47,7 +47,7 @@ export interface WidgetDef {
  * 위젯 갤러리(넣기 · 빼기)를 쓰는지 — 고를 서비스 위젯이 목업에만 있어 pnpm dev:mock · Vercel 미리보기에서만.
  * 운영 · pnpm dev 의 편집은 옮기기 · 크기 조절만이고 사이드바는 그대로 둔다(빼면 다시 넣을 곳이 없어 빼기도 없다)
  */
-export const GALLERY = !!import.meta.env.VITE_MOCK
+export const GALLERY = import.meta.env.VITE_MOCK
 
 /** 갤러리에서 브라우저 끌어 놓기로 끄는 위젯 — 위젯 판이 dragover 중에 읽는다(dataTransfer 는 놓을 때만 읽힌다) */
 export const galleryDrag = { type: '' }

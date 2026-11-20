@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   // vercel.json 의 rewrites 와 같은 주소 — 옮기면 둘 다 고친다
   const hubApi = (env.HUB_API_URL || 'https://api.dvi-ind.com/hub').replace(/\/+$/, '')
-  const cookie = env.HUB_SESSION_COOKIE?.trim()
+  const cookie = (env.HUB_SESSION_COOKIE as string | undefined)?.trim() // loadEnv 타입은 string 이지만 없는 키는 undefined
   // 목업 API 로 띄운다 — pnpm dev:mock, 그리고 Vercel preview 배포(로그인 서버 없이 미리보기. middleware.ts 도 로그인을 건너뛴다).
   // production 빌드는 false 라 목업 코드가 통째로 빠진다
   const mock = mode === 'mock' || process.env.VERCEL_ENV === 'preview'

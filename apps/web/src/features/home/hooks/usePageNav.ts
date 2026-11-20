@@ -55,7 +55,7 @@ export function usePageNav({ layout, pageCount, area, editing, dragging, viewRef
   const onSwipeMove = (e: PointerEvent<HTMLDivElement>) => {
     const s = swipe.current
     const track = trackRef.current
-    if (!s || s.id !== e.pointerId || !track) return
+    if (s?.id !== e.pointerId || !track) return
     const dx = e.clientX - s.x
     // 처음 · 마지막 페이지 너머로는 버티며 조금만
     s.dx = (dx > 0 && page === 0) || (dx < 0 && page === pageCount - 1) ? dx / 4 : dx
@@ -65,7 +65,7 @@ export function usePageNav({ layout, pageCount, area, editing, dragging, viewRef
   const onSwipeEnd = (e: PointerEvent<HTMLDivElement>) => {
     const s = swipe.current
     const track = trackRef.current
-    if (!s || s.id !== e.pointerId || !track) return
+    if (s?.id !== e.pointerId || !track) return
     swipe.current = null
     delete track.dataset.swiping
     track.style.removeProperty('--swipe')
@@ -83,7 +83,9 @@ export function usePageNav({ layout, pageCount, area, editing, dragging, viewRef
       const key = e.key.toLowerCase()
       if (editing && mod && (key === 'z' || key === 'y')) {
         e.preventDefault()
-        key === 'z' && !e.shiftKey ? layout.undo() : layout.redo(); return;
+        if (key === 'z' && !e.shiftKey) layout.undo()
+        else layout.redo()
+        return
       }
       const dir = { ArrowLeft: -1, ArrowRight: 1 }[e.key]
       const next = page + (dir ?? 0)

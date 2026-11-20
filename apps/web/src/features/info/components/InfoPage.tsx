@@ -41,6 +41,7 @@ export function InfoPage({ categoryId }: { categoryId?: string }) {
   useEffect(() => {
     if (categoryId !== 'org' || location.hash === hrefOf('info')) return
     history.replaceState(history.state, '', hrefOf('info'))
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 주소(#/info/org)가 바뀐 뒤에 창을 연다 — 바깥 변화에 맞추는 일
     openOrg()
   }, [categoryId])
 
@@ -80,7 +81,7 @@ export function InfoPage({ categoryId }: { categoryId?: string }) {
           <div className="mt-6 flex justify-center">
             <button
               type="button"
-              onClick={() => news.fetchNextPage()}
+              onClick={() => void news.fetchNextPage()}
               disabled={news.isFetchingNextPage}
               className="h-11 cursor-pointer rounded-xl px-5 text-[15px] font-semibold ring-1 ring-line transition-[background-color,scale,opacity] duration-150 hover:bg-subtle active:scale-95 disabled:cursor-wait disabled:opacity-60"
             >

@@ -65,12 +65,12 @@ interface ServerError {
   field?: string
 }
 
-const STATUS_CODE: Record<number, ApiErrorCode> = { 401: 'UNAUTHORIZED', 403: 'ACCESS_DENIED' }
+const STATUS_CODE: Partial<Record<number, ApiErrorCode>> = { 401: 'UNAUTHORIZED', 403: 'ACCESS_DENIED' }
 
 /** axios 오류 → ApiError */
 export function toApiError(error: unknown): ApiError {
   if (isApiError(error)) return error
-  if (!isAxiosError(error)) {
+  if (!isAxiosError<unknown>(error)) {
     return new ApiError(0, 'UNKNOWN', error instanceof Error ? error.message : String(error))
   }
   if (!error.response) {
@@ -79,7 +79,7 @@ export function toApiError(error: unknown): ApiError {
   }
   const { status, data } = error.response
   // 미들웨어의 401 처럼 본문이 JSON 이 아닐 수 있다
-  const body: ServerError = data && typeof data === 'object' ? (data as ServerError) : {}
+  const body: ServerError = data && typeof data === 'object' ? data : {}
   const text = typeof data === 'string' && data.length < 200 ? data : undefined
   return new ApiError(
     status,

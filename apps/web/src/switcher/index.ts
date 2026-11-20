@@ -50,9 +50,9 @@ async function fetchRoles(hub: string): Promise<Roles | null> {
   try {
     const res = await fetch(`${hub}/api/switcher/access`, { credentials: 'include' })
     if (!res.ok) return null
-    const data = await res.json()
+    const data = (await res.json()) as Partial<Record<'known' | 'realm' | 'svc', unknown>> | null
     if (!data?.known || !Array.isArray(data.realm) || typeof data.svc !== 'object') return null
-    return { realm: data.realm, svc: data.svc ?? {} }
+    return { realm: data.realm as string[], svc: (data.svc ?? {}) as Roles['svc'] }
   } catch {
     return null
   }
@@ -219,6 +219,12 @@ function listHtml(hub: string, roles: Roles | null): string {
   )
 }
 
+/** 방금 넣은 마크업에서 찾은 것. 없으면 던져 start 의 catch 가 받는다 */
+function need<T extends Element>(el: T | null): T {
+  if (!el) throw new Error('버튼 마크업이 없습니다')
+  return el
+}
+
 function mount(script: HTMLScriptElement | null) {
   const hub = hubOrigin(script)
   // 자리: 허브 services.ts 의 설정 → 스크립트 태그의 data-* 가 있으면 그것이 우선
@@ -243,11 +249,11 @@ function mount(script: HTMLScriptElement | null) {
     `<button class="close" type="button" aria-label="닫기">${X_ICON}</button></div>` +
     `<ul>${listHtml(hub, null)}</ul></div></div>`
 
-  const wrap = root.querySelector<HTMLElement>('.wrap')!
-  const list = root.querySelector<HTMLElement>('ul')!
+  const wrap = need(root.querySelector<HTMLElement>('.wrap'))
+  const list = need(root.querySelector<HTMLElement>('ul'))
 
   // 역할을 받으면 목록을 이 사람 것으로 바꾼다. 보통 버튼을 누르기 전에 끝난다.
-  fetchRoles(hub).then((roles) => {
+  void fetchRoles(hub).then((roles) => {
     try { if (roles) list.innerHTML = listHtml(hub, roles) } catch { /* 전체 목록 그대로 */ }
   })
 
@@ -256,8 +262,8 @@ function mount(script: HTMLScriptElement | null) {
     wrap.classList.remove('dark', 'light', 'auto')
     wrap.classList.add(hostTheme())
   }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] })
-  const fab = root.querySelector<HTMLButtonElement>('.fab')!
-  const panel = root.querySelector<HTMLElement>('.panel')!
+  const fab = need(root.querySelector<HTMLButtonElement>('.fab'))
+  const panel = need(root.querySelector<HTMLElement>('.panel'))
 
   const setOpen = (open: boolean) => {
     wrap.classList.toggle('open', open)
@@ -269,8 +275,8 @@ function mount(script: HTMLScriptElement | null) {
   }
 
   fab.addEventListener('click', () => setOpen(!wrap.classList.contains('open')))
-  root.querySelector('.close')!.addEventListener('click', () => setOpen(false))
-  root.querySelector('.backdrop')!.addEventListener('click', () => setOpen(false))
+  need(root.querySelector('.close')).addEventListener('click', () => setOpen(false))
+  need(root.querySelector('.backdrop')).addEventListener('click', () => setOpen(false))
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && wrap.classList.contains('open')) setOpen(false)
   })
@@ -293,7 +299,8 @@ function mount(script: HTMLScriptElement | null) {
     const start = () => {
       try { mount(script) } catch (e) { console.warn('[DVI switcher]', e) }
     }
-    if (document.body) start()
+    // <head> 에서 돌면 body 가 아직 없다 — 타입은 늘 있다고 한다
+    if (document.body as HTMLElement | null) start()
     else document.addEventListener('DOMContentLoaded', start, { once: true })
   } catch (e) {
     console.warn('[DVI switcher]', e)

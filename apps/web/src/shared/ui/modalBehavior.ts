@@ -77,7 +77,7 @@ export function useSheetDrag(panel: RefObject<HTMLElement | null>, dialog: RefOb
     const onEnd = (e: TouchEvent) => {
       const g = s
       s = null
-      if (!g || g.mode !== 'drag') return
+      if (g?.mode !== 'drag') return
       // 끝에 멈췄다 놓으면 속도는 0
       const v = e.timeStamp - g.t > 80 ? 0 : g.v
       const dy = Math.max(0, g.last - g.y0)
@@ -125,8 +125,9 @@ export function useBackToClose(open: boolean, onClose: () => void) {
   useEffect(() => {
     if (!open) return
     active.current = true
-    const mine = () => (history.state?.portalModals as string[] | undefined)?.includes(id)
-    if (!mine()) history.pushState({ ...history.state, portalModals: [...(history.state?.portalModals ?? []), id] }, '')
+    const modals = () => (history.state as { portalModals?: string[] } | null)?.portalModals
+    const mine = () => modals()?.includes(id)
+    if (!mine()) history.pushState({ ...history.state, portalModals: [...(modals() ?? []), id] }, '')
     const onPop = () => {
       if (!mine()) close.current()
     }
