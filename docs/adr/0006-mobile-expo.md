@@ -51,5 +51,12 @@ RN 기본 `Modal`(`animationType="slide"`, 투명 배경)로 만든다. 웹 Logo
 - 위젯 배치 저장 · 데이터 위젯(일정 · 점검 · 소식)은 API 인증 뒤에 `@dvi/core` 로 쿼리를 옮기며 한다(ADR 0003 의 미룬 일).
 - EAS 설정(`eas.json`) · 앱 아이콘 · 번들 id(`com.dviind.portal`, 임시)는 배포 전에 정한다.
 
+## 배포 — 웹과 앱을 따로(2026-11-20)
+
+- **웹은 Vercel 만** 맡는다. 프로젝트 Root Directory 는 `apps/web`, 빌드 · 결과 폴더는 `apps/web/vercel.json`(framework vite · dist).
+  `ignoreCommand` 로 `apps/web` · `packages/core` · 루트 의존성 파일이 안 바뀐 커밋은 배포를 건너뛴다 — 앱만 고친 커밋이 웹을 다시 배포하지 않는다.
+- **앱은 Vercel 밖에서** 빌드한다. 다시 만들 때 EAS Build 로 — GitHub Actions 에서 `eas build`(`expo/expo-github-action`, `EXPO_TOKEN` 비밀값)를
+  `apps/mobile` 이 바뀔 때만 돌리거나, Expo 의 GitHub 연동으로 Expo 쪽에서 빌드한다. 둘 중 무엇으로 할지는 앱을 다시 만들 때 정한다.
+
 참고: [Expo 모노레포 가이드](https://docs.expo.dev/guides/monorepos/), [SDK 58 업그레이드](https://expo.dev/blog/how-to-upgrade-to-sdk-58),
 [Expo Router 탭](https://docs.expo.dev/router/advanced/tabs.md)
