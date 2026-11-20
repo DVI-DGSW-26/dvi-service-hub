@@ -99,6 +99,7 @@ export function WideBoard({ layout, pageCount, width, colW, rowH, editing, viewR
   /** 끌기 · 크기 조절을 시작할 때 손 위치 · 위젯 자리와 크기(px) */
   /** ox · oy — 잡은 점이 위젯 왼쪽 위에서 떨어진 거리(px). 옆 페이지에서 이어 끌 때 같은 점을 다시 잡는다 */
   const grab = useRef({ x: 0, y: 0, left: 0, top: 0, width: 0, height: 0, ox: 0, oy: 0 })
+  // eslint-disable-next-line max-params -- react-grid-layout 이 정한 콜백 모양(layout, oldItem, newItem, placeholder, e, node)
   const start = (drag: boolean) => (l: Layout, item: LayoutItem | null, _n?: unknown, _p?: unknown, e?: Event, node?: HTMLElement | null) => {
     const base = l.map((c) => ({ ...c }))
     // 크기 조절의 node 는 손잡이다 — 이름(react-resizable-handle-se 등)의 n · e · s · w 가 잡은 변
@@ -112,6 +113,7 @@ export function WideBoard({ layout, pageCount, width, colW, rowH, editing, viewR
     const box = el.getBoundingClientRect()
     grab.current = { x, y, left, top, width: el.offsetWidth, height: el.offsetHeight, ox: x - box.left, oy: y - box.top }
   }
+  // eslint-disable-next-line max-params -- react-grid-layout 이 정한 콜백 모양(layout, oldItem, newItem, placeholder, e, node)
   const onDrag = (_l: Layout, _o: unknown, _n: unknown, _p: unknown, e: Event, node: HTMLElement | null) => {
     draggingRef.current = true
     // 끄는 위젯을 손에 붙인다 — react-grid-layout 은 위젯의 칸 자리가 바뀔 때만 다시 그리는데, 놓을 수 없는 자리에서는 칸 자리가
@@ -167,6 +169,7 @@ export function WideBoard({ layout, pageCount, width, colW, rowH, editing, viewR
     const at = { margin: MARGIN, containerPadding: PADDING, containerWidth: width, cols: COLS, rowHeight: rowH, maxRows: ROWS }
     if (el instanceof HTMLElement && c) Object.assign(el.style, setTransform(calcGridItemPosition(at, c.x, c.y, c.w, c.h)))
   }
+  // eslint-disable-next-line max-params -- react-grid-layout 이 정한 콜백 모양(layout, oldItem, newItem, placeholder, e, node)
   const onDragStop = (l: Layout, _o: unknown, item: { i: string } | null, _p: unknown, e: Event, node: HTMLElement | null) => {
     draggingRef.current = false
     drawGuides([])
@@ -187,6 +190,7 @@ export function WideBoard({ layout, pageCount, width, colW, rowH, editing, viewR
   }
   // 크기도 손에 붙인다 — 끌기와 같은 까닭(react-grid-layout 은 칸 수가 바뀔 때만 다시 그리고, 이웃이 비킬 곳이 없으면 칸 수가 머문다).
   // 다만 이웃은 덮지 않는다 — 받아들여질 배치에서 이웃 · 판 끝에 닿으면 거기서 살짝만 버티고 멈춘다. 놓으면 자리표시 크기로 내려앉는다
+  // eslint-disable-next-line max-params -- react-grid-layout 이 정한 콜백 모양(layout, oldItem, newItem, placeholder, e, node)
   const onResize = (_l: Layout, _o: unknown, item: LayoutItem | null, ph: LayoutItem | null, e: Event, node: HTMLElement | null) => {
     const el = node?.closest<HTMLElement>('.react-grid-item')
     const a = active.current
@@ -220,6 +224,7 @@ export function WideBoard({ layout, pageCount, width, colW, rowH, editing, viewR
     apply()
     requestAnimationFrame(apply)
   }
+  // eslint-disable-next-line max-params -- react-grid-layout 이 정한 콜백 모양(layout, oldItem, newItem, placeholder, e, node)
   const onResizeStop = (l: Layout, _o: unknown, item: { i: string } | null, _p: unknown, _e: Event, node: HTMLElement | null) => {
     active.current = null
     drawGuides([])

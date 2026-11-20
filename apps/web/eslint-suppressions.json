@@ -1,0 +1,78 @@
+{
+  "api/auth/callback.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "src/features/decor/lib/wallpaper.ts": {
+    "max-params": {
+      "count": 1
+    }
+  },
+  "src/features/home/components/StackBoard.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/home/components/WideBoard.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/home/hooks/usePageNav.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "src/features/home/lib/widgetLayout.ts": {
+    "max-params": {
+      "count": 2
+    }
+  },
+  "src/features/maintenance/components/MaintenancePanel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/schedule/components/CalendarPanel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/shell/components/TopBar.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/shell/hooks/useLiquidNav.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    },
+    "max-params": {
+      "count": 1
+    }
+  },
+  "src/features/systems/api/hub.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "src/features/systems/components/ServiceWidget.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/shared/api/errors.ts": {
+    "complexity": {
+      "count": 1
+    },
+    "max-params": {
+      "count": 1
+    }
+  },
+  "src/shared/api/http.ts": {
+    "complexity": {
+      "count": 1
+    }
+  }
+}

@@ -37,6 +37,8 @@ export default tseslint.config(
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
   {
+    // 쓸모없어진 eslint-disable 은 에러 — 고친 뒤 남은 주석이 다른 위반을 가리지 않게
+    linterOptions: { reportUnusedDisableDirectives: 'error' },
     languageOptions: {
       parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
     },
@@ -71,6 +73,11 @@ export default tseslint.config(
   },
   // 컴포넌트는 JSX 의 조건부 렌더링(&& · ? :)이 하나하나 분기로 세여 복잡도가 부풀어 오른다 — 크기는 함수 길이 · 파일 줄 수로 본다
   { files: ['src/**/*.tsx'], rules: { complexity: 'off' } },
+  // 테스트 · 목업(dev:mock · preview 전용)은 화면 코드가 아니라 함수 크기를 보지 않는다. 파일 400줄은 그대로
+  {
+    files: ['**/*.test.ts', 'src/mocks/**'],
+    rules: { complexity: 'off', 'max-lines-per-function': 'off', 'max-params': 'off' },
+  },
   // 순환 · 중복 가져오기
   {
     files: ['src/**/*.{ts,tsx}'],
