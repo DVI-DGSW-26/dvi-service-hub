@@ -69,6 +69,8 @@ export default tseslint.config(
       'max-params': ['error', 4],
     },
   },
+  // 컴포넌트는 JSX 의 조건부 렌더링(&& · ? :)이 하나하나 분기로 세여 복잡도가 부풀어 오른다 — 크기는 함수 길이 · 파일 줄 수로 본다
+  { files: ['src/**/*.tsx'], rules: { complexity: 'off' } },
   // 순환 · 중복 가져오기
   {
     files: ['src/**/*.{ts,tsx}'],
