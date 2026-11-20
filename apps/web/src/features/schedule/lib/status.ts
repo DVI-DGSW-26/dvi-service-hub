@@ -1,5 +1,5 @@
 import { toMinutes } from '@/shared/format'
-import type { ScheduleItem } from '@dvi/core/types'
+import type { ScheduleItem } from '@/shared/types'
 
 /** 종일 · 여러 날 일정은 시각이 없어 진행 상태 대신 '종일' 로 둔다 */
 export type ScheduleStatus = 'done' | 'now' | 'upcoming' | 'allDay'

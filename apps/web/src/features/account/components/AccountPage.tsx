@@ -10,7 +10,7 @@ import type { PortalTheme } from '@/features/theme'
 import { ACCOUNT_URL, LOGOUT_URL } from '../lib/account'
 import { useI18n } from '@/shared/i18n'
 import { hasNoDepartment } from '@/shared/lib'
-import type { Me } from '@dvi/core/types'
+import type { Me } from '@/shared/types'
 
 interface AccountPageProps {
   me: Me | null

@@ -2,7 +2,7 @@ import { ChevronDown, LogOut, Settings } from 'lucide-react'
 import { hrefOf, usePopover } from '@/shared/hooks'
 import { LOGOUT_URL } from '@/features/account'
 import { useI18n } from '@/shared/i18n'
-import type { Me } from '@dvi/core/types'
+import type { Me } from '@/shared/types'
 import { PopoverPanel } from '@/shared/ui'
 
 const ITEM = 'flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm hover:bg-subtle'

@@ -4,11 +4,11 @@ import { NoDepartmentNotice, SearchBox, PageTitle, Segmented } from '@/shared/ui
 import { ServiceCard } from './ServiceCard'
 import { ServiceRow } from './ServiceRow'
 import { ServiceCardSkeleton, ServiceRowSkeleton } from './ServiceSkeleton'
-import type { Category, Service } from '@dvi/core/services'
+import type { Category, Service } from '../lib/services'
 import { useI18n } from '@/shared/i18n'
 import { hasNoDepartment, KEYS, readPref, writePref } from '@/shared/lib'
-import { matchesQuery } from '@dvi/core/access'
-import type { Me } from '@dvi/core/types'
+import { matchesQuery } from '../lib/access'
+import type { Me } from '@/shared/types'
 
 const CATEGORIES: ('전체' | Category)[] = ['전체', '업무', '인사', '정보', '사내문화']
 const SKELETON_COUNT = 9

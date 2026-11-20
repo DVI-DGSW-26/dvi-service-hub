@@ -1,7 +1,7 @@
 import { useI18n } from '@/shared/i18n'
 import { shortDate } from '@/shared/format'
 import { useCreateNotice, useDeleteNotice } from '../api/queries'
-import type { Notice } from '@dvi/core/types'
+import type { Notice } from '@/shared/types'
 import { ComposeModal, DeletableItem, TextField, isHttpUrl, useComposeForm } from '@/shared/ui'
 
 /** 서버 한도 (명세 2.2) */

@@ -7,7 +7,7 @@ import { addMonths, eventsOn, fromIso, inMonth, monthKey, monthOf, monthTitle, t
 import { project, settle, snap, spring, step, motionOff } from '@/shared/lib'
 import { longToday, shortDate, useTitle } from '@/shared/format'
 import { calendarQueries } from '../api/queries'
-import type { CalendarEvent } from '@dvi/core/types'
+import type { CalendarEvent } from '@/shared/types'
 import { Modal } from '@/shared/ui'
 import { EventDot, MonthGrid, WeekdayRow } from './MonthGrid'
 

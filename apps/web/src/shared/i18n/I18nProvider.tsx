@@ -1,11 +1,16 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { KEYS, readPref, writePref } from '@/shared/lib'
 import { I18nContext } from './context'
-import { en, interpolate, ko, LOCALE, pickPlural, type Lang, type Messages, type Plural } from '@dvi/core/i18n'
-import { interpolateNodes } from './interpolate'
-import type { I18n } from './types'
+import { en } from './en'
+import { interpolate, interpolateNodes } from './interpolate'
+import { ko, type Messages } from './ko'
+import { LOCALE } from './langs'
+import type { I18n, Lang, Plural } from './types'
 
 const MESSAGES: Record<Lang, Messages> = { ko, en }
+
+// 개발 중에만: en 이 ko 와 어긋난 곳을 콘솔에 알린다 (배포 번들에는 들어가지 않는다)
+if (import.meta.env.DEV) void import('./check').then((m) => m.checkMessages(ko, en))
 
 function initialLang(): Lang {
   const saved = readPref(KEYS.lang)
@@ -20,7 +25,9 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = lang
   }, [lang])
 
-  const pick = (entry: string | Plural, count = 0) => pickPlural(entry, LOCALE[lang], count)
+  const plurals = new Intl.PluralRules(LOCALE[lang])
+  const pick = (entry: string | Plural, count = 0) =>
+    typeof entry === 'string' ? entry : entry[plurals.select(count) === 'one' ? 'one' : 'other']
   const value: I18n = {
     lang,
     locale: LOCALE[lang],

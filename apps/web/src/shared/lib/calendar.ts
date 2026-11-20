@@ -1,4 +1,4 @@
-import type { CalendarEvent } from '@dvi/core/types'
+import type { CalendarEvent } from '@/shared/types'
 
 // 회사 캘린더의 달 계산. 주는 일요일부터 시작한다.
 

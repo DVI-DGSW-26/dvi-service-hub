@@ -5,7 +5,7 @@ import { services as bundledServices, serviceQueries, ServiceLogo } from '@/feat
 import { useI18n } from '@/shared/i18n'
 import { toIso } from '@/shared/lib'
 import { useCreateMaintenance, useDeleteMaintenance } from '../api/queries'
-import type { Maintenance, MaintenanceKind } from '@dvi/core/types'
+import type { Maintenance, MaintenanceKind } from '@/shared/types'
 import { Badge, DatePicker, Field, Segmented, TimePicker, ComposeModal, DeletableItem, TextField, isHttpUrl, useComposeForm } from '@/shared/ui'
 import { Select, type SelectOption } from '@/shared/ui'
 import { MAINTENANCE_TONE } from '../lib/constants'

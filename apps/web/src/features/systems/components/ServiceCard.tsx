@@ -1,5 +1,5 @@
 import { ArrowUpRight, Lock, Star } from 'lucide-react'
-import type { AuthMode, Service } from '@dvi/core/services'
+import type { AuthMode, Service } from '../lib/services'
 import { useI18n } from '@/shared/i18n'
 import { Badge, type BadgeTone } from '@/shared/ui'
 

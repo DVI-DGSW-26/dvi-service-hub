@@ -1,4 +1,4 @@
-import type {  OrgTeam } from '@dvi/core/types'
+import type {  OrgTeam } from '@/shared/types'
 
 /** 팀의 담당 이름 전부 — 담당 아래 담당까지 */
 export const unitNames = (team: OrgTeam) => team.units.flatMap((u) => [u.name, ...(u.units ?? [])])

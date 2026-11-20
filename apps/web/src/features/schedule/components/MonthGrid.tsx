@@ -1,7 +1,7 @@
 import { useI18n } from '@/shared/i18n'
 import { eventsOn, inMonth, monthWeeks, toIso, weekdayNames, type Month } from '@/shared/lib'
 import { longToday, useTitle } from '@/shared/format'
-import type { CalendarEvent } from '@dvi/core/types'
+import type { CalendarEvent } from '@/shared/types'
 
 /** 모달 칸에 이름으로 보여줄 개수 — 나머지는 '+n' */
 const CHIPS = 3

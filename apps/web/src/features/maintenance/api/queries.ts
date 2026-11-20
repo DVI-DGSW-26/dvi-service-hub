@@ -3,7 +3,7 @@
 
 import { queryOptions } from '@tanstack/react-query'
 import { maintenanceApi } from './maintenance'
-import type { MaintenanceInput } from '@dvi/core/types'
+import type { MaintenanceInput } from '@/shared/types'
 import { alreadyGone, useWrite } from '@/shared/api'
 
 const maintenanceKeys = { list: ['maintenance'] as const }

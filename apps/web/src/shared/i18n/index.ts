@@ -14,5 +14,7 @@
  */
 export { useI18n } from './context'
 export { I18nProvider } from './I18nProvider'
-export { LANGS, LOCALE, interpolate } from '@dvi/core/i18n'
-export type { Lang, Messages, Plural, Vars } from '@dvi/core/i18n'
+export { interpolate } from './interpolate'
+export type { Messages } from './ko'
+export { LANGS, LOCALE } from './langs'
+export type { Lang, Plural, Vars } from './types'

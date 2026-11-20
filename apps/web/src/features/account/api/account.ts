@@ -1,6 +1,6 @@
 // 설정 화면의 계정 정보 — 허브 서버에 요청 중인 API (docs/bd.md). 생기기 전에는 404 가 온다.
 
-import type { AccountCredentials } from '@dvi/core/types'
+import type { AccountCredentials } from '@/shared/types'
 import { hubApi } from '@/shared/api'
 
 interface Opts { signal?: AbortSignal }

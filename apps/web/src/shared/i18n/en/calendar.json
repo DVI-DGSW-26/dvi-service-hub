@@ -1,0 +1,19 @@
+{
+  "title": "Occasions & events",
+  "expand": "Expand calendar",
+  "prev": "Previous month",
+  "next": "Next month",
+  "eventCount": { "one": "{count} event", "other": "{count} events" },
+  "dayCount": { "one": "{count} item", "other": "{count} items" },
+  "more": { "one": "+{count} more", "other": "+{count} more" },
+  "later": { "one": "+{count} more", "other": "+{count} more" },
+  "upNext": "Coming up",
+  "noneLeft": "Nothing else this month",
+  "today": "Today",
+  "dayEmpty": "Nothing on this day.",
+  "monthList": "This month",
+  "monthEmpty": "Nothing on the calendar this month.",
+  "swipeHint": "Swipe or use ← → to see other months",
+  "period": "{start} – {end}",
+  "oneDay": "One day"
+}

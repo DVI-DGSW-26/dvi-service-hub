@@ -1,7 +1,7 @@
 // pnpm dev:mock 의 가짜 데이터. 날짜는 모두 오늘을 기준으로 만든다 — 언제 열어도 '오늘 일정' · '이번 달' 이 차 있다.
 // 모양은 포털 대시보드 API 명세 v0.5 를 따른다 (빈 칸은 null 이 아니라 뺀다).
 
-import type { AccountCredentials, Maintenance, NewsItem, Notice } from '@dvi/core/types'
+import type { AccountCredentials, Maintenance, NewsItem, Notice } from '@/shared/types'
 import { addDays, fromIso, pad, toIso } from '@/shared/lib'
 
 export const today = () => toIso(new Date())

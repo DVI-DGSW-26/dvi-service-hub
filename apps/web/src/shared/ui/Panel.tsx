@@ -1,6 +1,6 @@
 import { ChevronRight, type LucideIcon } from 'lucide-react'
 import { useId, type ReactNode } from 'react'
-import type { MiniSize } from '@dvi/core/widget'
+import type { MiniSize } from '@/shared/widget'
 
 interface PanelProps {
   title: string

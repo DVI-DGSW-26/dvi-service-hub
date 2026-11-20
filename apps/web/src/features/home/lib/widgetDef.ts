@@ -3,8 +3,8 @@ import type { ReactNode } from 'react'
 import type { DecorKind, DecorPos } from '@/features/decor'
 import type { Access, Service } from '@/features/systems'
 import type { Messages } from '@/shared/i18n'
-import type { Me } from '@dvi/core/types'
-import type { StackSize } from '@dvi/core/widget'
+import type { Me } from '@/shared/types'
+import type { StackSize } from '@/shared/widget'
 import type { WidgetSize } from './widgetLayout'
 
 /** 위젯이 그릴 때 받는 것 — 홈 화면이 가진 것을 그대로 넘긴다 */

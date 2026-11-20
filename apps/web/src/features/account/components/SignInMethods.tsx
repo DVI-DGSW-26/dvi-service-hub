@@ -11,7 +11,7 @@ import {
 } from '../lib/account'
 import { dateTime } from '@/shared/format'
 import { accountQueries } from '../api/queries'
-import type { Credential } from '@dvi/core/types'
+import type { Credential } from '@/shared/types'
 import { LoadError, Skeleton } from '@/shared/ui'
 
 const OUTLINE =

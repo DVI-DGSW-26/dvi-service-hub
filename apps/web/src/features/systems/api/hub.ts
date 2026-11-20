@@ -1,7 +1,7 @@
 // 허브 서버의 기존 API — 서비스 목록 · 내 즐겨찾기 · 최근 사용 · 서비스 관리 · 플로우 글.
 // feat/flow-posts 브랜치의 src/api.ts(fetch)를 axios 로 옮긴 것이다. 경로 · 모양은 그대로다.
 
-import type { AuthMode, Service, ServiceLink } from '@dvi/core/services'
+import type { AuthMode, Service, ServiceLink } from '../lib/services'
 import { ApiError, hubApi, seg } from '@/shared/api'
 
 interface Opts { signal?: AbortSignal }

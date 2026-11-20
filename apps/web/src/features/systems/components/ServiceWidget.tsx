@@ -1,7 +1,7 @@
 import { ArrowUpRight, Search } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useI18n } from '@/shared/i18n'
-import { services } from '@dvi/core/services'
+import { services } from '../lib/services'
 import { Badge, type BadgeTone } from '@/shared/ui'
 import { ServiceLogo } from './ServiceCard'
 import type { WidgetSize } from '@/features/home'

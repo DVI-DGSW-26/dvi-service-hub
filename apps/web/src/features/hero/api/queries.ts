@@ -3,7 +3,7 @@
 
 import { queryOptions } from '@tanstack/react-query'
 import { noticesApi } from './notices'
-import type { NoticeInput } from '@dvi/core/types'
+import type { NoticeInput } from '@/shared/types'
 import { alreadyGone, useWrite } from '@/shared/api'
 
 const noticeKeys = { list: ['notices'] as const }

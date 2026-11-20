@@ -1,0 +1,16 @@
+{
+  "loading": "Loading",
+  "loadError": "Couldn't load this. Please try again in a moment.",
+  "loadForbidden": "Only employees with an assigned department can see this.",
+  "untitled": "(Untitled)",
+  "comingSoon": "Coming soon",
+  "close": "Close",
+  "newTab": "(opens in a new tab)",
+  "viewAll": "View all",
+  "picker": { "date": "Pick a date", "noTime": "No time", "timePlaceholder": "e.g. 2230", "timeList": "Pick from list" },
+  "duration": {
+    "h": "{h}h",
+    "m": "{m}m",
+    "hm": "{h}h {m}m"
+  }
+}

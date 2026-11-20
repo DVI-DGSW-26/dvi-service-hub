@@ -1,5 +1,5 @@
 import { Presentation } from 'lucide-react'
-import type { NewsItem } from '@dvi/core/types'
+import type { NewsItem } from '@/shared/types'
 
 /**
  * 소식 그림. 목록은 작은 그림(400px), 펼쳐 보기는 큰 그림(1920px · large).

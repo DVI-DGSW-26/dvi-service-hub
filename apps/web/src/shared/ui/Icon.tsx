@@ -1,6 +1,6 @@
 import { BookOpen, CircleHelp, FileText, Folder, Gift, Globe, Headset, Mail, Network, type LucideProps } from 'lucide-react'
 import type { ReactNode } from 'react'
-import type { IconName } from '@dvi/core/types'
+import type { IconName } from '@/shared/types'
 
 /** 플로우 로고 대신 쓰는 단순 표식 (외부 브랜드 로고는 들이지 않는다) */
 function FlowMark(props: LucideProps) {

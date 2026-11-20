@@ -1,5 +1,5 @@
 import { canSee, SystemsPanel, services } from '@/features/systems'
-import type { Me } from '@dvi/core/types'
+import type { Me } from '@/shared/types'
 import { CalendarPanel, TodayPanel } from '@/features/schedule'
 import { HeroCard } from '@/features/hero'
 import { MaintenancePanel } from '@/features/maintenance'

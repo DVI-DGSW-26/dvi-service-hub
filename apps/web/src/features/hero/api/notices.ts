@@ -1,7 +1,7 @@
 // 전사 공지 API (포털 대시보드 명세 v0.5)
 // signal 은 TanStack Query 가 넘겨 준다 — 화면을 떠나면 받던 요청을 끊는다. 화면은 이 함수를 직접 부르지 않고 같은 폴더 queries.ts 를 쓴다
 
-import type { Notice, NoticeInput } from '@dvi/core/types'
+import type { Notice, NoticeInput } from '@/shared/types'
 import { hubApi, seg } from '@/shared/api'
 
 interface Opts { signal?: AbortSignal }

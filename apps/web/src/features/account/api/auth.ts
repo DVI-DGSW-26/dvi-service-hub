@@ -1,7 +1,7 @@
 // 로그인 정보 (/api/auth/me — 허브의 Vercel Edge 함수).
 
 import { mockMe } from '@/mocks/info'
-import type { Me } from '@dvi/core/types'
+import type { Me } from '@/shared/types'
 import { isApiError, auth, toLogin, apiLog } from '@/shared/api'
 
 /**

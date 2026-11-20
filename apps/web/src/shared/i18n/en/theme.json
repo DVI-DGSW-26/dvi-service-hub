@@ -1,0 +1,24 @@
+{
+  "title": "Theme",
+  "mode": "Appearance",
+  "modes": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": "Language",
+  "accent": "Accent color",
+  "accents": {
+    "blue": "Blue",
+    "indigo": "Indigo",
+    "violet": "Violet",
+    "pink": "Pink",
+    "orange": "Orange",
+    "green": "Green",
+    "teal": "Teal"
+  },
+  "glass": { "label": "Glass effect", "hint": "Turn off for solid surfaces" },
+  "motion": { "label": "Animations", "hint": "Choose Light if things stutter — skips heavy motion like widget resizing", "levels": { "full": "On", "lite": "Light", "off": "Off" } },
+  "customize": "Change home background · images",
+  "savedLocally": "Settings are saved in this browser."
+}

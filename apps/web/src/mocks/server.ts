@@ -15,7 +15,7 @@
 import { AxiosError, AxiosHeaders, CanceledError, type AxiosAdapter, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { auth, hub, apiLog } from '@/shared/api'
 import { services } from '@/features/systems'
-import type { CalendarEvent, Maintenance, MaintenanceInput, MaintenanceKind, NewsPage, Notice, NoticeInput, ScheduleDay, ScheduleItem } from '@dvi/core/types'
+import type { CalendarEvent, Maintenance, MaintenanceInput, MaintenanceKind, NewsPage, Notice, NoticeInput, ScheduleDay, ScheduleItem } from '@/shared/types'
 import { addDays, fromIso } from '@/shared/lib'
 import { flowEvents, seedCredentials, seedMaintenance, seedNews, seedNotices, today, type FlowEvent } from './data'
 import { mockMe } from './info'

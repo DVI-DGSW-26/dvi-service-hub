@@ -1,6 +1,6 @@
 import { orgChart } from '../lib/orgChart'
 import { useI18n } from '@/shared/i18n'
-import type { OrgChart, OrgTeam, OrgUnit } from '@dvi/core/types'
+import type { OrgChart, OrgTeam, OrgUnit } from '@/shared/types'
 import { orgMatch } from '../lib/orgMatch'
 /** 가지를 잇는 점선 */
 const LINE = 'border-dashed border-fg/20'

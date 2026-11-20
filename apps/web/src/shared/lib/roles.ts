@@ -1,4 +1,4 @@
-import type { Me } from '@dvi/core/types'
+import type { Me } from '@/shared/types'
 
 export const hasNoDepartment = (me: Me | null) => me !== null && !me.realm.includes('employee')
 

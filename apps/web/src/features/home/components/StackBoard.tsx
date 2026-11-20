@@ -5,7 +5,7 @@ import { useI18n } from '@/shared/i18n'
 import { motionOff } from '@/shared/lib'
 import { type Item } from '../lib/widgetLayout'
 import { STACK_CELLS, stackSizeOf, nearest } from '../lib/stackLayout'
-import { type StackSize } from '@dvi/core/widget'
+import { type StackSize } from '@/shared/widget'
 import { text, type WidgetDef } from '../lib/widgetDef'
 interface StackBoardProps {
   layout: WidgetLayout

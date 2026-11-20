@@ -1,7 +1,7 @@
 import { Check, Clock } from 'lucide-react'
 import { useI18n } from '@/shared/i18n'
 import { clockTime, duration, monthDay,  useTitle } from '@/shared/format'
-import type { ScheduleItem } from '@dvi/core/types'
+import type { ScheduleItem } from '@/shared/types'
 import { endOf, startOf, statusOf, type ScheduleStatus } from '../lib/status'
 
 /**

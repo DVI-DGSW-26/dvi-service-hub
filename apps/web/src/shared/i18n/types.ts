@@ -1,5 +1,15 @@
 import type { ReactNode } from 'react'
-import type { Lang, Messages, Plural, Vars } from '@dvi/core/i18n'
+import type { Messages } from './ko'
+
+export type Lang = 'ko' | 'en'
+
+/** 수에 따라 모양이 바뀌는 문구 */
+export interface Plural {
+  one: string
+  other: string
+}
+
+export type Vars = Record<string, string | number>
 
 export interface I18n {
   lang: Lang
