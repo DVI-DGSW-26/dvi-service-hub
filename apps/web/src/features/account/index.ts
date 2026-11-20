@@ -1,3 +1,3 @@
 export { accountQueries } from './api/queries'
-export { LogoutConfirm } from './components/LogoutConfirm'
+export { LOGOUT_URL } from './lib/account'
 export { LazyAccountPage } from './components/LazyAccountPage'

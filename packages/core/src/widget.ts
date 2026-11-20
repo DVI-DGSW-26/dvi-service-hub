@@ -1,33 +1,31 @@
 // 위젯이 그려질 크기 — 홈 보드와 위젯(패널)이 함께 쓰는 약속
 
 /** 좁은 화면에서 고르는 크기(4칸 격자의 칸 수 또는 넓은 화면 크기 이름) */
-export type StackSize = 's' | 'w' | 'm' | 'l' | '1x1' | '1x2' | '2x1' | '4x1' | '3x2' | '2x3' | '2x4'
-/** 아주 작은 칸 — 아이콘 · 숫자 하나(1×1 · 1×2)나 한 줄 띠(2×1 · 4×1)만 들어간다(shared/ui 의 MiniPanel) */
-export type MiniSize = '1x1' | '1x2' | '2x1' | '4x1'
-export const isMini = (s: StackSize | undefined): s is MiniSize => s === '1x1' || s === '1x2' || s === '2x1' || s === '4x1'
+export type StackSize = 's' | 'w' | 'm' | 'l' | '1x1' | '1x2' | '4x1' | '3x2' | '2x3'
+/** 아주 작은 칸 — 아이콘 · 숫자 하나(1×1 · 1×2)나 한 줄 띠(4×1)만 들어간다(shared/ui 의 MiniPanel) */
+export type MiniSize = '1x1' | '1x2' | '4x1'
+export const isMini = (s: StackSize | undefined): s is MiniSize => s === '1x1' || s === '1x2' || s === '4x1'
 
 /**
  * 좁은 화면 크기 — 갤럭시 홈 화면처럼 4칸 격자의 칸 수로 정한다(칸은 정사각).
- * 작게 2×2 · 넓게 4×2 · 보통 4×3 · 크게 4×4(처음 넷은 저장 이름이 글자 하나), 그리고 1×1 · 1×2 · 2×1 · 4×1 · 3×2 · 2×3 · 2×4.
+ * 작게 2×2 · 넓게 4×2 · 보통 4×3 · 크게 4×4(처음 넷은 저장 이름이 글자 하나), 그리고 1×1 · 1×2 · 4×1 · 3×2 · 2×3.
  * 위젯마다 그릴 수 있는 것(웹 registry 의 stack) 사이에서만 고른다
  */
-export const STACK_SIZES: StackSize[] = ['1x1', '1x2', '2x1', '4x1', 's', '3x2', 'w', '2x3', '2x4', 'm', 'l']
+export const STACK_SIZES: StackSize[] = ['1x1', '1x2', '4x1', 's', '3x2', 'w', '2x3', 'm', 'l']
 /** 크기별 [가로, 세로] 칸 수 */
 export const STACK_CELLS: Record<StackSize, [number, number]> = {
   '1x1': [1, 1],
   '1x2': [1, 2],
-  '2x1': [2, 1],
   '4x1': [4, 1],
   s: [2, 2],
   '3x2': [3, 2],
   w: [4, 2],
   '2x3': [2, 3],
-  '2x4': [2, 4],
   m: [4, 3],
   l: [4, 4],
 }
-/** 위젯이 그릴 모양 — 3×2 는 넓게(4×2), 2×3 · 2×4 는 작게(2×2) 모양을 칸에 맞춰 늘려 쓴다. 나머지는 그 크기 그대로 */
-export const lookOf = (s: StackSize | undefined) => (s === '3x2' ? 'w' : s === '2x3' || s === '2x4' ? 's' : s)
+/** 위젯이 그릴 모양 — 3×2 는 넓게(4×2), 2×3 은 작게(2×2) 모양을 칸에 맞춰 늘려 쓴다. 나머지는 그 크기 그대로 */
+export const lookOf = (s: StackSize | undefined) => (s === '3x2' ? 'w' : s === '2x3' ? 's' : s)
 
 /** 4칸 격자에 놓인 자리(칸 단위) */
 export interface Cell {

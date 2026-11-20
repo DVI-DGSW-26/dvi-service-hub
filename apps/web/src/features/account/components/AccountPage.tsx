@@ -1,5 +1,5 @@
 import { ArrowUpRight, LayoutGrid, LogOut, MonitorSmartphone, Palette, ShieldCheck } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import type { Service } from '@/features/systems'
 import { SignInMethods } from './SignInMethods'
 import { ThemeSettings } from '@/features/theme'
@@ -7,8 +7,7 @@ import { ServiceLogo } from '@/features/systems'
 import { Badge, ComingSoon, PageTitle, CountTag, PANEL_LINK, Panel, LoadError, Skeleton, SkeletonText } from '@/shared/ui'
 import { hrefOf } from '@/shared/hooks'
 import type { PortalTheme } from '@/features/theme'
-import { ACCOUNT_URL } from '../lib/account'
-import { LogoutConfirm } from './LogoutConfirm'
+import { ACCOUNT_URL, LOGOUT_URL } from '../lib/account'
 import { useI18n } from '@/shared/i18n'
 import { hasNoDepartment } from '@/shared/lib'
 import type { Me } from '@dvi/core/types'
@@ -34,7 +33,6 @@ interface AccountPageProps {
 export function AccountPage({ me, loading, services, theme, onCustomize }: AccountPageProps) {
   const { t, rich } = useI18n()
   const soon = <Badge tone="neutral">{t.common.comingSoon}</Badge>
-  const [confirm, setConfirm] = useState(false)
 
   return (
     <>
@@ -114,17 +112,14 @@ export function AccountPage({ me, loading, services, theme, onCustomize }: Accou
               {t.account.logout.title}
             </h2>
             <p className="mt-1.5 text-sm/relaxed text-muted">{t.account.logout.body}</p>
-            {/* SSO 세션까지 끊는다 — 한 번 더 묻는다 */}
-            <button
-              type="button"
-              onClick={() => setConfirm(true)}
-              aria-haspopup="dialog"
-              className="mt-4 flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-danger-soft text-[15px] font-semibold text-danger transition-[background-color,scale] duration-150 hover:bg-danger-fill hover:text-white active:scale-[0.98]"
+            {/* SSO 세션까지 끊는다 */}
+            <a
+              href={LOGOUT_URL}
+              className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-danger-soft text-[15px] font-semibold text-danger transition-[background-color,scale] duration-150 hover:bg-danger-fill hover:text-white active:scale-[0.98]"
             >
               <LogOut className="size-[18px]" aria-hidden="true" />
               {t.account.logout.action}
-            </button>
-            <LogoutConfirm open={confirm} onClose={() => setConfirm(false)} />
+            </a>
           </section>
         </div>
       </div>

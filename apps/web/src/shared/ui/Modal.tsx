@@ -11,8 +11,6 @@ interface ModalProps {
   wide?: boolean
   /** 화면을 거의 다 채우는 모달 (캘린더 크게 보기) */
   full?: boolean
-  /** 짧은 확인 — 휴대폰 시트도 내용 높이만큼만(85% 고정 높이 대신), 넓은 화면은 좁은 창 */
-  compact?: boolean
   className?: string
   children: ReactNode
 }
@@ -22,7 +20,7 @@ interface ModalProps {
  * 브라우저가 맡는다. 닫을 때는 사라지는 애니메이션(styles/overlay.css 의 data-closing)이 끝난 뒤 닫는다.
  * 휴대폰에서는 화면 아래에 붙어 올라오는 시트가 된다 — 엄지가 닿는 쪽이고, 손잡이를 끌어 내려 닫는다.
  */
-export function Modal({ open, onClose, labelledBy, wide = false, full = false, compact = false, className = '', children }: ModalProps) {
+export function Modal({ open, onClose, labelledBy, wide = false, full = false, className = '', children }: ModalProps) {
   const { t } = useI18n()
   const ref = useRef<HTMLDialogElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
@@ -80,7 +78,7 @@ export function Modal({ open, onClose, labelledBy, wide = false, full = false, c
     >
       <div
         ref={panelRef}
-        className={`glass-strong relative flex max-h-[calc(100dvh-32px)] flex-col overflow-hidden rounded-3xl max-sm:max-h-none max-sm:w-full max-sm:rounded-b-none max-sm:pb-[env(safe-area-inset-bottom)] ${compact ? 'w-[min(420px,calc(100vw-24px))]' : 'max-sm:h-[85dvh]'} ${full ? 'h-[calc(100dvh-24px)] max-h-none w-[calc(100vw-24px)]' : wide ? 'w-[min(1200px,calc(100vw-24px))]' : compact ? '' : 'w-[min(760px,calc(100vw-24px))]'} ${className}`}
+        className={`glass-strong relative flex max-h-[calc(100dvh-32px)] flex-col overflow-hidden rounded-3xl max-sm:h-[85dvh] max-sm:max-h-none max-sm:w-full max-sm:rounded-b-none max-sm:pb-[env(safe-area-inset-bottom)] ${full ? 'h-[calc(100dvh-24px)] max-h-none w-[calc(100vw-24px)]' : wide ? 'w-[min(1200px,calc(100vw-24px))]' : 'w-[min(760px,calc(100vw-24px))]'} ${className}`}
       >
         {/*
           휴대폰 시트는 내용과 상관없이 늘 화면의 85% 높이다 — 손잡이 · 닫기 단추 · 아래 버튼 줄이 매번 같은 자리에 있고,

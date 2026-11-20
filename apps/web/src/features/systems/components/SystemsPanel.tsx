@@ -51,8 +51,8 @@ export function SystemsPanel({ me, loading = false, services, allServices, favor
         {loading ? (
           <Skeleton className="w-full rounded-2xl" />
         ) : (
-          <ul className={`grid min-h-0 flex-1 gap-2 ${stack === '4x1' ? 'grid-cols-4' : stack === '2x1' ? 'grid-cols-2' : 'auto-rows-fr'}`}>
-            {top.slice(0, stack === '1x1' ? 1 : stack === '1x2' || stack === '2x1' ? 2 : 4).map((s) => (
+          <ul className={`grid min-h-0 flex-1 gap-2 ${stack === '4x1' ? 'grid-cols-4' : 'auto-rows-fr'}`}>
+            {top.slice(0, stack === '1x1' ? 1 : stack === '1x2' ? 2 : 4).map((s) => (
               <li key={s.id} className="min-w-0">
                 <a
                   href={s.links[0].url}

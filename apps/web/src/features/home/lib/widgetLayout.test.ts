@@ -226,7 +226,7 @@ test('stack — 좁은 화면은 저장한 순서대로, 거기 없는 위젯은
 })
 
 test('parseStack · stackSizeOf — 틀린 순서 · 크기는 버리고, 그릴 수 없는 크기는 보통으로', () => {
-  assert.deepEqual(parseStack({ order: ['a', 1], sizes: { a: 's', b: 'xl', c: 'l', d: 'w', e: '1x2', f: '2x1', g: '2x4' } }), { order: [], sizes: { a: 's', c: 'l', d: 'w', e: '1x2', f: '2x1', g: '2x4' } })
+  assert.deepEqual(parseStack({ order: ['a', 1], sizes: { a: 's', b: 'xl', c: 'l', d: 'w', e: '1x2' } }), { order: [], sizes: { a: 's', c: 'l', d: 'w', e: '1x2' } })
   assert.deepEqual(parseStack(null), { order: [], sizes: {} })
   assert.equal(stackSizeOf(['s', 'm', 'l'], 's'), 's')
   assert.equal(stackSizeOf(['m', 'l'], 's'), 'm')

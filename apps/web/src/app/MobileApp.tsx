@@ -1,8 +1,8 @@
-import { useRef, useState, type MouseEvent } from 'react'
-import { HomePage, MobileBoard } from '@/features/home'
-import { EditTabBar, GooFilter, TabBar, TopBar, useSwipeTabs } from '@/features/shell'
-import { pageIn } from './pageIn'
-import { Backdrop, Dock, Screens } from './Screens'
+import { useRef, useState, type CSSProperties, type MouseEvent } from 'react'
+import { DecorAdjust, Wallpaper } from '@/features/decor'
+import { EditDock, GALLERY, HomePage, MobileBoard } from '@/features/home'
+import { EditTabBar, GooFilter, TabBar, TopBar } from '@/features/shell'
+import { Screens } from './Screens'
 import { SkipLink } from './SkipLink'
 import type { Hub } from './useHub'
 
@@ -13,8 +13,6 @@ export default function MobileApp({ hub }: { hub: Hub }) {
   const [picking, setPicking] = useState(false)
   // '완료' 말고도 빈 곳(위젯 · 버튼 밖)을 누르면 끝난다 — 홈 화면 앱처럼. 위젯을 골라 둔 채 누르면 그 누름은 고르기만 푼다(StackBoard)
   const pickedAtDown = useRef(false)
-  // 본문을 옆으로 밀어 탭 넘기기 — 위젯 편집 중에는 위젯 드래그 몫이라 끈다
-  const mainRef = useSwipeTabs<HTMLElement>(route.page, !editing)
   const endOnEmpty = {
     onPointerDownCapture: () => void (pickedAtDown.current = picking),
     onClick: (e: MouseEvent) => {
@@ -26,10 +24,11 @@ export default function MobileApp({ hub }: { hub: Hub }) {
   return (
     <>
       <SkipLink />
-      <Backdrop hub={hub} />
+      {home && decor.wallpaper && <Wallpaper src={decor.wallpaper} pos={decor.pos.wallpaper} />}
+      {editing && adjusting && <DecorAdjust decor={decor} />}
       {/* 탭 바가 편집 막대가 되고(EditTabBar), 이 독은 그림 위치 조정 때만 */}
       {editing && !picking && adjusting && (
-        <Dock hub={hub} side={0} />
+        <EditDock decor={decor} onTidy={widgets.tidy} onUndo={widgets.canUndo ? widgets.undo : undefined} onReset={GALLERY ? undefined : widgets.reset} onDone={hub.stopEditing} side={0} />
       )}
 
       <div className="flex min-h-dvh flex-col px-3 pt-3 pb-24 sm:px-4">
@@ -45,15 +44,15 @@ export default function MobileApp({ hub }: { hub: Hub }) {
           editing={editing}
         />
 
+        {/* 화면을 옮기면 main 을 새로 그려 옮긴 방향에서 밀려 들어온다(styles/layout.css 의 .page-in) — 앱의 탭 넘김처럼 */}
         <main
           key={route.page}
-          ref={mainRef}
           id="main"
           tabIndex={-1}
-          className={`flex-1 pt-5 outline-none ${pageIn(route.dir).className} ${home ? 'flex flex-col' : ''} ${adjusting === 'wallpaper' ? 'invisible' : ''}`}
+          className={`flex-1 pt-5 outline-none ${route.dir ? 'page-in' : ''} ${home ? 'flex flex-col' : ''} ${adjusting === 'wallpaper' ? 'invisible' : ''}`}
           data-adjust={adjusting ?? undefined}
           {...endOnEmpty}
-          style={pageIn(route.dir).style}
+          style={route.dir ? ({ '--dir': Math.sign(route.dir) } as CSSProperties) : undefined}
         >
           <Screens
             hub={hub}
