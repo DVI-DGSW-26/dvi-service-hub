@@ -10,8 +10,8 @@
  *   { known: false } — switcher 는 전체 목록을 보여준다.
  */
 import { ACCESS_COOKIE, readCookie, verifySession, type Signed } from '../../lib/session.js';
-// 공용 패키지의 서비스 목록 — React 없는 순수 데이터라 Edge 번들이 가볍다
-import { services } from '@dvi/core/services';
+// 화면 도메인(src/features/systems)의 index 는 React 컴포넌트까지 끌고 와 Edge 번들에 넣지 않는다 — 순수 데이터 파일만
+import { services } from '../../src/features/systems/lib/services';
 
 export const config = { runtime: 'edge' };
 
