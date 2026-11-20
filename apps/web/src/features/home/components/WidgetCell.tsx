@@ -1,5 +1,5 @@
 import { Minus } from 'lucide-react'
-import type { KeyboardEvent, ReactNode } from 'react'
+import type { HTMLAttributes, KeyboardEvent, ReactNode, Ref } from 'react'
 import { DecorMenu, type Decor } from '@/features/decor'
 import { useI18n } from '@/shared/i18n'
 import type { StackSize } from '@/shared/widget'
@@ -8,7 +8,12 @@ import { STACK_CELLS } from '../lib/stackLayout'
 import type { Item, WidgetSize } from '../lib/widgetLayout'
 import { GALLERY, text, type WidgetContext, type WidgetDef } from '../lib/widgetDef'
 
-interface WidgetCellProps {
+/**
+ * react-grid-layout 이 칸마다 복제해 넣는 것(className · style · ref · 끌기 마우스 · 터치 핸들러 · 크기 손잡이 children)을 받아
+ * 루트 div 에 그대로 넘긴다 — 빠지면 칸 자리를 못 잡고 끌 수도 없다
+ */
+interface WidgetCellProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onKeyDown'> {
+  ref?: Ref<HTMLDivElement>
   c: Item
   index: number
   list: Item[]
@@ -31,11 +36,13 @@ interface WidgetCellProps {
  * 위젯 하나 — 좁은 화면은 고른 크기(stack)의 칸 수만큼 차지한다(styles/widgets/stack.css 의 .stack-wrap).
  * 좁은 화면의 옮기기 · 키보드는 StackBoard 가 하고, 넓은 화면의 옮기기는 react-grid-layout 이 한다
  */
-export function WidgetCell({ c, index, list, stack, overlay, def, size, editing, ctx, decor, longPress, onKeyDown, onRemove }: WidgetCellProps) {
+export function WidgetCell({ c, index, list, stack, overlay, def, size, editing, ctx, decor, longPress, onKeyDown, onRemove, className = '', style, children, ref, ...grid }: WidgetCellProps) {
   const { t, f } = useI18n()
   const name = text(def.title, t)
   return (
     <div
+      {...grid}
+      ref={ref}
       role="listitem"
       data-size={size}
       data-stack={stack}
@@ -44,14 +51,15 @@ export function WidgetCell({ c, index, list, stack, overlay, def, size, editing,
       style={
         stack
           ? ({
+              ...style,
               gridColumn: `span ${STACK_CELLS[stack][0]}`,
               gridRow: `span ${STACK_CELLS[stack][1]}`,
               viewTransitionName: `w-${c.i.replace(/[^\w-]/g, '_')}`,
               viewTransitionClass: 'stack-widget',
             })
-          : undefined
+          : style
       }
-      className={`rounded-3xl ${editing || stack ? 'cursor-grab touch-manipulation select-none [-webkit-touch-callout:none]' : ''}`}
+      className={`${className} rounded-3xl ${editing || stack ? 'cursor-grab touch-manipulation select-none [-webkit-touch-callout:none]' : ''}`}
       tabIndex={editing ? 0 : undefined}
       aria-label={editing ? f(stack ? t.widgets.positionStack : GALLERY ? t.widgets.position : t.widgets.positionMove, { name, index: index + 1, total: list.length }) : undefined}
       // 좁은 화면의 길게 누르기(편집 켜고 위젯 들기)는 StackBoard 가 맡는다
@@ -97,6 +105,7 @@ export function WidgetCell({ c, index, list, stack, overlay, def, size, editing,
         )}
         {overlay}
       </div>
+      {children}
     </div>
   )
 }
