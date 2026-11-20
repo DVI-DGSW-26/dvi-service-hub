@@ -40,8 +40,9 @@ export function NewsModal({ news, index, onIndexChange, viewAll }: NewsModalProp
               <h2 id={titleId} className="mt-2 text-[clamp(22px,2.4vw,28px)]/[1.3] font-bold tracking-[-0.025em] text-balance">
                 {title(item.title)}
               </h2>
-              {/* 본문은 행사 메모를 줄바꿈(\n)으로 이은 일반 글자 */}
-              <p className="mt-4 text-[17px]/[1.75] whitespace-pre-line text-fg/90 select-text">{item.body || item.summary}</p>
+              {/* 요약은 행사 설명, 본문은 행사 메모(notes)를 줄바꿈(\n)으로 이은 일반 글자 — 서로 다른 내용이라 둘 다(명세 6.2) */}
+              <p className="mt-4 text-[17px]/[1.75] whitespace-pre-line text-fg/90 select-text">{item.summary}</p>
+              {item.body && <p className="mt-3 text-[15px]/[1.7] whitespace-pre-line text-muted select-text">{item.body}</p>}
 
               {news.length > 1 && (
                 <section aria-label={t.home.news.others} className="mt-8 border-t border-line pt-6">
