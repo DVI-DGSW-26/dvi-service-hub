@@ -50,6 +50,7 @@
     "noFavorites": "아직 즐겨찾기한 서비스가 없습니다.",
     "noFavoritesHint": "카드 오른쪽 위의 별을 눌러 추가하세요.",
     "noAccess": "지금 계정으로 쓸 수 있는 서비스가 없습니다.",
+    "pages": "업무시스템 페이지",
     "mobileAll": { "one": "업무시스템 {count}개 모두 보기", "other": "업무시스템 {count}개 모두 보기" },
     "noAccessHint": "권한이 필요하면 IT부서에 알려 주세요."
   }

@@ -50,6 +50,7 @@
     "noFavorites": "No favorites yet.",
     "noFavoritesHint": "Tap the star on any card to add one.",
     "noAccess": "No services are available for this account.",
+    "pages": "System pages",
     "mobileAll": { "one": "See all {count} system", "other": "See all {count} systems" },
     "noAccessHint": "Need access? Let the IT team know."
   }

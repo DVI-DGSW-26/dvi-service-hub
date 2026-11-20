@@ -1,11 +1,12 @@
-import { ChevronRight, LayoutGrid } from 'lucide-react'
+import { LayoutGrid } from 'lucide-react'
 import { useState } from 'react'
-import { useClipRows, hrefOf } from '@/shared/hooks'
+import { hrefOf } from '@/shared/hooks'
 import type { Service } from '../lib/services'
 import { useI18n } from '@/shared/i18n'
 import { canSee } from '../lib/access'
 import type { Me } from '@/shared/types'
 import { isMini, type StackSize } from '@/shared/widget'
+import { CardPages } from './CardPages'
 import { ServiceCard, ServiceLogo } from './ServiceCard'
 import { ServiceCardSkeleton } from './ServiceSkeleton'
 import { CountTag, Panel, SmallPanel, Segmented, Skeleton, SkeletonText } from '@/shared/ui'
@@ -29,14 +30,8 @@ type Filter = 'mine' | 'all' | 'favorites'
 
 /** 넓은 화면 한 줄(5칸) × 2줄 — 실제 서비스 수와 비슷하게 */
 const SKELETON_COUNT = 10
-/** 휴대폰 홈에 보일 카드 수 (아래 ul 의 nth-child(n+5) 와 맞춘다) — 나머지는 업무시스템 화면에서 */
-const MOBILE_SHOWN = 4
 
 export function SystemsPanel({ me, loading = false, services, allServices, favorites, onToggleFavorite, stack, className = '' }: SystemsPanelProps) {
-  // 위젯 칸에는 카드를 모두 두고 다 들어가는 줄만 보인다(useClipRows) — 나머지는 '모두 보기'(업무시스템 화면). 반쯤 잘린 줄이 보이지 않게.
-  // 넓은 화면은 남은 줄이 칸 높이를 나눠 채운다(카드 크기는 모두 같게)
-  const all = !!stack
-  const rows = useClipRows<HTMLUListElement>(true, !all)
   const [filter, setFilter] = useState<Filter>('mine')
   const { t, f, rich } = useI18n()
   const favCount = services.filter((s) => favorites.includes(s.id)).length
@@ -167,27 +162,20 @@ export function SystemsPanel({ me, loading = false, services, allServices, favor
           )}
         </div>
       ) : (
-        // 휴대폰은 앞의 MOBILE_SHOWN 개만 — 나머지는 아래 '모두 보기'(업무시스템 화면)에서
-        <ul ref={rows} className={`grid grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))] gap-3 max-sm:gap-2 min-h-0 flex-1 content-start overflow-hidden ${all ? '' : 'max-sm:[&>li:nth-child(n+5)]:hidden'} fit:flex-1 fit:grid-cols-5 fit:gap-2.5`}>
-          {list.map((s) => (
-            <ServiceCard
-              key={s.id}
-              service={s}
-              favorite={favorites.includes(s.id)}
-              onToggleFavorite={onToggleFavorite}
-              locked={filter === 'all' && !canSee(s, me)}
-            />
-          ))}
-        </ul>
-      )}
-      {!loading && !all && list.length > MOBILE_SHOWN && (
-        <a
-          href={hrefOf('systems')}
-          className="mt-2 flex items-center justify-center gap-1 rounded-2xl py-2 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft sm:hidden"
-        >
-          {f(t.home.systems.mobileAll, { count: list.length })}
-          <ChevronRight className="size-4" aria-hidden="true" />
-        </a>
+        // 위젯 칸에 다 들어가는 만큼씩 페이지로 — 옆으로 밀거나 아래 점을 눌러 넘긴다. 반쯤 잘린 줄 없이 카드 크기는 모두 같다. 필터를 바꾸면 첫 페이지부터(key)
+        <CardPages key={filter} count={list.length} label={t.home.systems.pages}>
+          {(from, to) =>
+            list.slice(from, to).map((s) => (
+              <ServiceCard
+                key={s.id}
+                service={s}
+                favorite={favorites.includes(s.id)}
+                onToggleFavorite={onToggleFavorite}
+                locked={filter === 'all' && !canSee(s, me)}
+              />
+            ))
+          }
+        </CardPages>
       )}
     </Panel>
   )

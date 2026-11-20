@@ -61,8 +61,9 @@ export function ServiceCard({ service: s, favorite, onToggleFavorite, variant = 
       <div className={`flex items-start gap-3 p-4 ${detailed ? '' : 'max-sm:p-3 fit:p-3 tall:p-4 @max-[14rem]:flex-col @max-[14rem]:gap-2'}`}>
         <ServiceLogo service={s} size={detailed ? 'lg' : 'md'} />
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <h3 className="min-w-0 text-base font-bold break-keep">
+          {/* 홈 카드는 이름 줄을 한 줄로(이름이 길면 …) — 개발 중 표시가 내려가 그 카드만 커지지 않게. 위젯 페이지의 카드 크기는 모두 같다 */}
+          <div className={`flex items-center gap-x-2 gap-y-1 ${detailed ? 'flex-wrap' : ''}`}>
+            <h3 className={`min-w-0 text-base font-bold break-keep ${detailed ? '' : 'truncate'}`}>
               <a
                 href={primary.url}
                 target="_blank"
