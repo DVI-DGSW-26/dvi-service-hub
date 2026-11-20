@@ -30,6 +30,14 @@ type Filter = 'mine' | 'all' | 'favorites'
 
 /** 넓은 화면 한 줄(5칸) × 2줄 — 실제 서비스 수와 비슷하게 */
 const SKELETON_COUNT = 10
+/** 작은 칸마다 한 페이지 로고 수 · 페이지 grid */
+const SMALL = {
+  '1x1': [1, 'grid-rows-1'],
+  '1x2': [2, 'grid-rows-2 gap-2'],
+  '4x1': [4, 'grid-cols-4 grid-rows-1 gap-2'],
+  s: [4, 'grid-cols-2 grid-rows-2 gap-2'],
+  w: [4, 'grid-cols-4 grid-rows-1 gap-2'],
+} as const
 
 export function SystemsPanel({ me, loading = false, services, allServices, favorites, onToggleFavorite, stack, className = '' }: SystemsPanelProps) {
   const [filter, setFilter] = useState<Filter>('mine')
@@ -37,67 +45,45 @@ export function SystemsPanel({ me, loading = false, services, allServices, favor
   const favCount = services.filter((s) => favorites.includes(s.id)).length
   const list = filter === 'all' ? allServices : filter === 'mine' ? services : services.filter((s) => favorites.includes(s.id))
 
-  // 작은 칸에 보이는 로고 — services 는 App 이 즐겨찾기를 앞에 둬서(sortByFavorite) 넘긴다
-  const top = services.slice(0, 4)
+  // 작은 칸 — 로고(넓게 4×2 는 이름까지)를 칸마다 정해진 수씩 페이지로, 옆 · 위아래로 쓸어 넘긴다(점은 자리가 없어 없다). services 는 App 이 즐겨찾기를 앞에 둬서(sortByFavorite) 넘긴다
+  const small = stack && stack in SMALL ? SMALL[stack as keyof typeof SMALL] : undefined
+  const tiles = small && (
+    <CardPages count={services.length} label={t.home.systems.pages} perPage={small[0]} grid={small[1]} dots={false}>
+      {(from, to) =>
+        services.slice(from, to).map((s) => (
+          <li key={s.id} className="min-w-0">
+            <a
+              href={s.links[0].url}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`${s.name} ${t.common.newTab}`}
+              title={s.name}
+              className="flex h-full flex-col items-center justify-center gap-1 rounded-2xl bg-subtle ring-1 ring-line transition-[background-color,scale] duration-200 hover:bg-raised active:scale-95"
+            >
+              <ServiceLogo service={s} />
+              {stack === 'w' && <span className="max-w-full truncate px-1.5 text-xs font-semibold">{s.name}</span>}
+            </a>
+          </li>
+        ))
+      }
+    </CardPages>
+  )
 
-  // 아주 작은 칸 — 제목 없이 로고만: 1×1 하나, 1×2 둘(세로), 4×1 넷(가로). 나머지는 탭 바의 업무시스템에서
+  // 아주 작은 칸 — 제목 없이 로고만: 1×1 하나, 1×2 둘(세로), 4×1 넷(가로)
   if (isMini(stack)) {
     return (
-      <section aria-label={t.home.systems.title} className={`glass flex rounded-3xl p-2 ${className}`}>
-        {loading ? (
-          <Skeleton className="w-full rounded-2xl" />
-        ) : (
-          <ul className={`grid min-h-0 flex-1 gap-2 ${stack === '4x1' ? 'grid-cols-4' : 'auto-rows-fr'}`}>
-            {top.slice(0, stack === '1x1' ? 1 : stack === '1x2' ? 2 : 4).map((s) => (
-              <li key={s.id} className="min-w-0">
-                <a
-                  href={s.links[0].url}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={`${s.name} ${t.common.newTab}`}
-                  title={s.name}
-                  className="grid h-full place-items-center rounded-2xl bg-subtle ring-1 ring-line transition-[background-color,scale] duration-200 hover:bg-raised active:scale-95"
-                >
-                  <ServiceLogo service={s} />
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
+      <section aria-label={t.home.systems.title} className={`glass flex flex-col rounded-3xl p-2 ${className}`}>
+        {loading ? <Skeleton className="w-full flex-1 rounded-2xl" /> : tiles}
       </section>
     )
   }
 
-  // 작게 — 로고 2 × 2(넓게 4×2 는 한 줄 넷에 이름까지). 이름은 화면낭독 · 마우스 올리기로, 나머지는 업무시스템 화면에서
+  // 작게 — 로고 2 × 2(넓게 4×2 는 한 줄 넷에 이름까지). 이름은 화면낭독 · 마우스 올리기로
   if (stack === 's' || stack === 'w') {
-    const wide = stack === 'w'
     return (
       <SmallPanel title={t.home.systems.title} icon={LayoutGrid} className={className}>
-        {loading ? (
-          <Skeleton className="h-20 w-full" />
-        ) : top.length ? (
-          <ul className={`grid min-h-0 flex-1 gap-2 ${wide ? 'grid-cols-4' : 'grid-cols-2 grid-rows-2'}`}>
-            {top.map((s) => (
-              <li key={s.id} className="min-w-0">
-                <a
-                  href={s.links[0].url}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={`${s.name} ${t.common.newTab}`}
-                  title={s.name}
-                  className="flex h-full flex-col items-center justify-center gap-1 rounded-2xl bg-subtle ring-1 ring-line transition-[background-color,scale] duration-200 hover:bg-raised active:scale-95"
-                >
-                  <ServiceLogo service={s} />
-                  {wide && <span className="max-w-full truncate px-1.5 text-xs font-semibold">{s.name}</span>}
-                </a>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-[13px] text-muted break-keep">{t.home.systems.noAccess}</p>
-        )}
-        {/* 작게는 로고 2 × 2 가 칸을 다 쓴다 — 나머지는 탭 바의 업무시스템에서 */}
-        {wide && (
+        {loading ? <Skeleton className="h-20 w-full" /> : services.length ? tiles : <p className="text-[13px] text-muted break-keep">{t.home.systems.noAccess}</p>}
+        {stack === 'w' && (
           <a href={hrefOf('systems')} className="mt-2 text-[13px] font-semibold text-accent">
             {f(t.home.systems.mobileAll, { count: services.length })}
           </a>
