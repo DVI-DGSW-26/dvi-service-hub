@@ -41,8 +41,8 @@ export function SystemsPanel({ me, loading = false, services, allServices, favor
   const favCount = services.filter((s) => favorites.includes(s.id)).length
   const list = filter === 'all' ? allServices : filter === 'mine' ? services : services.filter((s) => favorites.includes(s.id))
 
-  // 작은 칸에 보이는 로고 — 즐겨찾기를 앞에
-  const top = [...services].sort((a, b) => Number(favorites.includes(b.id)) - Number(favorites.includes(a.id))).slice(0, 4)
+  // 작은 칸에 보이는 로고 — services 는 App 이 즐겨찾기를 앞에 둬서(sortByFavorite) 넘긴다
+  const top = services.slice(0, 4)
 
   // 아주 작은 칸 — 제목 없이 로고만: 1×1 하나, 1×2 둘(세로), 4×1 넷(가로). 나머지는 탭 바의 업무시스템에서
   if (isMini(stack)) {
