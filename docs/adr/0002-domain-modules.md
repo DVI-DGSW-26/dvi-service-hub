@@ -2,6 +2,8 @@
 
 - 상태: 채택
 - 날짜: 2026-11-19
+- 이후: ADR 0003 — 웹은 `apps/web` 으로 옮겼고, 공용 타입 · 서비스 목록 · 권한 · 위젯 크기 · 사전은 `@dvi/core` 로 갔다가 2026-11-20 web 으로 돌아왔다(core 는 지움).
+  아래의 `shared/types` · `shared/widget` · Edge 함수 예외는 그 전 이야기다.
 
 ## 맥락
 
@@ -127,7 +129,12 @@ ESLint(`pnpm lint`)가 위 규칙을 막는다. 위반은 에러다.
 - 파일 수는 늘어난다(파일 하나에 내보내는 것 하나). 대신 파일마다 한 가지 일만 한다.
 - `typescript@7` 은 기존 컴파일러 API 가 없어 `typescript-eslint` 에는 `.pnpmfile.cjs` 로 TS 5.9 를 물린다(빌드 · `tsc` 는 7 그대로).
   `eslint-plugin-jsx-a11y` 가 ESLint 9 까지만 받아 ESLint 는 9 로 둔다.
-- 이 결정을 처음 들인 때 `pnpm lint` 에는 구조와 무관한 TS strict · 복잡도 · 접근성 지적이 남아 있다. 차례로 줄인다.
+- 이 결정을 처음 들인 때 `pnpm lint` 에는 구조와 무관한 TS strict · 복잡도 · 접근성 지적이 남아 있었다(314건). 2026-11-20 에 0 으로 만들고 CI 에 넣었다:
+  - `.tsx` 는 `complexity` 를 보지 않는다 — JSX 조건부(`&&` · `? :`)가 분기로 세여 부푼다. 크기는 함수 길이 · 파일 줄 수로 본다.
+  - 테스트 · `src/mocks` 는 함수 크기 규칙(complexity · max-lines-per-function · max-params)을 끈다.
+  - 남은 크기 위반 17건은 `apps/web/eslint-suppressions.json`(ESLint bulk suppressions)에 묶었다. 새 위반은 그대로 에러다.
+    고치면 `eslint . --prune-suppressions` 로 그 항목을 지운다(안 지우면 lint 가 실패한다).
+  - 라이브러리가 정한 콜백 모양처럼 고칠 수 없는 것만 그 줄에 `-- 이유` 를 단 eslint-disable. 쓸모없어진 disable 은 에러(`reportUnusedDisableDirectives`).
 
 ## 검토한 다른 길
 

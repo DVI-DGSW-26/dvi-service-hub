@@ -1,0 +1,25 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "devCommand": "pnpm dev:mock --port $PORT",
+  "buildCommand": "tsc -b && vite build",
+  "outputDirectory": "dist",
+  "ignoreCommand": "git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . ../../package.json ../../pnpm-lock.yaml ../../pnpm-workspace.yaml ../../.pnpmfile.cjs || exit 1",
+  "headers": [
+    {
+      "source": "/switcher.js",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=300, stale-while-revalidate=86400" }]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/switcher.js",
+      "destination": "https://api.dvi-ind.com/static/switcher/switcher.js"
+    },
+    {
+      "source": "/api/hub/:path*",
+      "destination": "https://api.dvi-ind.com/hub/:path*"
+    }
+  ]
+}

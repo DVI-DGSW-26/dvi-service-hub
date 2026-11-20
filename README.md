@@ -4,15 +4,24 @@ DVISION 사내 서비스를 한곳에서 찾고 이동하는 포털.
 
 ## 실행
 
-pnpm 을 쓴다 (`package.json` 의 `packageManager` 버전).
+pnpm 모노레포다 (`package.json` 의 `packageManager` 버전, Node 26 LTS). 명령은 저장소 루트에서 친다.
+
+```
+apps/web/       허브 웹 — Vite + React, Vercel Edge 함수(api/ · lib/ · middleware.ts), switcher
+```
 
 ```bash
 pnpm install
 pnpm dev        # http://localhost:5173 — 실제 허브 서버(/api/hub)를 부른다
 pnpm dev:mock   # 서버 없이 가짜 데이터로 (아래 '목업으로 보기')
-pnpm typecheck  # 화면(src) · 서버(api, lib, middleware.ts) 타입 검사
-pnpm build      # dist/ 생성
+pnpm build      # apps/web/dist 생성
+pnpm check      # 모든 패키지 typecheck · lint · test
 ```
+
+휴대폰 앱(apps/mobile)은 웹을 다시 맞춘 뒤 새로 만든다 — 그 전 시도는 `wip/mobile-login` 브랜치(ADR 0006).
+
+Vercel 프로젝트의 Root Directory 는 `apps/web` 이다 (docs/adr/0003-monorepo.md).
+아래에서 `src/` · `api/` 등 경로는 `apps/web/` 기준이다.
 
 ### 목업으로 보기 (`pnpm dev:mock`)
 
