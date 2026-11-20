@@ -17,7 +17,7 @@ interface StackBoardProps {
   onPick: (picking: boolean) => void
   /** 끌어 옮긴 위젯을 놓았다 — 놓기를 완료로 보고 편집을 끝낸다 */
   onDone: () => void
-  /** 위젯 하나 — MobileBoard 의 것을 그대로 쓴다. overlay 는 고른 위젯 위에 얹는 테두리 · 손잡이 */
+  /** 위젯 하나 — WidgetGrid 의 것을 그대로 쓴다. overlay 는 고른 위젯 위에 얹는 테두리 · 손잡이 */
   renderWidget: (c: Item, index: number, list: Item[], stack: StackSize, overlay?: ReactNode) => ReactNode
 }
 

@@ -12,7 +12,7 @@
       grid-auto-flow: column;
       grid-auto-columns: 100%;
       column-gap: 1.25rem;
-      /* --swipe — 빈 곳을 옆으로 미는 동안 손을 따라 옮긴 거리(DesktopBoard) */
+      /* --swipe — 빈 곳을 옆으로 미는 동안 손을 따라 옮긴 거리(WidgetGrid) */
       transform: translateX(calc(var(--page) * -1 * (100% + 1.25rem) + var(--swipe, 0px)));
       transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
     }

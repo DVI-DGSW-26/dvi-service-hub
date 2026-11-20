@@ -1,7 +1,5 @@
 export { EditDock } from './components/EditDock'
-export { DesktopBoard } from './components/DesktopBoard'
 export { HomePage } from './components/HomePage'
-export { MobileBoard } from './components/MobileBoard'
 export { WidgetEditBar } from './components/WidgetGallery'
 export { visibleWidgets } from './components/registry'
 export { GALLERY } from './lib/widgetDef'
