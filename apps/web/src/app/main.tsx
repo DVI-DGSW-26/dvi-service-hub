@@ -17,6 +17,19 @@ applySavedPrefs()
 // 앱 껍데기 캐시(public/sw.js) — 배포본에서만. 개발 서버는 /assets 가 없고 고친 것이 바로 보여야 한다
 if (import.meta.env.PROD && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js')
 
+// 새 배포 뒤 첫 실행은 받아 둔 옛 껍데기로 떠서, 아직 안 연 지연 로딩 화면(지난 해시 파일)이 서버에 없어 못 연다 — 한 번 새로 고친다.
+// 그사이 sw.js 가 새 index.html 을 받아 뒀다. 10초 안에 또 나면 그냥 둔다(계속 새로 고치지 않게)
+window.addEventListener('vite:preloadError', (e) => {
+  try {
+    if (Date.now() - Number(sessionStorage.getItem('reloadedAt') ?? 0) < 10_000) return
+    sessionStorage.setItem('reloadedAt', String(Date.now()))
+  } catch {
+    return
+  }
+  e.preventDefault()
+  location.reload()
+})
+
 // pnpm dev:mock · Vercel preview — 서버 없이 가짜 API 로 연다. production 빌드에서는 VITE_MOCK 이 false 라 이 import 가 통째로 빠진다
 async function prepare() {
   if (!import.meta.env.VITE_MOCK) return
