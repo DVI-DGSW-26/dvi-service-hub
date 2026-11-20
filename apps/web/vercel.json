@@ -5,7 +5,7 @@
   "devCommand": "pnpm dev:mock --port $PORT",
   "buildCommand": "tsc -b && vite build",
   "outputDirectory": "dist",
-  "ignoreCommand": "git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . ../../package.json ../../pnpm-lock.yaml ../../pnpm-workspace.yaml",
+  "ignoreCommand": "git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . ../../package.json ../../pnpm-lock.yaml ../../pnpm-workspace.yaml ../../.pnpmfile.cjs",
   "headers": [
     {
       "source": "/switcher.js",
