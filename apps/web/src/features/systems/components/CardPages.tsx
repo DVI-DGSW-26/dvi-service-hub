@@ -35,7 +35,8 @@ export function CardPages({ count, label, perPage: fixed, grid = CARD_GRID, dots
         className="-m-1 flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:none]"
       >
         {Array.from({ length: pageCount }, (_, k) => (
-          <ul key={k} className={`grid h-full w-full flex-none snap-start content-start p-1 ${grid}`}>
+          // snap-always: 크게 쓸어도(던지듯) 한 페이지씩 — 여러 장은 손을 대고 끌어서
+          <ul key={k} className={`grid h-full w-full flex-none snap-start snap-always content-start p-1 ${grid}`}>
             {children(k * perPage, (k + 1) * perPage)}
           </ul>
         ))}
