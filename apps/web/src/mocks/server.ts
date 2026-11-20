@@ -28,13 +28,15 @@ const db = { notices: seedNotices(), maintenance: seedMaintenance(), news: seedN
 
 // ---------------------------------------------------------------- 응답 · 오류
 
-class HttpError {
+class HttpError extends Error {
   constructor(
     readonly status: number,
     readonly code: string,
-    readonly message: string,
+    message: string,
     readonly field?: string,
-  ) {}
+  ) {
+    super(message)
+  }
 }
 
 const ok = <T>(data: T, message = '성공', status = 200) => ({ status, body: { status, message, data } })

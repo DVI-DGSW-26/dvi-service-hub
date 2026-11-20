@@ -46,6 +46,11 @@ export default tseslint.config(
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
     },
   },
+  // node:test 의 test() 는 Promise 를 돌려주지만 러너가 기다린다. 테스트의 ! 는 실패하면 그 자리에서 터지는 게 맞다
+  {
+    files: ['**/*.test.ts'],
+    rules: { '@typescript-eslint/no-floating-promises': 'off', '@typescript-eslint/no-non-null-assertion': 'off' },
+  },
   { files: ['**/*.js', '**/*.cjs'], ...tseslint.configs.disableTypeChecked },
   { files: ['**/*.cjs'], languageOptions: { sourceType: 'commonjs', globals: globals.node } },
   {
