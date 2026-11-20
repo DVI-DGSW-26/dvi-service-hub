@@ -57,8 +57,8 @@ export function WidgetEditBar({ layout, defs }: GalleryProps) {
         </div>
       </aside>
 
-      {/* 좁은 화면 — 탭 바 자리 */}
-      <div className="glass-chrome fixed inset-x-3 bottom-3 z-30 flex items-center gap-2 rounded-[22px] p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] lg:hidden">
+      {/* 좁은 화면 — 탭 바 자리는 편집 탭 바(EditTabBar)가 쓰니 그 위에 */}
+      <div className="glass-chrome fixed inset-x-3 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-30 flex items-center gap-2 rounded-[22px] p-2 lg:hidden">
         <button
           type="button"
           onClick={() => setSheet(true)}
