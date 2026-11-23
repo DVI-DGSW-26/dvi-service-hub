@@ -6,41 +6,32 @@
  * 3. iss · aud · nonce · exp 를 확인한다
  * 4. 토큰에 실려온 역할(realm + 서비스별)을 세션에 담는다
  *    — 허브는 이 역할로 "쓸 수 있는 서비스"만 보여준다 (docs/service-hub.md)
- * 5. 서명한 세션 쿠키를 심고 원래 보려던 주소로 돌려보낸다
+ * 5. 서명한 세션 쿠키와 refresh token 쿠키를 심고 원래 보려던 주소로 돌려보낸다
+ *    — 세션은 짧고, 끝나기 전에 /api/auth/refresh 가 늘린다 (lib/keycloak.ts)
  *
  * 행사 아카이브와 달리 employee 가 없어도 막지 않는다. 부서 미지정 신규
  * 입사자도 허브에는 들어와서 "부서가 지정되지 않았다"는 안내를 봐야 한다.
  * 빈 화면이나 403 은 본인에게 고장으로 보인다.
  */
-import { AUTH_COOKIE, IDTOKEN_COOKIE, SESSION_COOKIE, SESSION_HOURS, buildAccessCookie, buildCookie, readCookie, signSession,
-  verifySession, type Session } from '../../lib/session.js';
+import { AUTH_COOKIE, buildCookie, readCookie, verifySession } from '../../lib/session.js';
 import { configError, decodeJwt, discover, htmlError, redirect, safePath,
   type JwtClaims, type OidcMetadata, type PendingLogin } from '../../lib/oidc.js';
+import { sessionCookies, type TokenResponse } from '../../lib/keycloak.js';
 
 export const config = { runtime: 'edge' };
 
-// Keycloak 내부용이라 화면 판단에 쓰지 않는 역할·클라이언트
-const REALM_ROLE_NOISE = new Set(['offline_access', 'uma_authorization']);
-const CLIENT_NOISE = new Set(['account', 'account-console', 'broker', 'realm-management']);
-
 /**
- * Keycloak 은 realm_access · resource_access 를 보통 access_token 에만 담는다.
- * (id_token 에 넣으려면 별도 매퍼가 필요하다) 두 토큰을 모두 보고 합친다.
+ * 로그인 탭을 여러 개 열어 둔 채 한쪽에서 로그인하면 나머지 탭은 Keycloak 의 로그인 진행이 끝나
+ * error_description=authentication_expired 로 돌아온다. 다시 시작하면 SSO 가 살아 있어 화면 없이 들어간다.
+ * 오류 화면 대신 한 번만 다시 시작한다 — 다시 시작한 로그인(retried)이 또 그러면 오류를 보인다.
  */
-function collectRoles(tokens: (JwtClaims | null)[]): Pick<Session, 'realm' | 'svc'> {
-  const realm = new Set<string>();
-  const svc: Record<string, string[]> = {};
-  for (const t of tokens) {
-    if (!t) continue;
-    for (const r of t.realm_access?.roles ?? []) {
-      if (!REALM_ROLE_NOISE.has(r) && !r.startsWith('default-roles-')) realm.add(r);
-    }
-    for (const [client, v] of Object.entries(t.resource_access ?? {})) {
-      if (CLIENT_NOISE.has(client)) continue;
-      svc[client] = [...new Set([...(svc[client] ?? []), ...(v?.roles ?? [])])];
-    }
-  }
-  return { realm: [...realm], svc };
+function retryExpiredLogin(url: URL, pending: PendingLogin | null): Response | null {
+  if (url.searchParams.get('error_description') !== 'authentication_expired' || pending?.retried) return null;
+  const login = new URL('/api/auth/login', url.origin);
+  login.searchParams.set('next', safePath(pending?.next));
+  if (pending?.action) login.searchParams.set('action', pending.action);
+  login.searchParams.set('retried', '1');
+  return redirect(login.toString(), buildCookie(AUTH_COOKIE, '', 0));
 }
 
 /**
@@ -68,10 +59,12 @@ export default async function handler(req: Request): Promise<Response> {
   if (url.searchParams.get('error')) {
     // 설정에서 보낸 일(kc_action)을 취소 · 실패한 것이면 로그인은 그대로 두고 설정으로 돌아간다
     const status = url.searchParams.get('kc_action_status');
-    const back = status ? await verifySession<PendingLogin>(readCookie(req, AUTH_COOKIE), secret) : null;
-    if (back?.action && back.state === url.searchParams.get('state')) {
+    const back = await verifySession<PendingLogin>(readCookie(req, AUTH_COOKIE), secret);
+    if (status && back?.action && back.state === url.searchParams.get('state')) {
       return redirect(withActionResult(back, status, url.origin), buildCookie(AUTH_COOKIE, '', 0));
     }
+    const retry = retryExpiredLogin(url, back);
+    if (retry) return retry;
     // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- 빈 설명이면 error 코드를 보인다
     const desc = url.searchParams.get('error_description') || url.searchParams.get('error');
     return htmlError('로그인하지 못했습니다', `통합 로그인에서 거절되었습니다. (${desc})`);
@@ -125,7 +118,7 @@ export default async function handler(req: Request): Promise<Response> {
       `통합 로그인 서버가 토큰 발급을 거절했습니다. (${res.status}${detail ? ` · ${detail}` : ''})${hint}`, 502);
   }
 
-  const token = (await res.json().catch(() => ({}))) as { id_token?: string; access_token?: string };
+  const token = (await res.json().catch(() => ({}))) as TokenResponse;
   if (!token.id_token) return htmlError('로그인하지 못했습니다', '계정 정보를 받지 못했습니다.', 502);
 
   let claims: JwtClaims, access: JwtClaims | null = null;
@@ -142,26 +135,11 @@ export default async function handler(req: Request): Promise<Response> {
   if (!claims.exp || claims.exp * 1000 < Date.now()) return htmlError('로그인하지 못했습니다', '계정 정보가 만료되었습니다.', 401);
   if (!claims.sub) return htmlError('로그인하지 못했습니다', '계정 식별자(sub)가 없습니다.', 502);
 
-  /* 사용자 식별은 sub 으로 한다. 이메일은 바뀔 수 있지만 sub 은 바뀌지 않는다. */
-  const roles = collectRoles([claims, access]);
-  const session: Session = {
-    sub: claims.sub,
-    // eslint-disable-next-line @typescript-eslint/no-base-to-string, @typescript-eslint/prefer-nullish-coalescing -- 토큰 JSON 값이라 빈 값 · 무엇이 와도 String() 으로 받는다
-    email: String(claims.email || '').toLowerCase(),
-    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- 빈 이름도 다음 값으로 넘긴다
-    name: claims.name || claims.preferred_username || '사내 계정',
-    realm: roles.realm,
-    svc: roles.svc,
-    exp: Math.floor(Date.now() / 1000) + SESSION_HOURS * 3600,
-  };
-
+  // 세션은 짧게 만들고 refresh token 으로 늘린다 (lib/keycloak.ts)
+  const { cookies } = await sessionCookies(token, claims, access, secret);
   return redirect(
     withActionResult(pending, url.searchParams.get('kc_action_status'), url.origin),
-    buildCookie(SESSION_COOKIE, await signSession(session, secret), SESSION_HOURS * 3600),
+    ...cookies,
     buildCookie(AUTH_COOKIE, '', 0),
-    // 전체 로그아웃 때 id_token_hint 로 쓴다. 화면 스크립트는 읽지 못한다.
-    buildCookie(IDTOKEN_COOKIE, token.id_token, SESSION_HOURS * 3600),
-    // 서비스 이동 버튼이 다른 사이트에서 역할을 묻는 데 쓴다
-    await buildAccessCookie(session, secret),
   );
 }

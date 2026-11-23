@@ -13,7 +13,14 @@ const dec = new TextDecoder();
 export const SESSION_COOKIE = 'hub_session';
 export const IDTOKEN_COOKIE = 'hub_idt'; // 전체 로그아웃(id_token_hint)에만 쓴다
 export const AUTH_COOKIE = 'hub_auth'; // 로그인 진행 중에만 쓰는 임시 쿠키
-export const SESSION_HOURS = 12;
+/** Keycloak refresh token — 세션을 늘리는 /api/auth/refresh 에만 실려 간다 (lib/keycloak.ts) */
+export const REFRESH_COOKIE = 'hub_rt';
+/**
+ * hub_session 이 버티는 시간(초). 일부러 짧다 — 끝나기 전에 /api/auth/refresh 가 Keycloak 에서 갱신해 늘린다.
+ * 쿠키 수명만 길게 두지 않는 이유: 퇴사 처리 · 권한 변경이 다음 갱신에서 바로 반영된다.
+ * service-hub-server 도 이 exp 로 hub_session 을 거른다 — 화면은 401 이면 한 번 갱신하고 다시 부른다(src/shared/api).
+ */
+export const SESSION_SECONDS = 10 * 60;
 /**
  * 역할만 담은 쿠키 — 서비스 이동 버튼(switcher.js)이 다른 사이트 화면에서 /api/switcher/access 로 묻는다.
  * 그 요청에는 로그인 쿠키(SameSite=Lax)가 따라오지 않아 이것만 SameSite=None 으로 둔다.
@@ -26,6 +33,7 @@ export const ACCESS_COOKIE = 'hub_access';
 const COOKIE_PATH: Record<string, string> = {
   [IDTOKEN_COOKIE]: '/api/auth/logout',
   [AUTH_COOKIE]: '/api/auth/callback',
+  [REFRESH_COOKIE]: '/api/auth/refresh',
   [ACCESS_COOKIE]: '/api/switcher',
 };
 
@@ -115,7 +123,7 @@ export function buildCookie(name: string, value: string, maxAge: number): string
   return bits.join('; ');
 }
 
-/** 세션에서 역할만 떼어 서명한 쿠키. 세션과 같은 시각에 끝난다 */
+/** 세션에서 역할만 떼어 서명한 쿠키. exp 에 끝난다 — 짧은 세션이 아니라 refresh token 과 같은 시각을 넘긴다 */
 export async function buildAccessCookie(session: Signed & Partial<Pick<Session, 'realm' | 'svc'>>, secret: string): Promise<string> {
   const maxAge = Math.max(0, session.exp - Math.floor(Date.now() / 1000));
   return buildCookie(ACCESS_COOKIE, await signSession({ realm: session.realm, svc: session.svc, exp: session.exp }, secret), maxAge);

@@ -38,6 +38,8 @@ export default async function handler(req: Request): Promise<Response> {
   const next = safePath(url.searchParams.get('next'));
   const requested = url.searchParams.get('action');
   const action = requested && ACTION.test(requested) ? requested : undefined;
+  // callback 이 authentication_expired 로 다시 보낸 것 — 한 번만 다시 시작하게 표시해 둔다
+  const retried = url.searchParams.get('retried') === '1' || undefined;
 
   const state = randomString(24);
   const nonce = randomString(24);
@@ -45,7 +47,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   // 로그인 진행 상태는 10분만 유효하다
   const pending = await signSession(
-    { state, nonce, verifier, next, action, exp: Math.floor(Date.now() / 1000) + 600 } satisfies PendingLogin,
+    { state, nonce, verifier, next, action, retried, exp: Math.floor(Date.now() / 1000) + 600 } satisfies PendingLogin,
     secret,
   );
 

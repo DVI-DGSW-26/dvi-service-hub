@@ -7,8 +7,9 @@
  *
  * id_token_hint 를 함께 보내면 Keycloak 이 확인 화면 없이 바로 끝낸다.
  */
-import { ACCESS_COOKIE, IDTOKEN_COOKIE, SESSION_COOKIE, buildCookie, readCookie } from '../../lib/session.js';
+import { IDTOKEN_COOKIE, readCookie } from '../../lib/session.js';
 import { configError, discover, redirect } from '../../lib/oidc.js';
+import { clearSessionCookies } from '../../lib/keycloak.js';
 
 export const config = { runtime: 'edge' };
 
@@ -29,5 +30,6 @@ export default async function handler(req: Request): Promise<Response> {
   const idToken = readCookie(req, IDTOKEN_COOKIE);
   if (idToken) end.searchParams.set('id_token_hint', idToken);
 
-  return redirect(end.toString(), buildCookie(SESSION_COOKIE, '', 0), buildCookie(IDTOKEN_COOKIE, '', 0), buildCookie(ACCESS_COOKIE, '', 0));
+  // 세션 · refresh token · id token · 역할 쿠키를 모두 지운다
+  return redirect(end.toString(), ...clearSessionCookies());
 }

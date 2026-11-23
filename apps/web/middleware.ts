@@ -4,6 +4,10 @@
  * 허브에는 공개할 내용이 없다. 들어오면 바로 SSO 로 보내고, 돌아온 뒤에
  * 화면을 그린다 (docs/service-hub.md §2). 로그인 화면을 따로 두지 않고
  * /api/auth/login 이 곧장 Keycloak 으로 보낸다.
+ *
+ * 세션(hub_session)은 짧게 끝나고 refresh token 으로 늘린다. 세션이 끝난 페이지 이동은
+ * /api/auth/refresh 로 보내 늘린 뒤 돌아온다 — 거절되면 거기서 통합 로그인으로 보낸다.
+ * 여기서 직접 갱신하지 않는다. 갱신은 그 경로 하나에서만 한다 (lib/keycloak.ts).
  */
 import { next } from '@vercel/edge';
 import { SESSION_COOKIE, readCookie, verifySession } from './lib/session.js';
@@ -39,7 +43,7 @@ export default async function middleware(req: Request): Promise<Response> {
     });
   }
 
-  const login = new URL('/api/auth/login', url.origin);
-  login.searchParams.set('next', url.pathname + url.search);
-  return Response.redirect(login.toString(), 302);
+  const refresh = new URL('/api/auth/refresh', url.origin);
+  refresh.searchParams.set('next', url.pathname + url.search);
+  return Response.redirect(refresh.toString(), 302);
 }
