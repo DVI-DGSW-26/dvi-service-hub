@@ -17,6 +17,8 @@ export interface PendingLogin extends Signed {
   next: string;
   /** 통합 로그인에서 할 일(kc_action). 있으면 callback 이 결과를 돌아갈 주소에 붙인다 */
   action?: string;
+  /** authentication_expired 로 한 번 다시 시작한 로그인. 또 그러면 다시 시작하지 않고 오류를 보인다 (callback) */
+  retried?: boolean;
 }
 
 /** discovery 문서 중 이 허브가 쓰는 항목 */

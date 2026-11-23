@@ -10,6 +10,8 @@ export interface Me {
   department?: string
   realm: string[]
   svc: Record<string, string[]>
+  /** 세션 만료 시각(초). 화면이 끝나기 전에 늘린다 (shared/api/session.ts) */
+  exp?: number
 }
 
 /** 아이콘은 문자열 키로 받고 화면에서 lucide 아이콘으로 바꾼다 (shared/ui/Icon.tsx) */
