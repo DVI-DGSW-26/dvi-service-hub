@@ -35,7 +35,15 @@
   },
   "noDepartment": "You haven't been assigned to a department yet, so some services are hidden. Please contact the admin team.",
   "quickLinks": {
-    "title": "Quick links"
+    "title": "Quick links",
+    "openWith": {
+      "title": "Where to open?",
+      "web": "Open in browser",
+      "webHint": "In a new browser tab",
+      "app": "Open in app",
+      "appHint": "Falls back to the web",
+      "dontAsk": "Don't ask again"
+    }
   },
   "systems": {
     "title": "Systems",
@@ -53,5 +61,29 @@
     "pages": "System pages",
     "mobileAll": { "one": "See all {count} system", "other": "See all {count} systems" },
     "noAccessHint": "Need access? Let the IT team know."
+  },
+  "flow": {
+    "title": "External affairs room",
+    "source": "Flow",
+    "open": "Open in Flow",
+    "empty": "No posts yet.",
+    "untitled": "(Untitled)",
+    "unread": "Unread",
+    "comments": {
+      "one": "{count} comment",
+      "other": "{count} comments"
+    },
+    "type": {
+      "post": "Post",
+      "task": "Task",
+      "schedule": "Event",
+      "todo": "To-do",
+      "other": "Post"
+    },
+    "notice": {
+      "FLOW_ACCOUNT_UNKNOWN": "Only available to accounts signed in with a company email.",
+      "FLOW_FORBIDDEN": "You are not a member of this room in Flow, so its posts are hidden.",
+      "FLOW_PROJECT_NOT_FOUND": "Flow could not find your account or this room."
+    }
   }
 }

@@ -11,6 +11,8 @@ interface ModalProps {
   wide?: boolean
   /** 화면을 거의 다 채우는 모달 (캘린더 크게 보기) */
   full?: boolean
+  /** 고르기만 하는 작은 모달 (웹 · 앱으로 열기) — 휴대폰 시트도 내용 높이만큼 */
+  compact?: boolean
   className?: string
   children: ReactNode
 }
@@ -19,8 +21,23 @@ interface ModalProps {
  * 네이티브 <dialog> 모달. 초점 가두기 · 뒤 화면 비활성 · 닫은 뒤 원래 버튼으로 초점 복귀는
  * 브라우저가 맡는다. 닫을 때는 사라지는 애니메이션(styles/overlay.css 의 data-closing)이 끝난 뒤 닫는다.
  * 휴대폰에서는 화면 아래에 붙어 올라오는 시트가 된다 — 엄지가 닿는 쪽이고, 손잡이를 끌어 내려 닫는다.
+ * 폭은 px 로 정하지 않고 화면 폭의 몇 % — 화면이 넓을수록 비율을 줄여 큰 모니터에서 너무 퍼지지 않게(SIZE). 높이를 정하는 모달은 화면 높이의 %(dvh)로.
+ * 모달이 화면보다 좁으니 안의 배치(목록 · 본문 나란히 등)는 화면 폭(lg:)이 아니라 모달 폭(@container, @2xl: 672px · 캘린더는 @3xl: 768px)으로 바꾼다
  */
-export function Modal({ open, onClose, labelledBy, wide = false, full = false, className = '', children }: ModalProps) {
+/**
+ * 모달 크기 — IBM Carbon 의 모달 크기표(carbondesignsystem.com/components/modal/style)처럼 화면 폭의 %, 넓은 화면일수록 작은 %.
+ * Carbon 의 672 · 1056 · 1312px 구간을 Tailwind 의 sm · lg · xl 로. 휴대폰(sm 아래)은 폭 가득한 시트.
+ * 폭은 Carbon 보다 한 단계 넓게, 높이는 낮게 — 가로로 긴 모양(1920 × 1080 에서 넓은 모달이 1152 × 756)으로 목록 · 본문을 나란히 둔다.
+ * full(캘린더 크게 보기)은 더 크게 — 한 달 칸마다 일정 이름을 보여 줘야 해서, Carbon Large(72%)면 1366 화면에서 이름이 두 글자만 남는다
+ */
+const SIZE = {
+  normal: 'sm:w-[72vw] sm:max-h-[64dvh] lg:w-[50vw] xl:w-[42vw]',
+  wide: 'sm:w-[90vw] sm:max-h-[72dvh] lg:w-[72vw] xl:w-[60vw]',
+  full: 'h-[90dvh] max-h-none sm:w-[96vw] lg:w-[92vw] 2xl:w-[84vw]',
+  compact: 'sm:w-[56vw] lg:w-[36vw] xl:w-[28vw]',
+}
+
+export function Modal({ open, onClose, labelledBy, wide = false, full = false, compact = false, className = '', children }: ModalProps) {
   const { t } = useI18n()
   const ref = useRef<HTMLDialogElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
@@ -79,7 +96,7 @@ export function Modal({ open, onClose, labelledBy, wide = false, full = false, c
     >
       <div
         ref={panelRef}
-        className={`glass-strong relative flex max-h-[calc(100dvh-32px)] flex-col overflow-hidden rounded-3xl max-sm:h-[85dvh] max-sm:max-h-none max-sm:w-full max-sm:rounded-b-none max-sm:pb-[env(safe-area-inset-bottom)] ${full ? 'h-[calc(100dvh-24px)] max-h-none w-[calc(100vw-24px)]' : wide ? 'w-[min(1200px,calc(100vw-24px))]' : 'w-[min(760px,calc(100vw-24px))]'} ${className}`}
+        className={`glass-strong @container relative flex max-h-[calc(100dvh-32px)] flex-col overflow-hidden rounded-3xl ${compact ? '' : 'max-sm:h-[85dvh] max-sm:max-h-none'} max-sm:w-full max-sm:rounded-b-none max-sm:pb-[env(safe-area-inset-bottom)] ${SIZE[full ? 'full' : wide ? 'wide' : compact ? 'compact' : 'normal']} ${className}`}
       >
         {/*
           휴대폰 시트는 내용과 상관없이 늘 화면의 85% 높이다 — 손잡이 · 닫기 단추 · 아래 버튼 줄이 매번 같은 자리에 있고,

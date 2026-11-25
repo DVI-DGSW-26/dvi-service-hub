@@ -155,8 +155,10 @@ export interface QuickLink {
   description: string
   icon: IconName
   url: string
-  /** 앱 주소(스킴). 있으면 앱으로 먼저 열어 보고, 앱이 없으면 url 을 연다 (lib/openApp.ts) */
-  appUrl?: string
+  /** 기기별 앱 주소. 있으면 앱으로 먼저 열어 보고, 앱이 없으면 url 을 연다 (lib/openApp.ts). pc 는 스킴, android 는 intent:// */
+  app?: { pc?: string; android?: string }
+  /** 앱으로 열지 웹으로 열지 먼저 묻는다(다시 묻지 않기를 고르면 그 답대로). 없으면 앱 주소가 있는 기기에서 바로 앱으로 */
+  ask?: true
   /** 페이지로 가지 않고 홈에서 바로 여는 창. url 은 새 탭(가운데 누르기)용으로 남긴다 */
   modal?: 'org'
 }

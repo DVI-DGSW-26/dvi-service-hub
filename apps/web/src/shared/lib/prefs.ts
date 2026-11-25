@@ -10,6 +10,8 @@ export const KEYS = {
   sidebar: 'portal-sidebar',
   systemsView: 'portal-systems-view',
   favorites: 'favorites',
+  /** 이 브라우저의 즐겨찾기를 서버와 한 번 맞췄다 — systems/api/queries.ts */
+  favoritesSynced: 'favorites-synced',
   widgets: 'portal-widgets-v2',
   /** 좁은 화면 배치(쌓는 순서 · 위젯별 크기) — 넓은 화면 칸 배치와 따로 */
   widgetsStack: 'portal-widgets-stack',
@@ -22,6 +24,8 @@ export const KEYS = {
   heroImage: 'portal-hero-image',
   heroPos: 'portal-hero-pos',
   apiLog: 'portal-api-log',
+  /** 빠른 바로가기를 웹 · 앱 중 어디로 열지 '다시 묻지 않기'로 정한 답 — quick-links/lib/openApp.ts */
+  openWith: 'portal-open-with',
 } as const
 
 export function readPref(key: string): string | null {
