@@ -19,7 +19,7 @@ export const LOGOUT_URL = NO_AUTH ? '#/' : '/api/auth/logout'
 export const ACCOUNT_URL =
   'https://api.dvi-ind.com/dauth/realms/dvi/account/account-security/signing-in' +
   '?referrer=service-hub&referrer_uri=' +
-  encodeURIComponent('https://dvi-service-hub.vercel.app/')
+  encodeURIComponent('https://service-hub.dvi-ind.com/')
 
 /**
  * 통합 로그인(Keycloak)에서 할 일 — Application Initiated Action.

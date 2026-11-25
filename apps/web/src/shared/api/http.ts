@@ -13,7 +13,7 @@
 
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { ApiError, toApiError } from './errors'
-import { apiLog, type LogEntry } from './logger'
+import { apiLog, newId, type LogEntry } from './logger'
 import { renewSession, toLogin } from './session'
 
 declare module 'axios' {
@@ -33,9 +33,6 @@ interface Envelope<T> {
   message: string
   data: T
 }
-
-// randomUUID 는 보안 연결(https · localhost)에서만 있다
-const newId = () => ((crypto as Partial<Crypto>).randomUUID?.() ?? Math.random().toString(36).slice(2)).slice(0, 8)
 
 const entryOf = (config: InternalAxiosRequestConfig | undefined): LogEntry => ({
   id: config?.meta?.id ?? '-',

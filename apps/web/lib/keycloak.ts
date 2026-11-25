@@ -17,6 +17,7 @@
 import { ACCESS_COOKIE, IDTOKEN_COOKIE, REFRESH_COOKIE, SESSION_COOKIE, SESSION_SECONDS, buildAccessCookie, buildCookie,
   signSession, type Session } from './session.js';
 import { decodeJwt, type JwtClaims, type OidcMetadata } from './oidc.js';
+import { clip, errorCode, log } from './log.js';
 
 /** 토큰 엔드포인트 응답 중 이 허브가 쓰는 항목 */
 export interface TokenResponse {
@@ -102,6 +103,8 @@ export async function refreshTokens(
   meta: OidcMetadata,
   refreshToken: string,
   client: { id: string; secret?: string },
+  /** 로그에 같이 남길 것 — 요청 번호(rid) */
+  fields: Record<string, unknown> = {},
 ): Promise<TokenResponse | 'rejected' | 'unreachable'> {
   const form = new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refreshToken, client_id: client.id });
   if (client.secret) form.set('client_secret', client.secret);
@@ -112,11 +115,21 @@ export async function refreshTokens(
       headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
       body: form,
     });
-  } catch { return 'unreachable'; }
+  } catch (e) {
+    log('error', 'refresh.unreachable', 'keycloak', { ...fields, detail: clip((e as Error).message) });
+    return 'unreachable';
+  }
+  if (res.ok) return (await res.json().catch(() => ({}))) as TokenResponse;
+  // 왜 거절했는지(Token is not active · Session not active · refresh token 재사용 등)를 남긴다
+  const err = (await res.json().catch(() => ({}))) as { error?: string; error_description?: string };
+  const detail = { ...fields, status: res.status, error: errorCode(err.error), detail: clip(err.error_description) };
   // 400 invalid_grant · 401 이 거절이다. 5xx 는 Keycloak 장애라 세션을 지우지 않는다
-  if (res.status >= 500) return 'unreachable';
-  if (!res.ok) return 'rejected';
-  return (await res.json().catch(() => ({}))) as TokenResponse;
+  if (res.status >= 500) {
+    log('error', 'refresh.unreachable', 'keycloak', detail);
+    return 'unreachable';
+  }
+  log('warn', 'refresh.rejected', 'keycloak', detail);
+  return 'rejected';
 }
 
 /** 갱신 응답의 계정 정보. id_token 이 없으면(scope 에 openid 가 빠진 경우) access token 에서 읽는다 */

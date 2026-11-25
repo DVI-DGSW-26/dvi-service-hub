@@ -8,6 +8,8 @@
 // 갱신이 거절되면 버튼 없이 바로 통합 로그인으로 보낸다. SSO 가 살아 있으면 화면 없이 돌아온다.
 // 다녀온 지 1분 안에 또 보내게 되면 반복으로 보고 멈춘 뒤 안내한다.
 
+import { apiLog, newId } from './logger'
+
 /** 세션 만료 시각(초) — 탭끼리 나눠 보려고 localStorage 에 둔다 */
 const EXP_KEY = 'hub:session-exp'
 /** 마지막으로 로그인에 보낸 시각 (sessionStorage) */
@@ -43,15 +45,26 @@ export function noteSessionExp(exp: number | undefined) {
 }
 
 async function callRefresh(): Promise<Renewal> {
+  const id = newId()
   let res: Response
   try {
-    res = await fetch('/api/auth/refresh', { method: 'POST', headers: { Accept: 'application/json' } })
+    res = await fetch('/api/auth/refresh', { method: 'POST', headers: { Accept: 'application/json', 'X-Request-Id': id } })
   } catch {
+    apiLog.hint(`세션 갱신 실패 from=network #${id} — /api/auth/refresh 에 닿지 못했습니다`)
     return 'failed'
   }
-  if (res.status === 401) return 'expired'
+  // #id 로 Vercel Logs 를 찾으면 이유(refresh.rejected · refresh.missing 줄의 rid)가 나온다. Vercel 이 직접 낸 오류면 x-vercel-error 가 붙는다
+  const vercelError = res.headers.get('x-vercel-error')
+  const where = `from=${vercelError ? `vercel(${vercelError})` : 'hub-web'} #${id} vercel=${res.headers.get('x-vercel-id') ?? '-'}`
+  if (res.status === 401) {
+    apiLog.hint(`세션 갱신 거절(401) ${where} — 통합 로그인으로 보냅니다`)
+    return 'expired'
+  }
   // 로컬 vite 에는 함수가 없어 index.html 이 온다
-  if (!res.ok || !String(res.headers.get('content-type')).includes('application/json')) return 'failed'
+  if (!res.ok || !String(res.headers.get('content-type')).includes('application/json')) {
+    apiLog.hint(`세션 갱신 실패(${res.status}) ${where} — 세션은 그대로 두고 요청만 실패로 둡니다`)
+    return 'failed'
+  }
   const body = (await res.json().catch(() => null)) as { exp?: number } | null
   noteSessionExp(body?.exp)
   return 'renewed'

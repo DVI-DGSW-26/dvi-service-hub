@@ -17,6 +17,7 @@ import { AUTH_COOKIE, buildCookie, readCookie, verifySession } from '../../lib/s
 import { configError, decodeJwt, discover, htmlError, redirect, safePath,
   type JwtClaims, type OidcMetadata, type PendingLogin } from '../../lib/oidc.js';
 import { sessionCookies, type TokenResponse } from '../../lib/keycloak.js';
+import { errorCode, log } from '../../lib/log.js';
 
 export const config = { runtime: 'edge' };
 
@@ -27,6 +28,7 @@ export const config = { runtime: 'edge' };
  */
 function retryExpiredLogin(url: URL, pending: PendingLogin | null): Response | null {
   if (url.searchParams.get('error_description') !== 'authentication_expired' || pending?.retried) return null;
+  log('info', 'login.retry_expired', 'user');
   const login = new URL('/api/auth/login', url.origin);
   login.searchParams.set('next', safePath(pending?.next));
   if (pending?.action) login.searchParams.set('action', pending.action);
@@ -67,7 +69,11 @@ export default async function handler(req: Request): Promise<Response> {
     if (retry) return retry;
     // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- 빈 설명이면 error 코드를 보인다
     const desc = url.searchParams.get('error_description') || url.searchParams.get('error');
-    return htmlError('로그인하지 못했습니다', `통합 로그인에서 거절되었습니다. (${desc})`);
+    // URL 쿼리는 누구나 넣을 수 있어 로그에는 코드 모양만 남긴다
+    return htmlError('로그인하지 못했습니다', `통합 로그인에서 거절되었습니다. (${desc})`, 400, {
+      who: 'keycloak',
+      fields: { error: errorCode(url.searchParams.get('error')), description: errorCode(url.searchParams.get('error_description')) },
+    });
   }
 
   const code = url.searchParams.get('code');

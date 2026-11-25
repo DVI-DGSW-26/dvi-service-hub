@@ -16,23 +16,36 @@
 import { REFRESH_COOKIE, readCookie } from '../../lib/session.js';
 import { configError, discover, htmlError, redirect, safePath, type OidcMetadata } from '../../lib/oidc.js';
 import { claimsOf, clearSessionCookies, refreshTokens, sessionCookies } from '../../lib/keycloak.js';
+import { clip, log, requestId } from '../../lib/log.js';
 
 export const config = { runtime: 'edge' };
 
 type Outcome = { cookies: string[]; exp: number } | 'rejected' | 'missing' | 'unreachable';
 
 async function renew(req: Request, secret: string, issuer: string, clientId: string): Promise<Outcome> {
+  const rid = requestId(req);
   const refreshToken = readCookie(req, REFRESH_COOKIE);
-  if (!refreshToken) return 'missing';
+  if (!refreshToken) {
+    // 갱신 전(47e4e67) 로그인했거나 refresh token 이 끝났다 — 통합 로그인을 한 번 다녀온다
+    log('info', 'refresh.missing', 'user', { rid });
+    return 'missing';
+  }
 
   let meta: OidcMetadata;
   try { meta = await discover(issuer); }
-  catch { return 'unreachable'; }
+  catch (e) {
+    log('error', 'refresh.unreachable', 'keycloak', { rid, detail: clip((e as Error).message) });
+    return 'unreachable';
+  }
 
-  const token = await refreshTokens(meta, refreshToken, { id: clientId, secret: process.env.OIDC_CLIENT_SECRET });
+  const token = await refreshTokens(meta, refreshToken, { id: clientId, secret: process.env.OIDC_CLIENT_SECRET }, { rid });
   if (typeof token === 'string') return token;
   const read = claimsOf(token);
-  if (!read) return 'rejected';
+  if (!read) {
+    log('error', 'refresh.no_claims', 'keycloak', { rid, detail: '갱신 응답에 sub 이 있는 토큰이 없다' });
+    return 'rejected';
+  }
+  // 성공은 남기지 않는다 — 열어 둔 화면마다 10분에 한 번씩이라 양만 많다
   return sessionCookies(token, read.claims, read.access, secret);
 }
 
@@ -51,6 +64,7 @@ export default async function handler(req: Request): Promise<Response> {
   const next = safePath(url.searchParams.get('next'));
 
   if (!secret || !issuer || !clientId) {
+    if (!page) log('error', 'auth.config_missing', 'config', { path: url.pathname }); // 화면(GET)은 configError 가 남긴다
     return page ? configError('서버 환경변수가 설정되지 않았습니다.') : json({ error: '서버 환경변수가 설정되지 않았습니다.' }, 500);
   }
 

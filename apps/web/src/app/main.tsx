@@ -12,6 +12,11 @@ const QueryDevtools = import.meta.env.DEV
   ? lazy(() => import('@tanstack/react-query-devtools').then((m) => ({ default: m.ReactQueryDevtools })))
   : null
 
+// 옛 운영 주소(Vercel 기본 주소)에서 sw.js 가 받아 둔 화면으로 뜬 것 — 회사 도메인으로 옮긴다. 서버로 오는 이동은 middleware.ts 가 옮긴다
+if (location.hostname === 'dvi-service-hub.vercel.app') {
+  location.replace('https://service-hub.dvi-ind.com' + location.pathname + location.search + location.hash)
+}
+
 applySavedPrefs()
 
 // 앱 껍데기 캐시(public/sw.js) — 배포본에서만. 개발 서버는 /assets 가 없고 고친 것이 바로 보여야 한다
