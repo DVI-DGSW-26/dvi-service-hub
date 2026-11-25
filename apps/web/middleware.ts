@@ -11,6 +11,7 @@
  */
 import { next } from '@vercel/edge';
 import { SESSION_COOKIE, readCookie, verifySession } from './lib/session.js';
+import { redirect } from './lib/oidc.js';
 
 export const config = {
   // 인증 API 와 Vercel 내부 경로, 다른 서비스가 불러가는 파일은 제외하고 전부 검사한다.
@@ -36,16 +37,19 @@ export default async function middleware(req: Request): Promise<Response> {
   const session = await verifySession(readCookie(req, SESSION_COOKIE), process.env.SESSION_SECRET);
   if (session) return next();
 
-  // 페이지가 아니라 파일 요청이면 리다이렉트 대신 401 을 준다.
-  const wantsHtml = (req.headers.get('accept') ?? '').includes('text/html');
-  if (!wantsHtml) {
-    return new Response('로그인이 필요합니다.', {
+  // 페이지 이동만 갱신으로 보낸다. fetch 는 리다이렉트를 따라가 Web Locks 밖에서 refresh token 을 쓰게 되니 401 을 준다 —
+  // 화면(src/shared/api)이 줄을 세워 늘리고 다시 부른다. Sec-Fetch-Mode 가 없는 옛 브라우저만 Accept 로 가린다
+  const mode = req.headers.get('sec-fetch-mode');
+  const isPage = mode ? mode === 'navigate' : (req.headers.get('accept') ?? '').includes('text/html');
+  if (!isPage) {
+    // 허브 서버 오류와 같은 모양(명세 1.4) — /api/hub 를 부른 화면이 서버의 401 과 똑같이 다룬다
+    return new Response(JSON.stringify({ code: 'UNAUTHORIZED', status: 401, message: '로그인이 필요합니다.' }), {
       status: 401,
-      headers: { 'content-type': 'text/plain; charset=utf-8' },
+      headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
     });
   }
 
   const refresh = new URL('/api/auth/refresh', url.origin);
   refresh.searchParams.set('next', url.pathname + url.search);
-  return Response.redirect(refresh.toString(), 302);
+  return redirect(refresh.toString());
 }
