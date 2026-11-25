@@ -43,7 +43,8 @@ public class AppUpdatePlugin extends Plugin {
             call.reject("허브 주소의 APK 만 받는다");
             return;
         }
-        if (!getContext().getPackageManager().canRequestPackageInstalls()) {
+        // 앱별 설치 허용은 Android 8 부터 — 7 은 시스템의 '알 수 없는 출처' 설정을 따르고, 꺼져 있으면 설치 확인 창이 알려준다
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !getContext().getPackageManager().canRequestPackageInstalls()) {
             Intent intent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getContext().getPackageName()));
             startActivityForResult(call, intent, "afterPermission");
             return;

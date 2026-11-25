@@ -38,6 +38,8 @@ public class IntentLinks extends Plugin {
                     // 브라우저도 없으면 할 수 있는 게 없다
                 }
             }
+        } catch (RuntimeException e) {
+            // file:// (FileUriExposedException) · 권한이 막힌 대상(SecurityException) — 못 여는 링크로 앱이 죽지 않게 버린다
         }
         return true;
     }
