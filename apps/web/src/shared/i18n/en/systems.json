@@ -1,6 +1,7 @@
 {
   "title": "Systems",
   "description": "Find and open every DVISION service in one place.",
+  "bundledList": "Couldn't get the latest list, so this is the saved one.",
   "descriptionCount": {
     "one": "Find and open the {count} DVISION service in one place.",
     "other": "Find and open all {count} DVISION services in one place."

@@ -1,3 +1,5 @@
+import { RotateCw } from 'lucide-react'
+import { useIsFetching, useQueryClient, type Query } from '@tanstack/react-query'
 import { isApiError } from '@/shared/api'
 import { useI18n } from '@/shared/i18n'
 
@@ -22,9 +24,31 @@ export function SkeletonList({ rows, className = 'h-12' }: { rows: number; class
   )
 }
 
+/**
+ * 실패한 조회 — 연결이 끊기면 위젯이 한꺼번에 실패하므로, 다시 시도는 이 위젯만이 아니라 실패한 조회를 모두 다시 부른다.
+ * 값이 null 인 것도 넣는다: 로그인 정보(fetchMe)는 실패하면 오류 대신 null 을 남긴다
+ */
+const failed = (q: Query) => q.state.status === 'error' || q.state.data === null
+
 /** 불러오기 실패. 조회는 재직자(employee)만 되므로 403 이면 다시 시도하라고 하지 않고 이유를 알려 준다 (명세 1.2) */
-export function LoadError({ error, className = 'py-6 text-center text-sm' }: { error?: unknown; className?: string }) {
+export function LoadError({ error, message, className = 'py-6 text-center text-sm' }: { error?: unknown; message?: string; className?: string }) {
   const { t } = useI18n()
+  const queryClient = useQueryClient()
+  const retrying = useIsFetching({ predicate: failed }) > 0
   const forbidden = isApiError(error) && error.status === 403
-  return <p className={`text-muted ${className}`}>{forbidden ? t.common.loadForbidden : t.common.loadError}</p>
+  if (forbidden) return <p className={`text-muted ${className}`}>{t.common.loadForbidden}</p>
+  return (
+    <div className={`text-muted ${className}`} role="status">
+      {message ?? t.common.loadError}{' '}
+      <button
+        type="button"
+        onClick={() => void queryClient.refetchQueries({ type: 'active', predicate: failed })}
+        disabled={retrying}
+        className="ml-1 inline-flex min-h-8 cursor-pointer items-center gap-1.5 rounded-full bg-subtle px-3 align-middle text-[13px] font-semibold text-fg ring-1 ring-line transition-[background-color,scale] hover:bg-raised active:scale-95 disabled:cursor-default disabled:opacity-60"
+      >
+        <RotateCw className={`size-3.5 ${retrying ? 'animate-spin' : ''}`} aria-hidden="true" />
+        {retrying ? t.common.retrying : t.common.retry}
+      </button>
+    </div>
+  )
 }

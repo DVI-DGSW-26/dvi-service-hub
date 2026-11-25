@@ -120,21 +120,38 @@ export function toLogin() {
 
 const loginUrl = () => '/api/auth/login?next=' + encodeURIComponent(location.pathname + location.search + location.hash)
 
-/** 로그인을 다녀왔는데 또 세션이 거절됐다 — 끝없이 오가지 않게 멈추고 알린다. 링크는 사람이 눌러 다시 시도한다 */
+/**
+ * 로그인을 다녀왔는데 또 세션이 거절됐다 — 끝없이 오가지 않게 멈추고 알린다. 버튼은 사람이 눌러 다시 시도한다.
+ * 저절로 사라지지 않고 X 로 닫을 때까지 떠 있다. 화면(React) 밖에서 부르므로 DOM 으로 그리고, 모양은 허브의 유리 · 테마 색을 쓴다.
+ * 좁은 화면에서는 탭 바 위(WidgetGallery 의 막대와 같은 높이), 넓은 화면에서는 오른쪽 아래
+ */
 function showLoginStuck() {
+  if (document.getElementById('login-stuck')) return
   const en = document.documentElement.lang.startsWith('en')
   const box = document.createElement('div')
+  box.id = 'login-stuck'
   box.setAttribute('role', 'alert')
-  box.style.cssText =
-    'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2147483647;max-width:calc(100% - 32px);' +
-    'padding:12px 16px;border-radius:10px;background:#1B2428;color:#fff;font:14px/1.6 system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.25)'
-  box.textContent = en
-    ? 'Could not keep you signed in. Please try again in a moment. '
-    : '로그인을 이어가지 못했습니다. 잠시 뒤 다시 시도해 주세요. '
-  const link = document.createElement('a')
+  box.className =
+    'glass-strong animate-materialize fixed inset-x-3 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-50 flex items-start gap-3 rounded-[22px] p-4 pr-2 text-fg ' +
+    'lg:inset-x-auto lg:right-6 lg:bottom-6 lg:w-[25rem]'
+  box.innerHTML =
+    '<span class="grid size-10 flex-none place-items-center rounded-full bg-accent-soft text-accent" aria-hidden="true">' +
+    '<svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></svg></span>' +
+    '<div class="min-w-0 flex-1 pt-0.5"><p class="text-[15px] font-semibold"></p><p class="mt-1 text-sm text-muted break-keep"></p>' +
+    '<a class="mt-3 inline-flex min-h-10 items-center rounded-xl bg-accent-fill px-4 text-sm font-semibold text-white transition-[scale] active:scale-95"></a></div>' +
+    '<button type="button" class="grid size-9 flex-none cursor-pointer place-items-center rounded-full text-muted transition-colors hover:bg-subtle hover:text-fg">' +
+    '<svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>'
+  const [title, detail] = box.querySelectorAll('p')
+  title.textContent = en ? "Couldn't keep you signed in" : '로그인을 이어가지 못했습니다'
+  detail.textContent = en
+    ? 'You went through sign-in, but the session was refused again. Wait a moment, then sign in again.'
+    : '통합 로그인을 다녀왔는데도 로그인이 유지되지 않았습니다. 잠시 뒤 다시 로그인해 주세요.'
+  const [link] = box.querySelectorAll('a')
   link.href = loginUrl()
   link.textContent = en ? 'Sign in again' : '다시 로그인'
-  link.style.cssText = 'color:#FFB38A;text-decoration:underline'
-  box.append(link)
+  const [close] = box.querySelectorAll('button')
+  close.setAttribute('aria-label', en ? 'Close' : '닫기')
+  close.addEventListener('click', () => box.remove())
   document.body.append(box)
 }

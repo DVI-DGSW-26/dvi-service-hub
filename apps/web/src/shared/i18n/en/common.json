@@ -1,6 +1,8 @@
 {
   "loading": "Loading",
-  "loadError": "Couldn't load this. Please try again in a moment.",
+  "loadError": "Couldn't load this.",
+  "retry": "Try again",
+  "retrying": "Retrying",
   "loadForbidden": "Only employees with an assigned department can see this.",
   "untitled": "(Untitled)",
   "comingSoon": "Coming soon",
