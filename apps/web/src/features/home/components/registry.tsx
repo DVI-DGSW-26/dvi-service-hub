@@ -4,6 +4,7 @@ import { CalendarPanel, TodayPanel } from '@/features/schedule'
 import { HeroCard } from '@/features/hero'
 import { MaintenancePanel } from '@/features/maintenance'
 import { NewsPanel } from '@/features/news'
+import { FlowPanel } from '@/features/flow'
 import { QuickLinksPanel } from '@/features/quick-links'
 
 import { STACK_SIZES, lookOf } from '../lib/stackLayout'
@@ -45,12 +46,12 @@ export const WIDGETS: WidgetDef[] = [
     app: 'portal',
     title: (t) => t.home.systems.title,
     description: (t) => t.widgets.builtin.systems,
-    // 카드 다섯 칸 × 두 줄이라 넓은 크기만 — 좁으면 카드가 세로로 길쭉해진다
+    // 카드 여러 장을 줄지어 보여 주는 위젯이라 넓은 크기만
     sizes: ['m', 'xl'],
-    // 화면에 맞춘 칸에서는 카드가 다섯 칸으로 늘어선다 — 그보다 좁으면 이름과 별이 겹친다
+    // 카드(240px 이상)가 서너 장씩 한 줄에 서는 폭 — 좁아도 깨지지는 않지만(가로 카드 한두 줄) 한 페이지에 보이는 카드가 적다
     min: { w: 860, h: 300 },
     stack: STACK_SIZES,
-    render: (ctx) => <SystemsPanel {...ctx} stack={lookOf(ctx.stack)} loading={ctx.meLoading} className={FILL} />,
+    render: (ctx) => <SystemsPanel {...ctx} stack={lookOf(ctx.stack)} loading={ctx.meLoading || ctx.servicesLoading} className={FILL} />,
   },
   {
     type: 'today',
@@ -90,6 +91,17 @@ export const WIDGETS: WidgetDef[] = [
     min: { w: 340, h: 300 },
     stack: STACK_SIZES,
     render: ({ stack }) => <CalendarPanel size={lookOf(stack)} className={FILL} />,
+  },
+  {
+    // 처음 배치(DEFAULT_WIDGETS)에는 없다 — 운영 서버에 플로우 연동이 켜지면 넣을지 정한다. 그전에는 갤러리(목업)에서만 넣는다
+    type: 'flow',
+    app: 'portal',
+    title: (t) => t.home.flow.title,
+    description: (t) => t.widgets.builtin.flow,
+    sizes: ['s', 'm', 'l'],
+    min: { w: 320, h: 300 },
+    stack: STACK_SIZES,
+    render: ({ stack }) => <FlowPanel size={lookOf(stack)} className={FILL} />,
   },
 ]
 

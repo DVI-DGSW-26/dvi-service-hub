@@ -142,7 +142,8 @@ export function MaintenanceComposer({ open, onClose, items }: MaintenanceCompose
 
       <TextField label={c.subject} required error={err('title')} value={form.title} onChange={(v) => set('title', v)} placeholder={c.subjectPlaceholder} max={MAX.title} />
 
-      <div className="grid gap-4 sm:grid-cols-[1.4fr_1fr_1fr]">
+      {/* 날짜 · 시작 · 끝은 칸마다 12rem 이상으로 들어가는 만큼 한 줄에 — 남는 칸은 비워 두어 한 칸이 폼 폭을 다 차지하며 길어지지 않게(auto-fill) */}
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] gap-4">
         <Field label={c.date} required error={err('date')} group>
           <DatePicker value={form.date} onChange={(v) => set('date', v)} label={c.date} invalid={!!err('date')} />
         </Field>

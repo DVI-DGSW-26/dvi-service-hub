@@ -8,16 +8,28 @@ const FLING_PX = 25
 const FLING_SPEED = 0.4
 /** 넘긴 뒤 이만큼(ms)은 쓸어도 넘기지 않는다 — 연달아 크게 써도 한 페이지씩 */
 const FLIP_REST = 300
+/** 손을 대고 이만큼(ms) 넘게 옆으로 끌다 놓으면 여러 페이지 — 손을 뗀 자리에서 가장 가까운 페이지로. 그보다 짧으면 한 페이지만 */
+const HOLD_MULTI = 1300
+/** 휠 · 트랙패드로 옆으로 이만큼(px) 밀면 한 페이지 */
+const WHEEL_PX = 40
+/** 휠 이벤트가 이만큼(ms) 끊기면 한 번 밀기가 끝난 것 — 트랙패드 관성으로 이어지는 이벤트는 같은 밀기라 더 넘기지 않는다 */
+const WHEEL_GAP = 200
 
-/** 쓰는 중 — 시작점 · 시작 페이지 · 끈 거리(d) · 그린 거리(shown) · 빠르기(v) · 마지막 움직임 시각(t) · 방향 */
-interface Swipe { x: number; y: number; from: number; resting: boolean; d: number; shown: number; v: number; t: number; axis?: 'x' | 'y' }
+/** 여러 페이지 넘기기의 도착 — 손을 뗀 자리(near, 페이지 단위)에서 가장 가까운 페이지, 던졌으면(빠르기 v) 던진 쪽. 0 ~ last 안에서 */
+const landing = (near: number, v: number, flung: boolean, last: number) =>
+  Math.max(0, Math.min(last, flung ? (v < 0 ? Math.ceil(near) : Math.floor(near)) : Math.round(near)))
+
+/** 쓰는 중 — 시작점 · 시작 시각(at) · 시작 페이지 · 끈 거리(d) · 그린 거리(shown) · 빠르기(v) · 마지막 움직임 시각(t) · 방향 */
+interface Swipe { x: number; y: number; at: number; from: number; resting: boolean; d: number; shown: number; v: number; t: number; axis?: 'x' | 'y' }
 
 /**
  * 페이지 틀(ref, 자식마다 페이지 하나 · 옆으로 scroll-snap)을 손가락으로 넘기기 — 옆으로도 위 · 아래로도, 넘어간 결과는 같다.
  * 처음 8px 로 방향을 정하고(브라우저가 스크롤을 시작하기 전) 그 뒤는 직접 그린다 — 브라우저의 관성 스크롤에 맡기면 크게 던질 때 두 장씩 넘어간다.
  * 옆은 페이지들이 손을 따라 옆으로, 위 · 아래는 지금 페이지가 손을 따라 위 · 아래로 움직이고, 놓으면 다음 페이지가 그쪽에서 들어온다.
- * 위 · 아래로 쓸 때 그쪽에 페이지가 없으면 받지 않는다(화면이 스크롤된다). 트랙패드 · 마우스는 브라우저 scroll-snap 그대로.
- * React 의 터치 핸들러는 passive 라 막을 수 없어 직접 건다
+ * 위 · 아래로 쓸 때 그쪽에 페이지가 없으면 받지 않는다(화면이 스크롤된다). 옆으로 HOLD_MULTI 넘게 끌다 놓으면 여러 페이지.
+ * 휠 · 트랙패드도 옆으로 한 번 밀면 한 페이지 — 브라우저 스크롤에 맡기면 관성으로 여러 장이 넘어간다.
+ * 틀은 브라우저가 옆으로 스크롤을 시작하지 않게 touch-action: pan-y 여야 한다(CardPages) — 시작해 버리면 막을 수 없다.
+ * React 의 터치 · 휠 핸들러는 passive 라 막을 수 없어 직접 건다
  */
 export function useSwipePages(ref: RefObject<HTMLElement | null>, pageCount: number) {
   useEffect(() => {
@@ -45,7 +57,7 @@ export function useSwipePages(ref: RefObject<HTMLElement | null>, pageCount: num
     const down = (e: TouchEvent) => {
       const t = e.touches[0]
       // 쉬는 중에 쓸어도 화면이 스크롤되지 않게 받기는 받고, 넘기지는 않는다
-      s = e.touches.length === 1 ? { x: t.clientX, y: t.clientY, from: at(), resting: performance.now() < rest, d: 0, shown: 0, v: 0, t: e.timeStamp } : null
+      s = e.touches.length === 1 ? { x: t.clientX, y: t.clientY, at: e.timeStamp, from: at(), resting: performance.now() < rest, d: 0, shown: 0, v: 0, t: e.timeStamp } : null
     }
     const drag = (e: TouchEvent) => {
       if (!s) return
@@ -63,8 +75,9 @@ export function useSwipePages(ref: RefObject<HTMLElement | null>, pageCount: num
       s.v = (d - s.d) / Math.max(1, e.timeStamp - s.t)
       s.t = e.timeStamp
       s.d = d
-      // 페이지가 없는 쪽은 버티며 조금만
-      s.shown = ok(s.from - Math.sign(d)) ? d : d / 4
+      // 페이지가 없는 쪽은 버티며 조금만 — 옆은 끝 페이지까지 따라오고(여러 페이지 넘기기), 위 · 아래는 한 페이지
+      const [lo, hi] = s.axis === 'x' ? [(s.from - pageCount + 1) * view.clientWidth, s.from * view.clientWidth] : ok(s.from - Math.sign(d)) ? [-Infinity, Infinity] : [0, 0]
+      s.shown = d > hi ? hi + (d - hi) / 4 : d < lo ? lo + (d - lo) / 4 : d
       move(s.axis === 'x' ? pages() : pages().slice(s.from, s.from + 1), s.axis, s.shown)
     }
     const up = (e: TouchEvent) => {
@@ -72,11 +85,13 @@ export function useSwipePages(ref: RefObject<HTMLElement | null>, pageCount: num
       const { axis, from, d, shown, resting } = s
       // 마지막 움직임이 오래전이면 멈췄다 놓은 것
       const v = e.timeStamp - s.t > 100 ? 0 : s.v
+      const multi = axis === 'x' && e.timeStamp - s.at >= HOLD_MULTI
       s = null
       const size = axis === 'x' ? view.clientWidth : view.clientHeight
       const flung = Math.abs(d) > FLING_PX && Math.abs(v) > FLING_SPEED
       const dir = flung ? -Math.sign(v) : Math.abs(d) > size / 2 ? -Math.sign(d) : 0
-      const to = resting || !ok(from + dir) ? from : from + dir
+      const target = multi ? landing(from - shown / size, v, flung, pageCount - 1) : from + dir
+      const to = resting || !ok(target) ? from : target
       if (to === from) {
         settle(axis === 'x' ? pages() : pages().slice(from, from + 1), axis, shown)
         return
@@ -92,15 +107,30 @@ export function useSwipePages(ref: RefObject<HTMLElement | null>, pageCount: num
       if (s?.axis) settle(pages(), s.axis, 0)
       s = null
     }
+    // 휠 · 트랙패드 — 옆으로 민 한 번(이벤트가 WHEEL_GAP 넘게 끊길 때까지)에 한 페이지. 위 · 아래 휠은 화면 스크롤 그대로
+    let wheel = { last: -Infinity, sum: 0, done: false }
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return
+      e.preventDefault()
+      if (e.timeStamp - wheel.last > WHEEL_GAP) wheel = { last: 0, sum: 0, done: false }
+      wheel.last = e.timeStamp
+      wheel.sum += e.deltaX
+      if (wheel.done || Math.abs(wheel.sum) < WHEEL_PX) return
+      wheel.done = true
+      const to = at() + Math.sign(wheel.sum)
+      if (ok(to)) view.scrollTo({ left: to * view.clientWidth, behavior: 'smooth' })
+    }
     view.addEventListener('touchstart', down, { passive: true })
     view.addEventListener('touchmove', drag, { passive: false })
     view.addEventListener('touchend', up)
     view.addEventListener('touchcancel', cancel)
+    view.addEventListener('wheel', onWheel, { passive: false })
     return () => {
       view.removeEventListener('touchstart', down)
       view.removeEventListener('touchmove', drag)
       view.removeEventListener('touchend', up)
       view.removeEventListener('touchcancel', cancel)
+      view.removeEventListener('wheel', onWheel)
     }
   }, [ref, pageCount])
 }

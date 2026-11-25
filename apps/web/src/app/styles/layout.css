@@ -14,16 +14,20 @@
 /*
  * 아래 둘은 레이어 밖 — 요소에 붙은 유틸리티(w-64 · p-4 · absolute …)보다 이겨야 한다.
  *
- * 화면을 옮길 때(App.tsx 의 main) — 옮긴 방향(--dir: 1 뒤 · -1 앞)에서 조금 밀려 들어온다
+ * 본문을 옆으로 미는 동안(useSwipeTabs 의 data-swiping) 양옆에 드러나는 옆 탭 화면(SwipePeek)
  */
-.page-in {
-  animation: page-in 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+.swipe-peek {
+  display: none;
+  position: absolute;
+  /* 내려 본 자리에서 밀어도 옆 화면 맨 위가 보이게 — useSwipeTabs 가 밀기 시작할 때 정한다. 문서 높이를 늘리지 않게 한 화면 높이로 자른다 */
+  top: calc(var(--peek-top, 0px) + 1.25rem); /* main 의 pt-5 만큼 — 실제 화면과 같은 높이에서 시작 */
+  width: 100%;
+  max-height: 100dvh;
+  overflow: hidden;
+  pointer-events: none;
 }
-@keyframes page-in {
-  from {
-    opacity: 0;
-    translate: calc(var(--dir) * 28px) 0;
-  }
+#main[data-swiping] .swipe-peek {
+  display: block;
 }
 
 /*
@@ -55,5 +59,21 @@
   .app-bar:not([data-scrolled])::before,
   .app-bar:not([data-scrolled])::after {
     opacity: 0;
+  }
+}
+
+/*
+ * 손가락 화면에서 입력칸을 누르면(자판이 올라오면) 아래 탭바를 내린다 — 앱처럼, 자판 위에 탭바가 떠 있지 않게.
+ * shortcut: 자판만 뒤로 가기로 내리고 입력칸에 초점이 남으면 탭바도 숨은 채다, 거슬리면 visualViewport 로 자판 높이를 본다
+ */
+@media (hover: none) {
+  .tab-bar {
+    transition:
+      translate 220ms cubic-bezier(0.32, 0.72, 0, 1),
+      visibility 220ms;
+  }
+  body:has(:is(input:not([type='checkbox'], [type='radio'], [type='range'], [type='button']), textarea, [contenteditable]):focus) .tab-bar {
+    translate: 0 calc(100% + 1rem);
+    visibility: hidden;
   }
 }

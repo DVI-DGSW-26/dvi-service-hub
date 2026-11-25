@@ -1,13 +1,15 @@
 import { Check, RotateCcw } from 'lucide-react'
 import type { Decor } from '@/features/decor'
-import { hrefOf, type Page } from '@/shared/hooks'
+import { hrefOf, useMedia, type Page } from '@/shared/hooks'
+import { BOARD } from '@/shared/constants'
 import { useLiquidNav } from '../hooks/useLiquidNav'
+import { useSwipeTabs } from '../hooks/useSwipeTabs'
 import { useI18n } from '@/shared/i18n'
 import { DecorMenu } from '@/features/decor'
 import { CarryChip, LiquidBlobs } from './LiquidParts'
 import { NAV_ITEMS } from '../lib/navItems'
 
-const BAR = 'glass-chrome fixed inset-x-3 bottom-3 z-30 rounded-[22px] p-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] lg:hidden'
+const BAR = 'tab-bar glass-chrome fixed inset-x-3 bottom-3 z-30 rounded-[22px] p-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] lg:hidden'
 /** 탭 한 칸 — 아이콘 위 · 글자 아래. 꾸미기 단추(DecorMenu)는 휴대폰에서 글자를 숨기므로 여기서는 다시 보인다 */
 const ITEM =
   'flex min-h-12 w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-2xl text-[11px] font-semibold transition-[background-color,color,scale] duration-150 active:scale-95 [&>span]:not-sr-only'
@@ -52,6 +54,8 @@ export function EditTabBar({ decor, onReset, onDone }: { decor: Decor; onReset: 
 export function TabBar({ page }: { page: Page }) {
   const { t } = useI18n()
   const active = NAV_ITEMS.findIndex((n) => n.page === page)
+  // 탭 바가 보이는 동안(좁은 화면 · 편집 아닐 때)은 본문을 옆으로 밀어도 탭이 넘어간다
+  useSwipeTabs(page, !useMedia(BOARD))
   const { listRef, dropRef, chipRef, anchorRefs, lit, dragging, carry, onPointerDown, onDragStart } = useLiquidNav({
     axis: 'x',
     active,

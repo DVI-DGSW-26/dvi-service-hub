@@ -12,22 +12,11 @@
 
 /* dark: 는 시스템 설정이 아니라 <html data-theme> 를 따른다 */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
-/* 화면 높이에 맞춘 홈 위젯 칸 안(board-fit) — 칸 높이가 화면에서 정해지므로 패널이 그 높이에 맞춰 줄이고 채운다 */
-@custom-variant fit {
-  @media (min-width: 1880px) and (min-height: 900px) {
-    &:where(.widget-board *) {
-      @slot;
-    }
-  }
-}
+/* 넓은 화면 홈 위젯 칸 안(react-grid-layout 판) — 칸 높이가 화면 크기와 상관없이 정해져 있으므로 패널이 그 높이에 맞춰 줄이고 채운다.
+   좁은 화면 판(StackBoard)은 같은 .widget-board 지만 고른 크기(size)로 따로 그린다 */
+@custom-variant fit (&:where(.widget-board.react-grid-layout *));
 /* 그중에서도 큰 칸(L · XL 로 그려지는 위젯) — 카드를 넉넉하게 */
-@custom-variant tall {
-  @media (min-width: 1880px) and (min-height: 900px) {
-    &:where(.widget-board > :is([data-size='l'], [data-size='xl']) *) {
-      @slot;
-    }
-  }
-}
+@custom-variant tall (&:where(.widget-board.react-grid-layout > :is([data-size='l'], [data-size='xl']) *));
 /* 홈 한 페이지를 스크롤 없이 화면에 담을 만큼 넓고 높은 화면. 이보다 작으면 칸 높이가 내용만큼 늘고 화면이 스크롤된다
    — 패널 일곱 개를 그보다 작은 칸에 넣으면 글자 · 카드가 겹친다 */
 @custom-variant board-fit (@media (min-width: 1880px) and (min-height: 900px));

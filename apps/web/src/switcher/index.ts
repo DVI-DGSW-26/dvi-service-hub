@@ -31,7 +31,7 @@ import { services, type Service } from '@/features/systems'
 interface Roles { realm: string[]; svc: Record<string, string[]> }
 
 const GLOBAL_FLAG = '__dviSwitcherLoaded'
-const HUB = 'https://dvi-service-hub.vercel.app'
+const HUB = 'https://service-hub.dvi-ind.com'
 
 /**
  * 허브 주소 — 로고 경로 · "포털 홈" 링크 · 역할 조회에 쓴다.

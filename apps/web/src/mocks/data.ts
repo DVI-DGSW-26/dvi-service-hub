@@ -3,6 +3,7 @@
 
 import type { AccountCredentials, Maintenance, NewsItem, Notice } from '@/shared/types'
 import { addDays, fromIso, pad, toIso } from '@/shared/lib'
+import type { FlowPost } from '@/features/flow'
 
 export const today = () => toIso(new Date())
 
@@ -244,4 +245,23 @@ export function seedCredentials(): AccountCredentials {
       { id: '9a1b2c3d-4e5f-4a6b-8c7d-6e5f4a3b2c1d', label: '업무용 노트북', provider: 'Windows Hello', createdDate: '2026-10-14', createdTime: '17:02' },
     ],
   }
+}
+
+/** 플로우 대외업무 공유방 글 — [제목, 본문, 종류, 작성자, 며칠 전, 시각, 댓글, 읽음]. 최신순 */
+export function seedFlowPosts(): FlowPost[] {
+  const raw: [string, string, FlowPost['type'], string, number, string, number, boolean | undefined][] = [
+    ['협력사 방문 일정 공유', '다음 주 목요일 오후 2시, 2층 회의실에서 진행합니다.', 'schedule', '김민수', 0, '09:12', 3, false],
+    ['견적서 회신 요청', '지난주 보낸 견적서 회신을 이번 주 안에 부탁드립니다.', 'task', '이서연', 0, '08:40', 1, false],
+    ['', '제목 없이 본문만 있는 글 — 화면은 본문을 제목 자리에 보여준다.', 'post', '박지훈', 1, '17:05', 0, true],
+    ['전시회 부스 배치도', '배치도 초안을 올립니다. 의견 주세요.', 'post', '최유진', 2, '15:30', 5, true],
+    ['샘플 발송 확인', '택배 송장 번호를 댓글로 남겨 주세요.', 'todo', '정하늘', 3, '11:20', 2, undefined],
+    ['고객사 미팅 회의록', '요구 사항 3건을 정리했습니다.', 'post', '김민수', 6, '16:45', 0, true],
+    ['분기 실적 보고 자료', '보고 자료 취합을 부탁드립니다.', 'task', '이서연', 12, '10:00', 4, true],
+    ['해외 바이어 응대 안내', '통역 지원이 필요하면 미리 알려 주세요.', 'post', '박지훈', 400, '14:10', 1, true],
+  ]
+  return raw.map(([title, content, type, author, ago, time, commentCount, read], i) => {
+    const post: FlowPost = { id: `fp${i + 1}`, type, title, content, author, registeredAt: `${addDays(today(), -ago)}T${time}`, commentCount }
+    if (read !== undefined) post.read = read
+    return post
+  })
 }

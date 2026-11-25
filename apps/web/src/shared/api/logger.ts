@@ -40,6 +40,12 @@ export interface LogEntry {
   ms?: number
 }
 
+/**
+ * 요청 번호 — X-Request-Id 로 보내고 로그에 #id 로 보인다. 허브 Vercel 함수 · middleware 는 이 값을 JSON 로그의 rid 로 남긴다(lib/log.ts).
+ * randomUUID 는 보안 연결(https · localhost)에서만 있다
+ */
+export const newId = () => ((crypto as Partial<Crypto>).randomUUID?.() ?? Math.random().toString(36).slice(2)).slice(0, 8)
+
 const STYLE = {
   ok: 'color:#16a34a;font-weight:700',
   fail: 'color:#dc2626;font-weight:700',
@@ -92,15 +98,24 @@ export const apiLog = {
     console.groupEnd()
   },
 
+  /**
+   * 한 줄로 무엇이 · 누가 · 어디서 찾을지를 보인다
+   *   401 GET /api/hub/me UNAUTHORIZED from=hub-web(expired) 12ms #a1b2c3d4 vercel=icn1::xxxx — 로그인이 필요합니다.
+   * from 은 errors.ts 의 ErrorSource. #id 는 서버 JSON 로그의 rid — Vercel Logs 에서 이 값으로 찾는다.
+   * vercel= 은 Vercel 이 붙인 x-vercel-id(지나온 지역 · 요청 식별). Runtime Logs 의 requestId 와 같다는 보장은 없어 보조로만 본다
+   */
   error(e: LogEntry, err: ApiError) {
     if (!on('error')) return
-    const what = [err.status || 'ERR', label(e), err.code, err.field && `field=${err.field}`].filter(Boolean).join(' ')
-    const head = [`%c${what}%c${took(e)} #${e.id} — ${err.message}`, STYLE.fail, STYLE.dim] as const
+    const reason = (err.data as { reason?: string } | undefined)?.reason
+    const what = [err.status || 'ERR', label(e), err.code, `from=${err.from}${reason ? `(${reason})` : ''}`, err.field && `field=${err.field}`]
+      .filter(Boolean)
+      .join(' ')
+    const head = [`%c${what}%c${took(e)} #${e.id}${err.vercelId ? ` vercel=${err.vercelId}` : ''} — ${err.message}`, STYLE.fail, STYLE.dim] as const
     if (!on('debug')) { console.error(...head); return; }
     console.groupCollapsed(...head)
     if (e.params) console.log('params', e.params)
     if (e.body !== undefined) console.log('body', e.body)
-    console.log('error', { status: err.status, code: err.code, field: err.field, message: err.message, data: err.data })
+    console.log('error', { status: err.status, code: err.code, from: err.from, vercelId: err.vercelId, field: err.field, message: err.message, data: err.data })
     console.groupEnd()
   },
 

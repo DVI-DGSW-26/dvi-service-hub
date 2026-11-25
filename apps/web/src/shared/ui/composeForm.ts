@@ -41,6 +41,12 @@ export function useComposeForm<F extends object>(initial: () => F) {
   return {
     form,
     set: <K extends keyof F>(key: K, value: F[K]) => setForm((f) => ({ ...f, [key]: value })),
+    /** 창을 연 채 다른 글로 바꾼다 (서비스 관리에서 다른 서비스를 고를 때) — 빨간 칸 · 실패 문구도 지운다 */
+    reset: (next: F) => {
+      setForm(next)
+      setTried(false)
+      submitError.reset()
+    },
     /** 등록 실패 문구 (ComposeModal error) */
     error: submitError.message,
     /** 칸 아래 문구 — 칸 검사를 지나 서버가 거절한 칸이면(field) 서버 문구 */

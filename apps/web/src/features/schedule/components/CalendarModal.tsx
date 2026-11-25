@@ -236,7 +236,28 @@ export function CalendarModal({ open, start, today, onClose }: CalendarModalProp
 
   const counts = f(t.calendar.eventCount, { count: events.length })
   const arrow =
-    'grid size-11 cursor-pointer place-items-center rounded-xl text-fg ring-1 ring-line transition-[background-color,scale] duration-150 hover:bg-subtle active:scale-90'
+    'grid size-11 flex-none cursor-pointer place-items-center rounded-xl text-fg ring-1 ring-line transition-[background-color,scale] duration-150 hover:bg-subtle active:scale-90'
+  // 넓은 화면은 제목 옆, 휴대폰 시트는 맨 아래(엄지 자리)에 같은 버튼을 둔다
+  const prevButton = (
+    <button type="button" onClick={() => go(-1)} aria-label={t.calendar.prev} className={arrow}>
+      <ChevronLeft className="size-5" aria-hidden="true" />
+    </button>
+  )
+  const nextButton = (
+    <button type="button" onClick={() => go(1)} aria-label={t.calendar.next} className={arrow}>
+      <ChevronRight className="size-5" aria-hidden="true" />
+    </button>
+  )
+  // 오늘이 있는 달로 가서 오늘을 고른다
+  const todayButton = (
+    <button
+      type="button"
+      onClick={goToday}
+      className="h-11 cursor-pointer rounded-xl px-4 text-[15px] font-semibold ring-1 ring-line transition-[background-color,scale] duration-150 hover:bg-subtle active:scale-95"
+    >
+      {t.calendar.today}
+    </button>
+  )
 
   return (
     <Modal open={open} onClose={onClose} labelledBy={titleId} full>
@@ -251,26 +272,15 @@ export function CalendarModal({ open, start, today, onClose }: CalendarModalProp
             </h2>
             <p className="mt-1 text-base text-muted">{counts}</p>
           </div>
-          <div className="flex items-center gap-2">
-            {/* 오늘이 있는 달로 가서 오늘을 고른다 */}
-            <button
-              type="button"
-              onClick={goToday}
-              className="h-11 cursor-pointer rounded-xl px-4 text-[15px] font-semibold ring-1 ring-line transition-[background-color,scale] duration-150 hover:bg-subtle active:scale-95"
-            >
-              {t.calendar.today}
-            </button>
-            <button type="button" onClick={() => go(-1)} aria-label={t.calendar.prev} className={arrow}>
-              <ChevronLeft className="size-5" aria-hidden="true" />
-            </button>
-            <button type="button" onClick={() => go(1)} aria-label={t.calendar.next} className={arrow}>
-              <ChevronRight className="size-5" aria-hidden="true" />
-            </button>
+          <div className="flex items-center gap-2 max-sm:hidden">
+            {todayButton}
+            {prevButton}
+            {nextButton}
           </div>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-          <div className="flex h-[58%] flex-none flex-col px-2 pt-3 pb-2 sm:px-5 lg:h-auto lg:flex-1">
+        <div className="flex min-h-0 flex-1 flex-col @3xl:flex-row">
+          <div className="flex h-[58%] flex-none flex-col px-2 pt-3 pb-2 sm:px-5 @3xl:h-auto @3xl:flex-1">
             <WeekdayRow className="mb-2" />
             {/* 세로 스크롤은 브라우저에, 가로 밀기는 여기서 */}
             <div ref={viewportRef} className="min-h-0 flex-1 touch-pan-y overflow-hidden select-none" {...bind}>
@@ -295,7 +305,7 @@ export function CalendarModal({ open, start, today, onClose }: CalendarModalProp
             <p className="mt-2 hidden text-center text-[13px] text-muted sm:block">{t.calendar.swipeHint}</p>
           </div>
 
-          <aside className="min-h-0 flex-1 overflow-y-auto overscroll-contain border-t border-line px-5 py-5 lg:w-96 lg:flex-none lg:border-t-0 lg:border-l">
+          <aside className="min-h-0 flex-1 overflow-y-auto overscroll-contain border-t border-line px-5 py-5 @3xl:w-96 @3xl:flex-none @3xl:border-t-0 @3xl:border-l">
             <h3 className="text-base font-bold">{selected === today ? `${t.calendar.today} · ${shortDate(selected, lang)}` : longToday(fromIso(selected), lang)}</h3>
             {dayItems.length ? (
               <ul className="mt-3 space-y-2">
@@ -328,6 +338,13 @@ export function CalendarModal({ open, start, today, onClose }: CalendarModalProp
               <p className="mt-2 text-[15px] text-muted">{t.calendar.monthEmpty}</p>
             )}
           </aside>
+        </div>
+
+        {/* 휴대폰 시트는 위와 같은 묶음을 엄지가 닿는 오른쪽 아래에 */}
+        <div className="flex flex-none items-center justify-end gap-2 border-t border-line px-5 py-3 sm:hidden">
+          {todayButton}
+          {prevButton}
+          {nextButton}
         </div>
       </div>
     </Modal>

@@ -77,11 +77,8 @@ export async function signSession<T extends Signed>(payload: T, secret: string):
   return `${body}.${sig}`;
 }
 
-/** 서명과 만료를 확인한다. 유효하지 않으면 null */
-export async function verifySession<T extends Signed = Session>(
-  token: string | null,
-  secret: string | undefined,
-): Promise<T | null> {
+/** 서명을 확인하고 본문을 읽는다. 만료는 보지 않는다. 서명 · 모양이 틀리면 null */
+async function openSigned<T extends Signed>(token: string | null, secret: string | undefined): Promise<T | null> {
   if (!token || !secret || !token.includes('.')) return null;
   const [body, sig] = token.split('.');
   let ok = false;
@@ -90,10 +87,28 @@ export async function verifySession<T extends Signed = Session>(
   } catch { return null; }
   if (!ok) return null;
   try {
-    const data = JSON.parse(dec.decode(fromB64url(body))) as T;
-    if (!data.exp || data.exp * 1000 < Date.now()) return null;
-    return data;
+    return JSON.parse(dec.decode(fromB64url(body))) as T;
   } catch { return null; }
+}
+
+/** 서명과 만료를 확인한다. 유효하지 않으면 null */
+export async function verifySession<T extends Signed = Session>(
+  token: string | null,
+  secret: string | undefined,
+): Promise<T | null> {
+  const data = await openSigned<T>(token, secret);
+  return data?.exp && data.exp * 1000 >= Date.now() ? data : null;
+}
+
+/**
+ * verifySession 이 null 일 때 그 이유 — 로그용. verifySession 이 null 인 쿠키에만 부른다.
+ *   none     쿠키가 없다
+ *   expired  서명은 맞고 끝났다 — 갱신하면 된다
+ *   invalid  서명 · 모양이 틀렸다 — 깨지거나 조작된 쿠키, 또는 SESSION_SECRET 이 바뀌었다. 어느 쪽인지는 모른다
+ */
+export async function sessionProblem(token: string | null, secret: string | undefined): Promise<'none' | 'expired' | 'invalid'> {
+  if (!token) return 'none';
+  return (await openSigned(token, secret)) ? 'expired' : 'invalid';
 }
 
 /** Cookie 헤더에서 값 하나를 꺼낸다 */

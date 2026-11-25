@@ -1,5 +1,6 @@
 export { EditDock } from './components/EditDock'
 export { HomePage } from './components/HomePage'
+export { HomeSkeleton } from './components/HomeSkeleton'
 export { WidgetEditBar } from './components/WidgetGallery'
 export { visibleWidgets } from './components/registry'
 export { GALLERY } from './lib/widgetDef'

@@ -53,8 +53,11 @@ export default tseslint.config(
     files: ['**/*.test.ts'],
     rules: { '@typescript-eslint/no-floating-promises': 'off', '@typescript-eslint/no-non-null-assertion': 'off' },
   },
-  { files: ['**/*.js', '**/*.cjs'], ...tseslint.configs.disableTypeChecked },
+  { files: ['**/*.js', '**/*.cjs', '**/*.mjs'], ...tseslint.configs.disableTypeChecked },
   { files: ['**/*.cjs'], languageOptions: { sourceType: 'commonjs', globals: globals.node } },
+  // 손으로 돌리는 운영 스크립트(scripts/smoke.mjs) · public/sw.js 에 덮어쓰는 긴급 정지 서비스 워커
+  { files: ['scripts/*.mjs'], languageOptions: { globals: globals.node } },
+  { files: ['scripts/sw-kill.js'], languageOptions: { globals: globals.serviceworker } },
   {
     files: ['src/**/*.{ts,tsx}'],
     languageOptions: { globals: globals.browser },

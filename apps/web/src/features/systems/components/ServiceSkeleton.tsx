@@ -48,3 +48,12 @@ export function ServiceRowSkeleton() {
     </li>
   )
 }
+
+export function ServiceTileSkeleton() {
+  return (
+    <li className="flex flex-col items-center gap-2 px-1 py-2" aria-hidden="true">
+      <Skeleton className="size-14 rounded-2xl" />
+      <Skeleton className="h-4 w-12 rounded-md" />
+    </li>
+  )
+}

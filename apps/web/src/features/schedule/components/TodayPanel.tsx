@@ -33,9 +33,9 @@ export function TodayPanel({ size, className = '' }: { size?: StackSize; classNa
   const { data, isPending: loading, error } = useQuery({ ...scheduleQueries.recent(toIso(date)), select: (days) => days.at(-1)?.items })
   const items = data ?? []
 
-  // 좁은 화면 고정 칸은 들어가는 만큼(useClipRows) — 넓게 · 보통 · 크게 순으로 더 보인다
+  // 좁은 화면 고정 칸은 들어가는 만큼 — 넓게 · 보통 · 크게 순으로 더 보인다. 넓은 화면 칸도 낮으면 다 들어가지 않는 줄은 숨긴다(useClipRows)
   const visible = size ? 12 : VISIBLE
-  const rows = useClipRows<HTMLOListElement>(!!size)
+  const rows = useClipRows<HTMLOListElement>(true)
   const firstOpen = items.findIndex((s) => statusOf(s, now) !== 'done')
   const last = Math.max(0, items.length - visible)
   const from = firstOpen < 0 ? last : Math.min(firstOpen, last)
@@ -159,7 +159,7 @@ export function TodayPanel({ size, className = '' }: { size?: StackSize; classNa
       ) : items.length ? (
         <>
           <NowGuide items={items} now={now} date={date} compact className="mb-3 fit:mb-1.5 fit:py-2" />
-          <ol ref={rows} className={`space-y-1.5 fit:space-y-0.5 ${size ? 'min-h-0 flex-1 overflow-hidden' : ''}`} aria-label={more ? f(t.schedule.listLabel, { count: items.length, shown: shown.length }) : undefined}>
+          <ol ref={rows} className="@container min-h-0 flex-1 space-y-1.5 overflow-hidden fit:space-y-0.5" aria-label={more ? f(t.schedule.listLabel, { count: items.length, shown: shown.length }) : undefined}>
             {shown.map((s) => (
               <ScheduleRow key={s.id} item={s} now={now} className="fit:py-1.5" />
             ))}

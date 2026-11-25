@@ -35,7 +35,15 @@
   },
   "noDepartment": "아직 부서가 지정되지 않아 일부 서비스가 보이지 않습니다. 관리팀에 문의해주세요.",
   "quickLinks": {
-    "title": "빠른 바로가기"
+    "title": "빠른 바로가기",
+    "openWith": {
+      "title": "어디서 열까요?",
+      "web": "웹으로 열기",
+      "webHint": "브라우저 새 탭에서",
+      "app": "앱으로 열기",
+      "appHint": "앱이 없으면 웹으로",
+      "dontAsk": "다시 묻지 않기"
+    }
   },
   "systems": {
     "title": "업무시스템",
@@ -53,5 +61,29 @@
     "pages": "업무시스템 페이지",
     "mobileAll": { "one": "업무시스템 {count}개 모두 보기", "other": "업무시스템 {count}개 모두 보기" },
     "noAccessHint": "권한이 필요하면 IT부서에 알려 주세요."
+  },
+  "flow": {
+    "title": "대외업무 공유방",
+    "source": "플로우",
+    "open": "플로우에서 열기",
+    "empty": "아직 올라온 글이 없습니다.",
+    "untitled": "(제목 없음)",
+    "unread": "안 읽음",
+    "comments": {
+      "one": "댓글 {count}",
+      "other": "댓글 {count}"
+    },
+    "type": {
+      "post": "글",
+      "task": "업무",
+      "schedule": "일정",
+      "todo": "할일",
+      "other": "글"
+    },
+    "notice": {
+      "FLOW_ACCOUNT_UNKNOWN": "회사 메일로 로그인한 계정에서만 볼 수 있습니다.",
+      "FLOW_FORBIDDEN": "플로우에서 이 방의 참여자가 아니어서 글을 볼 수 없습니다.",
+      "FLOW_PROJECT_NOT_FOUND": "플로우에서 본인 계정이나 이 방을 찾지 못했습니다."
+    }
   }
 }

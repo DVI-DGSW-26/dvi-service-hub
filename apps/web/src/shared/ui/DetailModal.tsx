@@ -105,12 +105,12 @@ export function DetailModal<T>({ items, index, onIndexChange, content, prevLabel
       onClose={() => onIndexChange(null)}
       labelledBy={titleId}
       wide={!!list}
-      className={list ? 'lg:h-[min(720px,calc(100dvh-32px))]' : ''}
+      className={list ? 'lg:h-[64dvh]' : ''}
     >
       {list ? (
         // 좁은 화면은 본문이 먼저, 목록은 아래
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain lg:flex-row lg:overflow-hidden">
-          <nav aria-label={list.label} className="order-last flex-none border-t border-line p-3 lg:order-first lg:w-80 lg:overflow-y-auto lg:overscroll-contain lg:border-t-0 lg:border-r">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain @2xl:flex-row @2xl:overflow-hidden">
+          <nav aria-label={list.label} className="order-last flex-none border-t border-line p-3 @2xl:order-first @2xl:w-80 @2xl:overflow-y-auto @2xl:overscroll-contain @2xl:border-t-0 @2xl:border-r">
             <h3 className="px-2 pt-1 pb-2 text-sm font-bold text-muted">
               {list.label} · {items.length}
             </h3>
@@ -131,7 +131,7 @@ export function DetailModal<T>({ items, index, onIndexChange, content, prevLabel
               ))}
             </ul>
           </nav>
-          <div className="flex min-w-0 flex-col lg:min-h-0 lg:flex-1">{detail}</div>
+          <div className="flex min-w-0 flex-col @2xl:min-h-0 @2xl:flex-1">{detail}</div>
         </div>
       ) : (
         detail

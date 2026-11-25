@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { startTransition, useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 export type Page = 'home' | 'systems' | 'info' | 'account'
 
@@ -34,7 +34,8 @@ export function useHashRoute(): Route {
       const next = parse(location.hash)
       scrolls.set(page.current, scrollY)
       page.current = next.page
-      setRoute((r) => ({ ...next, dir: PAGES.indexOf(next.page) - PAGES.indexOf(r.page) }))
+      // 새 화면 코드를 받는 동안 빈칸 대신 지금 화면을 둔다 — 받아 두었으면(App 의 미리 받기) 바로 넘어간다
+      startTransition(() => setRoute((r) => ({ ...next, dir: PAGES.indexOf(next.page) - PAGES.indexOf(r.page) })))
     }
     addEventListener('hashchange', onChange)
     return () => removeEventListener('hashchange', onChange)

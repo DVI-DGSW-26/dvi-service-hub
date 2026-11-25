@@ -42,6 +42,13 @@
 :root {
   view-transition-name: none;
 }
+/* 테마를 바꾸는 순간만 화면 전체를 찍어 겹쳐 넘긴다(usePortalTheme 의 switchTheme) */
+:root.theme-fade {
+  view-transition-name: root;
+}
+::view-transition-group(root) {
+  animation-duration: 0.35s;
+}
 ::view-transition-group(.stack-widget) {
   animation-duration: 300ms;
   animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);

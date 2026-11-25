@@ -8,6 +8,7 @@
  * realm 주소나 Keycloak 버전이 바뀌어도 환경변수만 고치면 된다.
  */
 import { toB64url, fromB64url, type Signed } from './session.js';
+import { clip, log, type Who } from './log.js';
 
 /** 로그인 진행 상태 (hub_auth 쿠키). callback 에서 대조한다 */
 export interface PendingLogin extends Signed {
@@ -108,8 +109,19 @@ export function configError(msg: string): Response {
   return htmlError('설정이 필요합니다', msg, 500);
 }
 
-/** title · msg 는 평문이다 — 쿼리값(error_description)이 들어오므로 반드시 이스케이프한다 */
-export function htmlError(title: string, msg: string, status = 400): Response {
+/**
+ * title · msg 는 평문이다 — 쿼리값(error_description)이 들어오므로 반드시 이스케이프한다.
+ * 로그인 흐름이 실패한 화면은 모두 여기를 지나 로그를 남긴다. who 를 안 주면 상태로 정한다 — 500 설정 · 502 Keycloak · 4xx 요청.
+ * 로그에는 msg 를 줄여 남긴다. msg 에 누구나 넣을 수 있는 값(URL 쿼리)이 섞였으면 부르는 쪽이 fields 로 대신 줄 것을 넘긴다
+ */
+export function htmlError(
+  title: string,
+  msg: string,
+  status = 400,
+  logAs: { who?: Who; fields?: Record<string, unknown> } = {},
+): Response {
+  log(status >= 500 ? 'error' : 'warn', 'auth.error_page', logAs.who ?? (status === 500 ? 'config' : status >= 500 ? 'keycloak' : 'request'),
+    { status, title, ...(logAs.fields ?? { detail: clip(msg) }) });
   title = esc(title);
   msg = esc(msg);
   return new Response(

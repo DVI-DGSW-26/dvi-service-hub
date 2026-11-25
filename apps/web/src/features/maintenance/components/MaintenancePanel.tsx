@@ -29,10 +29,10 @@ export function MaintenancePanel({ me, size, className = '' }: { me: Me | null; 
   const composer = useLazyModal()
   const [detail, setDetail] = useState<number | null>(null)
   const items = data ?? []
-  // 좁은 화면 고정 칸은 들어가는 만큼(useClipRows) — 나머지는 펼쳐 보기 창의 목록 · 다음으로
+  // 좁은 화면 고정 칸은 들어가는 만큼 — 나머지는 펼쳐 보기 창의 목록 · 다음으로. 넓은 화면 칸도 낮으면 다 들어가지 않는 줄은 숨긴다(useClipRows)
   const listed = size ? items.length : LISTED
   const hidden = items.length - listed
-  const rows = useClipRows<HTMLUListElement>(!!size)
+  const rows = useClipRows<HTMLUListElement>(true)
   const detailModal = (
     <DetailModal
       items={items}
@@ -148,20 +148,21 @@ export function MaintenancePanel({ me, size, className = '' }: { me: Me | null; 
             className={composeButton}
           >
             <PenLine className="size-4" aria-hidden="true" />
-            {/* 휴대폰은 아이콘만 — 제목 줄이 두 줄로 밀리지 않게 */}
-            <span className="max-sm:sr-only">{t.compose.maintenance.open}</span>
+            {/* 휴대폰 · 좁은 칸은 아이콘만 — 제목 줄이 두 줄로 밀리지 않게 */}
+            <span className="max-sm:sr-only @max-[300px]:sr-only">{t.compose.maintenance.open}</span>
           </button>
         )
       }
-      className={className}
+      className={`@container ${className}`}
     >
       {loading ? (
         <SkeletonList rows={2} className="h-16" />
       ) : error ? (
         <LoadError error={error} />
       ) : data.length ? (
-        // 낮은 한 화면(fit)에서만 줄 간격을 좁히고, 높은 화면(tall)에서는 다시 넉넉하게
-        <ul ref={rows} className={`space-y-2 fit:space-y-1.5 tall:space-y-2.5 ${size ? 'min-h-0 flex-1 overflow-hidden' : ''}`}>
+        // 낮은 한 화면(fit)에서만 줄 간격을 좁히고, 높은 화면(tall)에서는 다시 넉넉하게.
+        // 아주 좁으면(260px 아래) 한 줄을 위에 종류 · 화살표, 아래에 제목 · 때로 — 제목이 몇 글자로 잘리고 때가 두 줄로 꺾이지 않게
+        <ul ref={rows} className="@container min-h-0 flex-1 space-y-2 overflow-hidden fit:space-y-1.5 tall:space-y-2.5">
           {data.slice(0, listed).map((m, i) => (
             <li key={m.id}>
               {/* 제목이 잘리고 본문 · 링크는 안 보이므로, 누르면 펼쳐 보기 — 시스템 열기는 그 안에서 */}
@@ -169,10 +170,10 @@ export function MaintenancePanel({ me, size, className = '' }: { me: Me | null; 
                 type="button"
                 onClick={() => setDetail(i)}
                 aria-haspopup="dialog"
-                className="group flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-subtle px-3.5 py-3 text-left ring-1 ring-line transition-[background-color,scale] duration-200 hover:bg-raised active:scale-[0.98] fit:py-2 tall:px-4 tall:py-3.5"
+                className="group flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-subtle px-3.5 py-3 text-left ring-1 ring-line transition-[background-color,scale] duration-200 hover:bg-raised active:scale-[0.98] fit:py-2 tall:px-4 tall:py-3.5 @max-[260px]:flex-wrap @max-[260px]:justify-between @max-[260px]:gap-y-1.5"
               >
                 <Badge tone={MAINTENANCE_TONE[m.kind]}>{t.home.maintenance.kind[m.kind]}</Badge>
-                <span className="min-w-0 flex-1">
+                <span className="min-w-0 flex-1 @max-[260px]:order-last @max-[260px]:basis-full">
                   <span className="block truncate text-[15px] font-semibold group-hover:text-accent">{m.title}</span>
                   <span className="mt-1 block text-sm text-muted">{maintenanceWhen(m, lang)}</span>
                 </span>
