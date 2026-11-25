@@ -1,0 +1,32 @@
+{
+  "update": {
+    "available": "Version {version} is available",
+    "detail": "Tap to download and install. The app closes when it is done; open it again.",
+    "action": "Update",
+    "busy": "Downloading",
+    "failed": "Could not update. Try again in a moment."
+  },
+  "download": {
+    "pageTitle": "Get the app",
+    "back": "Back to hub",
+    "appName": "DVI Service Hub",
+    "tagline": "DVISION internal services on your phone",
+    "platform": "Android",
+    "version": "Version {version}",
+    "released": "Released {date}",
+    "action": "Download",
+    "notAndroid": "Open this page on an Android phone to download. There is no iPhone app yet; use the hub in your browser.",
+    "inApp": "You are viewing this in the app. New versions arrive as an update notice on the home screen.",
+    "howTitle": "How to install",
+    "steps": [
+      "Tap Download and open the file.",
+      "The first time, turn on \"Allow from this source\".",
+      "Tap Install and you are done."
+    ],
+    "howNote": "After the first install, new versions update right from the notice on the app's home screen.",
+    "historyTitle": "Update history",
+    "latest": "Latest",
+    "empty": "No versions have been published yet.",
+    "loadError": "Could not load version info. Refresh in a moment."
+  }
+}

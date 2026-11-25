@@ -27,6 +27,8 @@ export default defineConfig(({ mode }) => {
     // tsconfig.app.json 의 paths 와 같은 별칭
     resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
     define: { 'import.meta.env.VITE_MOCK': JSON.stringify(mock) },
+    // 허브와 앱 받기 페이지(/app/ — 같은 폴더의 APK · releases.json 은 public/app 이 채운다)
+    build: { rollupOptions: { input: ['index.html', 'app/index.html'] } },
     server: {
       proxy: {
         '/api/hub': {

@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { Suspense, useEffect, useRef, useState, type CSSProperties, type MouseEvent } from 'react'
+import { Activity, Suspense, useEffect, useRef, useState, type MouseEvent } from 'react'
 import { flushSync } from 'react-dom'
-import { services, useFavorites, canSee, sortByFavorite, LazySystemsPage } from '@/features/systems'
-import { GooFilter, Sidebar, EditTabBar, TabBar, TopBar } from '@/features/shell'
+import { useServices, useFavorites, canSee, sortByFavorite, LazySystemsPage } from '@/features/systems'
+import { AppUpdate } from '@/features/app-release'
+import { GooFilter, Sidebar, EditTabBar, SwipePeek, TabBar, TopBar } from '@/features/shell'
 import { DecorAdjust, Wallpaper, useDecor } from '@/features/decor'
-import { EditDock, WidgetEditBar, GALLERY, visibleWidgets, useWidgetLayout, HomePage } from '@/features/home'
-import { hrefOf, useHashRoute, useMedia } from '@/shared/hooks'
+import { EditDock, WidgetEditBar, GALLERY, visibleWidgets, useWidgetLayout, HomePage, HomeSkeleton } from '@/features/home'
+import { hrefOf, useHashRoute, useMedia, type Page } from '@/shared/hooks'
 import { BOARD, EASE } from '@/shared/constants'
 import { usePortalTheme } from '@/features/theme'
 import { useI18n } from '@/shared/i18n'
@@ -13,6 +14,7 @@ import { KEYS, readPref, writePref, motionOff } from '@/shared/lib'
 import { LazyAccountPage, accountQueries } from '@/features/account'
 // 홈만 첫 번들에 — 나머지 화면은 처음 갈 때 받는다(Lazy*)
 import { LazyInfoPage } from '@/features/info'
+import { useAppStart, usePageIn } from './useAppStart'
 
 
 export default function App() {
@@ -25,6 +27,7 @@ export default function App() {
   const meLoading = meQuery.isPending
   const [query, setQuery] = useState('')
   const { favorites, toggleFavorite } = useFavorites()
+  const { services, loading: servicesLoading } = useServices()
   const decor = useDecor()
   const [collapsed, setCollapsed] = useState(() => readPref(KEYS.sidebar) === 'collapsed')
 
@@ -79,6 +82,8 @@ export default function App() {
     if (!editing && adjusting) decor.endAdjust(true)
   })
 
+  useAppStart()
+  const mainRef = usePageIn(route.page, route.dir)
   const shellRef = useRef<HTMLDivElement>(null)
   // 본문 여백은 한 번에 바꾸고, 밀려나는 모습은 transform 으로만 그린다(FLIP).
   // padding 을 애니메이션하면 300ms 동안 매 프레임 대시보드 전체를 다시 배치한다
@@ -92,6 +97,13 @@ export default function App() {
       el.animate([{ transform: `translateX(${dx}px)` }, { transform: 'none' }], { duration: 300, easing: EASE })
     }
   }
+
+  // 홈 밖의 화면 — 본문과 옆 탭 미리 보기(SwipePeek)가 같이 쓴다. 홈은 숨겨 둔 하나뿐이라 미리 보기에는 자리표시를, 사내정보는 첫 화면을
+  const screen = (p: Page, peek = false) =>
+    p === 'systems' ? <LazySystemsPage me={me} loading={meLoading || servicesLoading} services={mine} query={query} onQueryChange={setQuery} favorites={favorites} onToggleFavorite={toggleFavorite} />
+    : p === 'info' ? <LazyInfoPage categoryId={peek ? undefined : route.param} />
+    : p === 'account' ? <LazyAccountPage me={me} loading={meLoading} services={mine} theme={theme} onCustomize={customize} />
+    : <HomeSkeleton layout={widgets} defs={visible} />
 
   return (
     <>
@@ -146,16 +158,16 @@ export default function App() {
           editing={editing}
         />
 
-        {/* 화면을 옮기면 main 을 새로 그려 옮긴 방향에서 밀려 들어온다(styles/layout.css 의 .page-in) — 앱의 탭 넘김처럼 */}
-        <main key={route.page} id="main" tabIndex={-1} className={`flex-1 pt-5 outline-none ${route.dir ? 'page-in' : ''} ${home ? 'flex flex-col board-fit:min-h-0' : ''} ${adjusting === 'wallpaper' ? 'invisible' : ''}`}
-          data-adjust={adjusting ?? undefined}
-          {...endOnEmpty}
-          style={route.dir ? { '--dir': Math.sign(route.dir) } as CSSProperties : undefined}
-        >
+        <AppUpdate />
+
+        {/* 화면을 옮기면 옮긴 방향에서 밀려 들어온다(usePageIn) */}
+        <main ref={mainRef} id="main" tabIndex={-1} className={`flex-1 pt-5 outline-none ${home ? 'flex flex-col board-fit:min-h-0' : ''} ${adjusting === 'wallpaper' ? 'invisible' : ''}`} data-adjust={adjusting ?? undefined} {...endOnEmpty}>
+          <SwipePeek page={route.page} render={(p) => screen(p, true)} />
           <Suspense>
-            {home && (
+            {/* 홈은 떠나도 숨겨 둔다 — 돌아올 때 위젯을 처음부터 다시 그리면 휴대폰에서 끊긴다 */}
+            <Activity mode={home ? 'visible' : 'hidden'}>
               <HomePage
-                ctx={{ me, meLoading, services: mine, allServices: all, favorites, onToggleFavorite: toggleFavorite, hero: decor.hero ? { src: decor.hero, pos: decor.pos.hero } : null }}
+                ctx={{ me, meLoading, servicesLoading, services: mine, allServices: all, favorites, onToggleFavorite: toggleFavorite, hero: decor.hero ? { src: decor.hero, pos: decor.pos.hero } : null }}
                 layout={widgets}
                 defs={visible}
                 editing={editing}
@@ -164,20 +176,8 @@ export default function App() {
                 onDone={stopEditing}
                 decor={decor}
               />
-            )}
-            {route.page === 'systems' && (
-              <LazySystemsPage
-                me={me}
-                loading={meLoading}
-                services={mine}
-                query={query}
-                onQueryChange={setQuery}
-                favorites={favorites}
-                onToggleFavorite={toggleFavorite}
-              />
-            )}
-            {route.page === 'info' && <LazyInfoPage categoryId={route.param} />}
-            {route.page === 'account' && <LazyAccountPage me={me} loading={meLoading} services={mine} theme={theme} onCustomize={customize} />}
+            </Activity>
+            {!home && screen(route.page)}
           </Suspense>
         </main>
 

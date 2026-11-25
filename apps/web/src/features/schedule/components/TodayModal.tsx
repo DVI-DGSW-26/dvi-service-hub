@@ -74,7 +74,7 @@ export function TodayModal({ items, now, date, open, onClose }: TodayModalProps)
   const bold = (text: string) => <strong className="font-bold text-fg">{text}</strong>
 
   return (
-    <Modal open={open} onClose={onClose} labelledBy={titleId} wide className="lg:h-[min(800px,calc(100dvh-32px))]">
+    <Modal open={open} onClose={onClose} labelledBy={titleId} wide className="lg:h-[70dvh]">
       <div className="flex flex-none flex-wrap items-end justify-between gap-4 border-b border-line p-6 pr-16 sm:p-8 sm:pr-20">
         <div className="min-w-0">
           <p className="text-[15px] font-semibold text-accent">{longToday(isToday || q ? date : fromIso(selected.date), lang)}</p>
@@ -101,10 +101,10 @@ export function TodayModal({ items, now, date, open, onClose }: TodayModalProps)
         />
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        {/* 날짜 고르기 — 좁은 화면에서는 가로로 넘긴다 */}
-        <nav aria-label={t.schedule.dates} className="flex-none border-b border-line lg:w-60 lg:border-r lg:border-b-0">
-          <ul className="flex gap-1.5 overflow-x-auto p-3 [scrollbar-width:none] lg:h-full lg:[scrollbar-width:auto] lg:flex-col lg:overflow-y-auto lg:overscroll-contain">
+      <div className="flex min-h-0 flex-1 flex-col @2xl:flex-row">
+        {/* 날짜 고르기 — 좁은 화면에서는 엄지가 닿는 맨 아래에서 가로로 넘긴다(달력 크게 보기의 달 넘기기와 같은 자리) */}
+        <nav aria-label={t.schedule.dates} className="order-last flex-none border-t border-line @2xl:order-none @2xl:w-60 @2xl:border-t-0 @2xl:border-r">
+          <ul className="flex gap-1.5 overflow-x-auto p-3 [scrollbar-width:none] @2xl:h-full @2xl:[scrollbar-width:auto] @2xl:flex-col @2xl:overflow-y-auto @2xl:overscroll-contain">
             {days.map((d, i) => {
               const active = !q && i === day
               return (
@@ -137,7 +137,7 @@ export function TodayModal({ items, now, date, open, onClose }: TodayModalProps)
             {history.isPending &&
               Array.from({ length: 6 }, (_, i) => (
                 <li key={`sk-${i}`} className="flex-none" aria-hidden="true">
-                  <Skeleton className="h-11 w-28 lg:w-full" />
+                  <Skeleton className="h-11 w-28 @2xl:w-full" />
                 </li>
               ))}
           </ul>

@@ -54,17 +54,6 @@
     outline-offset: 2px;
   }
 
-  /* 밝기가 갑자기 뒤집히지 않게 테마를 바꾸는 순간에만 색을 부드럽게 넘긴다 */
-  html.theme-switching *,
-  html.theme-switching *::before,
-  html.theme-switching *::after {
-    transition:
-      background-color 0.35s ease,
-      border-color 0.35s ease,
-      color 0.35s ease,
-      box-shadow 0.35s ease !important;
-  }
-
   /* OS 의 '동작 줄이기' · 테마 메뉴의 애니메이션 끄기 — 움직임 없이 바로 바뀐다 */
   @media (prefers-reduced-motion: reduce) {
     *,
