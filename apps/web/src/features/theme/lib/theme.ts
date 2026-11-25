@@ -66,6 +66,30 @@ export function resolveMode(mode: ThemeMode): 'light' | 'dark' {
   return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
+// 앱(apps/mobile)이 페이지에 넣어 주는 Capacitor 연결 통로 — 웹 브라우저에는 없다
+declare global {
+  interface Window {
+    Capacitor?: { nativePromise: (plugin: string, method: string, options?: object) => Promise<unknown> }
+  }
+}
+
+/**
+ * 앱의 상태 표시줄 · 아래 내비 바를 테마에 맞춘다(바탕 bg · 아이콘 색). 둘 다 그냥 두면 휴대폰 설정을 따라서
+ * 휴대폰은 라이트 · 허브는 다크면 바 · 아이콘이 허브와 따로 논다.
+ * - 바탕: WebView 140 이상은 웹이 바 뒤까지 그려 저절로 맞는다. 그 아래는 앱의 HubTheme 플러그인(apps/mobile)이 창 색을 칠한다
+ * - 아이콘: Capacitor 8 코어 SystemBars. DARK = 어두운 바탕용 밝은 아이콘
+ * @capacitor/core 를 들이지 않고 앱이 넣어 주는 통로로 바로 부른다 — 웹 브라우저에서는 그냥 지나간다
+ */
+export function applySystemBars(t: 'light' | 'dark', bg: string) {
+  const cap = window.Capacitor
+  if (!cap) return
+  // 순서가 중요하다 — SystemBars.setStyle 이 창 바탕을 기본색으로 되돌리므로 바탕은 그 뒤에 칠한다
+  cap
+    .nativePromise('SystemBars', 'setStyle', { style: t === 'dark' ? 'DARK' : 'LIGHT' })
+    .finally(() => cap.nativePromise('HubTheme', 'setBackground', { color: bg }))
+    .catch(() => undefined)
+}
+
 /** 첫 렌더 전에 저장된 강조색 · 유리 · 애니메이션 설정을 입힌다 (모드는 index.html 인라인 스크립트가 이미 정했다) */
 export function applySavedPrefs() {
   applyAccent(readPref(KEYS.accent) ?? ACCENTS[0].id)

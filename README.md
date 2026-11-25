@@ -18,7 +18,28 @@ pnpm build      # apps/web/dist 생성
 pnpm check      # 모든 패키지 typecheck · lint · test
 ```
 
-휴대폰 앱(apps/mobile)은 웹을 다시 맞춘 뒤 새로 만든다 — 그 전 시도는 `wip/mobile-login` 브랜치(ADR 0006).
+휴대폰 앱(`apps/mobile`)은 배포된 허브를 띄우는 Capacitor 껍데기다(ADR 0007). 웹을 배포하면 앱도 바뀐다. 지금은 Android 만.
+
+```bash
+cd apps/mobile
+pnpm sync      # capacitor.config.ts 를 android/ 에 반영
+pnpm open      # Android Studio 로 열기 — 거기서 ▶ 실행
+```
+
+로그인 없이 목업으로 앱 화면을 보려면(에뮬레이터 · USB 연결 휴대폰) 배포하지 않은 웹 코드 그대로:
+
+```bash
+cd apps/mobile && pnpm run:mock   # 목업 웹을 :5174 에 띄우고 앱을 거기에 붙인다. 웹을 고치면 앱도 바로 바뀐다
+```
+
+5174 는 평소 띄워 두는 `pnpm dev`(:5173)와 겹치지 않게 따로 쓴다. 실제 데이터로 보려면 터미널 두 개에서 저장소 루트 `pnpm dev --host 127.0.0.1`
+(`apps/web/.env.local` 의 `HUB_SESSION_COOKIE` 필요, vite.config.ts 참고), `apps/mobile` 에서 `pnpm dev:mock`(앱이 PC 의 :5173 을 띄운다).
+
+끝낼 때는 Ctrl+C 로 — 앱 설정의 주소를 운영 주소로 되돌린다. 창을 그냥 닫았다면 `pnpm sync` 로 되돌린다.
+기기에 깔린 앱은 그대로 PC 를 보니, 운영 허브로 돌아가려면 `pnpm run run` 으로 다시 깐다.
+
+Gradle 은 JDK 21 이상으로 돌린다. Android Studio 는 기본 JBR 이면 되고, 터미널(`pnpm exec cap run android`)에서
+`invalid source release: 21` 이 나면 `~/.gradle/gradle.properties` 에 `org.gradle.java.home=C:/Program Files/Android/Android Studio/jbr` 를 넣는다.
 
 Vercel 프로젝트의 Root Directory 는 `apps/web` 이다 (docs/adr/0003-monorepo.md).
 아래에서 `src/` · `api/` 등 경로는 `apps/web/` 기준이다.

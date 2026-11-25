@@ -1,0 +1,23 @@
+{
+  "name": "@dvi/mobile",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev:mock": "cap run android -l --host localhost --port 5173 --forwardPorts 5173:5173",
+    "sync": "cap sync android",
+    "open": "cap open android",
+    "run": "cap run android",
+    "run:mock": "node scripts/run-mock.mjs",
+    "release": "node scripts/release.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.6.0",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.6.0",
+    "@capacitor/splash-screen": "8.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.6.0"
+  }
+}
