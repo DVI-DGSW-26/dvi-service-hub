@@ -97,7 +97,7 @@ export function HeroCard({ me, loading = false, favoriteCount, image, size, clas
   }
 
   return (
-    <section className={`hero relative flex flex-col justify-center overflow-hidden rounded-3xl fit:gap-4 fit:px-8 fit:py-6 ${size ? 'gap-4 p-5' : 'gap-6 p-6 sm:p-8'} ${className}`}>
+    <section className={`hero @container relative flex flex-col justify-center overflow-hidden rounded-3xl fit:gap-4 fit:px-8 fit:py-6 ${size ? 'gap-4 p-5' : 'gap-6 p-6 sm:p-8'} ${className}`}>
       {/* 카드 높이에 맞춰 잘리지 않게 그리고, 왼쪽으로 갈수록 배경에 녹인다 */}
       {picture ?? (
         <HeroIllustration className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-auto max-w-[62%] mask-[linear-gradient(to_right,transparent,black_45%)] sm:block dark:opacity-35 dark:saturate-50" />
@@ -109,8 +109,8 @@ export function HeroCard({ me, loading = false, favoriteCount, image, size, clas
         {/* 한 칸 높이에서는 안내 문구를 뺀다 — 큰 칸(L)에서만 */}
         <p className="mt-3 text-base/relaxed text-muted max-sm:mt-2 max-sm:text-[15px]/relaxed fit:hidden tall:block">{t.home.hero.lead}</p>
 
-        {/* 휴대폰에서는 요약을 뺀다 — 일정 · 점검 위젯이 같은 숫자를 보여준다. 크게면 휴대폰에서도 */}
-        <div className={`mt-6 flex flex-wrap gap-2.5 fit:mt-4 ${size === 'l' ? 'max-sm:mt-4 max-sm:gap-2' : 'max-sm:hidden'}`}>
+        {/* 휴대폰 · 좁은 칸에서는 요약을 뺀다 — 일정 · 점검 위젯이 같은 숫자를 보여준다. 크게면 휴대폰에서도 */}
+        <div className={`mt-6 flex flex-wrap gap-2.5 fit:mt-4 fit:@max-[720px]:hidden ${size === 'l' ? 'max-sm:mt-4 max-sm:gap-2' : 'max-sm:hidden'}`}>
           <Pill icon={<CalendarDays className="size-[18px]" aria-hidden="true" />}>
             <Count entry={t.home.hero.schedule} value={schedule.data?.length} loading={schedule.isPending} />
           </Pill>
@@ -167,7 +167,7 @@ function Greeting({ name, loading, small = false }: { name?: string; loading: bo
 
   return (
     <h1 className="mt-3 min-h-[2.5em] text-[clamp(26px,2.8vw,36px)]/[1.25] font-bold tracking-[-0.03em] text-balance max-sm:mt-2 max-sm:min-h-0 max-sm:text-[25px] fit:min-h-0 fit:text-[32px]">
-      <span key={line} className="block animate-greet fit:truncate">
+      <span key={line} className="block animate-greet fit:line-clamp-2">
         {line} <span aria-hidden="true">👋</span>
       </span>
     </h1>
@@ -176,7 +176,7 @@ function Greeting({ name, loading, small = false }: { name?: string; loading: bo
 
 /**
  * 전사 공지 한 건씩. 날짜 · 넘김 버튼은 오른쪽에 모아 세로 가운데로 맞춘다. admin 이면 맨 오른쪽에 작성 단추.
- * 좁은 화면에서는 위 줄에 '전사 공지' · 넘김, 아래 줄에 공지 글을 폭 가득 — 글이 몇 글자로 잘리지 않게.
+ * 카드가 좁으면(인사 카드 폭 720px 아래) 위 줄에 '전사 공지' · 넘김, 아래 줄에 공지 글을 폭 가득 — 글이 몇 글자로 잘리지 않게.
  */
 /** compact — 좁은 화면 고정 칸: 한 줄에 표시 · 제목 · 쓰기만(넘기기는 좌우로 쓸기 · 펼쳐 보기에서) */
 function NoticeTicker({ canWrite, compact = false, className = '' }: { canWrite: boolean; compact?: boolean; className?: string }) {
@@ -200,7 +200,7 @@ function NoticeTicker({ canWrite, compact = false, className = '' }: { canWrite:
 
   return (
     <div
-      className={`hero-glass relative flex items-center rounded-2xl sm:max-w-[min(100%,760px)] ${compact ? 'gap-2.5 py-2 pr-3 pl-2' : 'flex-wrap gap-x-4 gap-y-2.5 py-3.5 pr-2.5 pl-4 sm:flex-nowrap'} ${className}`}
+      className={`hero-glass relative flex items-center rounded-2xl sm:max-w-[min(100%,760px)] ${compact ? 'gap-2.5 py-2 pr-3 pl-2' : 'flex-wrap gap-x-4 gap-y-2.5 py-3.5 pr-2.5 pl-4 @min-[720px]:flex-nowrap'} ${className}`}
     >
       {/* 한 줄(compact)은 아이콘만 — 좁은 칸(3×2)에서도 제목이 보이게 */}
       <span className={`flex flex-none items-center gap-1.5 rounded-xl bg-accent-fill text-sm font-bold text-white ${compact ? 'p-1.5' : 'px-3 py-2 max-sm:px-2.5 max-sm:py-1.5'}`}>
@@ -208,7 +208,7 @@ function NoticeTicker({ canWrite, compact = false, className = '' }: { canWrite:
         <span className={compact ? 'sr-only' : ''}>{t.home.notice.label}</span>
       </span>
       {/* 좌우로 쓸면 이전 · 다음 공지 (위아래는 화면 스크롤 그대로 — touch-pan-y) */}
-      <div {...swipe} className={`min-w-0 touch-pan-y overflow-hidden ${compact ? 'flex-1' : 'order-last w-full pr-1.5 sm:order-none sm:w-auto sm:flex-1 sm:pr-0'}`} aria-live="polite">
+      <div {...swipe} className={`min-w-0 touch-pan-y overflow-hidden ${compact ? 'flex-1' : 'order-last w-full pr-1.5 @min-[720px]:order-none @min-[720px]:w-auto @min-[720px]:flex-1 @min-[720px]:pr-0'}`} aria-live="polite">
         {loading ? (
           <div className="h-12 animate-pulse rounded-lg bg-fg/[0.07]" />
         ) : error ? (
@@ -220,7 +220,7 @@ function NoticeTicker({ canWrite, compact = false, className = '' }: { canWrite:
           <p className="text-[15px] text-muted">{t.home.notice.empty}</p>
         )}
       </div>
-      <div className="ml-auto flex flex-none items-center gap-1 sm:ml-0">
+      <div className="ml-auto flex flex-none items-center gap-1 @min-[720px]:ml-0">
         {n && <span className="mr-2 hidden text-sm font-medium text-muted md:inline">{shortDate(n.date, lang)}</span>}
         {notices.length > 1 && !compact && (
           <>

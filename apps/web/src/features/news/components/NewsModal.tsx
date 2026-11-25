@@ -29,14 +29,14 @@ export function NewsModal({ news, index, onIndexChange, viewAll }: NewsModalProp
   const item = news[shown] as NewsItem | undefined
 
   return (
-    <Modal open={index !== null} onClose={() => onIndexChange(null)} labelledBy={titleId} wide className="lg:h-[min(720px,calc(100dvh-32px))]">
+    <Modal open={index !== null} onClose={() => onIndexChange(null)} labelledBy={titleId} wide className="lg:h-[64dvh]">
       {item && (
         <>
           {/* 다른 소식으로 넘기면 맨 위부터(key) */}
-          <div key={shown} className="min-h-0 flex-1 overflow-y-auto overscroll-contain lg:grid lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:overflow-hidden">
-            <NewsThumb item={item} large className="aspect-[16/8] w-full lg:aspect-auto lg:h-full" />
+          <div key={shown} className="min-h-0 flex-1 overflow-y-auto overscroll-contain @2xl:grid @2xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] @2xl:overflow-hidden">
+            <NewsThumb item={item} large className="aspect-[16/8] w-full @2xl:aspect-auto @2xl:h-full" />
 
-            <div className="p-6 sm:p-8 lg:overflow-y-auto lg:overscroll-contain lg:p-10 lg:pt-14">
+            <div className="p-6 sm:p-8 @2xl:overflow-y-auto @2xl:overscroll-contain @2xl:p-10 @2xl:pt-14">
               <p className="text-[15px] font-semibold text-accent tabular-nums">{formatDate(item.date, lang)}</p>
               <h2 id={titleId} className="mt-2 text-[clamp(22px,2.4vw,28px)]/[1.3] font-bold tracking-[-0.025em] text-balance">
                 {title(item.title)}

@@ -100,22 +100,23 @@ function TimeCell({ item: s }: { item: ScheduleItem }) {
  * 일정 한 줄. 연령대가 넓은 사용자를 생각해 시각은 크게 '오전/오후'로, 상태는 글자로.
  * 눈이 가는 순서는 진행 중 → 예정 → 끝남. 끝난 줄은 글자 · 색 막대를 흐려 뒤로 물린다.
  * 색 막대는 플로우 일정 색 — 플로우가 분류 이름을 주지 않아 색으로 구분한다.
+ * 목록이 아주 좁으면(@container 280px 아래, 홈 위젯 칸) 제목이 한두 글자씩 꺾이지 않게 위 줄에 시각 · 상태, 아래 줄에 제목을 폭 가득.
  */
 export function ScheduleRow({ item: s, now, className = '' }: { item: ScheduleItem; now: number; className?: string }) {
   const title = useTitle()
   const st = statusOf(s, now)
   const done = st === 'done'
   return (
-    <li data-status={st} className={`flex items-center gap-3 rounded-2xl px-3 py-3 sm:gap-3.5 ${ROW[st]} ${className}`}>
-      <span className={`w-[84px] flex-none sm:w-[92px] ${done ? 'text-muted' : st === 'now' ? 'text-live' : ''}`}>
+    <li data-status={st} className={`flex items-center gap-3 rounded-2xl px-3 py-3 sm:gap-3.5 @max-[280px]:flex-wrap @max-[280px]:justify-between @max-[280px]:gap-y-1 ${ROW[st]} ${className}`}>
+      <span className={`w-[84px] flex-none sm:w-[92px] @max-[280px]:w-auto ${done ? 'text-muted' : st === 'now' ? 'text-live' : ''}`}>
         <TimeCell item={s} />
       </span>
       <span
-        className={`h-10 w-1 flex-none rounded-full ${s.color ? '' : 'bg-accent-fill'} ${done ? 'opacity-30' : ''}`}
+        className={`h-10 w-1 flex-none rounded-full @max-[280px]:hidden ${s.color ? '' : 'bg-accent-fill'} ${done ? 'opacity-30' : ''}`}
         style={s.color ? { backgroundColor: s.color } : undefined}
         aria-hidden="true"
       />
-      <span className="min-w-0 flex-1">
+      <span className="min-w-0 flex-1 @max-[280px]:order-last @max-[280px]:basis-full">
         <span className={`block text-base break-keep ${done ? 'font-medium text-muted' : st === 'now' ? 'font-bold' : 'font-semibold'}`}>{title(s.title)}</span>
       </span>
       <StatusBadge status={st} />

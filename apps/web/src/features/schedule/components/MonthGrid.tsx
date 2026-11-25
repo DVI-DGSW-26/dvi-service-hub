@@ -20,6 +20,11 @@ export function EventDot({ event, className = 'size-2' }: { event: CalendarEvent
   )
 }
 
+/** 일정이 있는 날 표시 — 홈 카드는 일정 수 · 색과 상관없이 점 하나(일정이 많으면 색 점이 날마다 셋씩 붙어 어지럽다). 색 · 이름은 크게 보기에서 */
+export function DayDot() {
+  return <span className="size-1.5 flex-none rounded-full bg-fg/35" aria-hidden="true" />
+}
+
 /** 칸 안 이름표 바탕 — 일정 색을 옅게 */
 const chipStyle = (e: CalendarEvent) => (e.color ? { backgroundColor: `color-mix(in oklab, ${e.color} 18%, transparent)` } : undefined)
 
@@ -84,9 +89,7 @@ export function MonthGrid({ month, events, today, variant, selected, onSelect, c
         )
         const dots = items.length > 0 && (
           <span className={`flex justify-center gap-0.5 ${full ? 'sm:hidden' : ''}`} aria-hidden="true">
-            {items.slice(0, 3).map((e) => (
-              <EventDot key={e.id} event={e} className="size-1.5" />
-            ))}
+            {full ? items.slice(0, 3).map((e) => <EventDot key={e.id} event={e} className="size-1.5" />) : <DayDot />}
           </span>
         )
 

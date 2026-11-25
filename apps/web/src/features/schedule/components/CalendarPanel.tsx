@@ -9,7 +9,7 @@ import { isMini, type StackSize } from '@/shared/widget'
 import { calendarQueries } from '../api/queries'
 import type { CalendarEvent } from '@/shared/types'
 import { CountTag, MiniPanel, Panel, SMALL_BODY, SmallPanel, SourceTag, LoadError, Skeleton } from '@/shared/ui'
-import { EventDot, MonthGrid, WeekdayRow } from './MonthGrid'
+import { DayDot, EventDot, MonthGrid, WeekdayRow } from './MonthGrid'
 
 // 눌러서 열 때 받는다 — 첫 화면 번들에서 뺀다
 const CalendarModal = lazy(() => import('./CalendarModal').then((m) => ({ default: m.CalendarModal })))
@@ -229,10 +229,8 @@ function WeekStrip({ events, now, today, onSelect }: { events: CalendarEvent[]; 
             <span className={`grid size-8 place-items-center rounded-full text-sm font-semibold tabular-nums ${iso === today ? 'bg-accent-fill text-white' : d.getDay() === 0 ? 'text-danger' : ''}`}>
               {d.getDate()}
             </span>
-            <span className="flex h-1.5 gap-0.5" aria-hidden="true">
-              {items.slice(0, 3).map((e) => (
-                <EventDot key={e.id} event={e} className="size-1.5" />
-              ))}
+            <span className="flex h-1.5" aria-hidden="true">
+              {items.length > 0 && <DayDot />}
             </span>
           </button>
         )

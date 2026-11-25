@@ -39,7 +39,7 @@ export function OrgChartModal({ open, onClose, team }: { open: boolean; onClose:
   }, [open, team])
 
   return (
-    <Modal open={open} onClose={onClose} labelledBy={titleId} wide className="lg:h-[min(820px,calc(100dvh-32px))]">
+    <Modal open={open} onClose={onClose} labelledBy={titleId} wide className="lg:h-[70dvh]">
       <div className="flex flex-none flex-wrap items-end justify-between gap-4 border-b border-line p-6 pr-16 sm:p-8 sm:pr-20">
         <div className="min-w-0">
           <p className="text-[15px] font-semibold text-accent">{t.info.title}</p>
@@ -60,10 +60,10 @@ export function OrgChartModal({ open, onClose, team }: { open: boolean; onClose:
         />
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col @2xl:flex-row">
         {/* 팀 목록 — 좁은 화면에서는 가로로 넘긴다 */}
-        <nav aria-label={t.info.org.teams} className="flex-none border-b border-line lg:w-60 lg:border-r lg:border-b-0">
-          <ul className="flex gap-1.5 overflow-x-auto p-3 [scrollbar-width:none] lg:h-full lg:[scrollbar-width:auto] lg:flex-col lg:overflow-y-auto lg:overscroll-contain">
+        <nav aria-label={t.info.org.teams} className="flex-none border-b border-line @2xl:w-60 @2xl:border-r @2xl:border-b-0">
+          <ul className="flex gap-1.5 overflow-x-auto p-3 [scrollbar-width:none] @2xl:h-full @2xl:[scrollbar-width:auto] @2xl:flex-col @2xl:overflow-y-auto @2xl:overscroll-contain">
             {listed.map((team) => {
               const on = team.id === active
               return (

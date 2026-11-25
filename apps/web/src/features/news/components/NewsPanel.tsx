@@ -108,7 +108,7 @@ export function NewsPanel({ size, className = '' }: { size?: StackSize; classNam
         <LoadError error={error} />
       ) : top ? (
         // 한 화면 모드: 칸이 넓고 낮아 위에 그림을 깔면 띠처럼 잘린다. 그림을 왼쪽에 제 비율(16:10)로 두고
-        // (높이 = 남는 높이와 칸 폭 48% 에 맞는 높이(30cqw) 중 작은 쪽), 아주 낮으면 작은 그림으로 줄인다
+        // (높이 = 남는 높이와 칸 폭 48% 에 맞는 높이(30cqw) 중 작은 쪽), 아주 낮으면 작은 그림으로 줄이고, 아주 좁으면 그림을 빼 제목에 폭을 준다
         <div className={`fit:flex fit:min-h-0 fit:flex-1 fit:flex-col fit:[container-type:size] ${size ? 'flex min-h-0 flex-1 flex-col' : ''}`}>
           <button
             type="button"
@@ -116,7 +116,7 @@ export function NewsPanel({ size, className = '' }: { size?: StackSize; classNam
             aria-haspopup="dialog"
             className={`group block w-full cursor-pointer text-left transition-[scale] duration-150 active:scale-[0.99] fit:flex fit:min-h-0 fit:flex-1 fit:items-center fit:gap-4 ${beside ? 'flex flex-none items-center gap-3' : ''}`}
           >
-            <span className={`block overflow-hidden rounded-2xl ring-1 ring-line fit:aspect-[16/10] fit:h-full fit:max-h-[30cqw] fit:flex-none [@container(max-height:220px)]:h-auto [@container(max-height:220px)]:w-28 [@container(max-height:220px)]:rounded-xl ${beside ? 'w-32 flex-none rounded-xl' : ''}`}>
+            <span className={`block overflow-hidden rounded-2xl ring-1 ring-line fit:aspect-[16/10] fit:h-full fit:max-h-[30cqw] fit:flex-none [@container(max-height:220px)]:h-auto [@container(max-height:220px)]:w-28 [@container(max-height:220px)]:rounded-xl fit:[@container(max-width:260px)]:hidden ${beside ? 'w-32 flex-none rounded-xl' : ''}`}>
               <NewsThumb item={top} className={`w-full fit:aspect-auto fit:h-full transition-transform duration-300 group-hover:scale-[1.03] ${beside ? 'aspect-[16/10]' : size === 'l' ? 'aspect-[16/7]' : 'aspect-[2/1]'}`} />
             </span>
             <span className={`block min-w-0 fit:mt-0 ${beside ? '' : 'mt-3'}`}>
