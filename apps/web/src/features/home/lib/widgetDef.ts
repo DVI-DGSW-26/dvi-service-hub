@@ -11,6 +11,8 @@ import type { WidgetSize } from './widgetLayout'
 export interface WidgetContext {
   me: Me | null
   meLoading: boolean
+  /** 서비스 목록(허브 서버)을 받는 중 */
+  servicesLoading: boolean
   /** 권한으로 거르고 즐겨찾기 순으로 정렬한 목록 */
   services: Service[]
   allServices: Service[]

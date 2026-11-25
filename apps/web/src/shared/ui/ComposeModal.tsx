@@ -17,6 +17,8 @@ interface ComposeModalProps {
   aside: ReactNode
   onSubmit: () => void
   submitting: boolean
+  /** 등록 대신 다른 글자 (고치기는 '저장') */
+  submitLabel?: string
   /** 등록 실패 문구 */
   error?: string
   children: ReactNode
@@ -26,7 +28,7 @@ interface ComposeModalProps {
  * 글쓰기 모달 — 오늘의 일정 모달과 같은 틀(위 머리말 · 왼쪽 목록 · 오른쪽 본문)에 본문 자리로 폼을 넣는다.
  * 왼쪽에는 이미 올라온 글을 보여 겹치는 내용을 쓰지 않게 한다. 좁은 화면은 폼이 먼저, 목록은 아래.
  */
-export function ComposeModal({ open, onClose, eyebrow, title, description, asideTitle, asideHint, aside, onSubmit, submitting, error, children }: ComposeModalProps) {
+export function ComposeModal({ open, onClose, eyebrow, title, description, asideTitle, asideHint, aside, onSubmit, submitting, submitLabel, error, children }: ComposeModalProps) {
   const titleId = useId()
   const { t } = useI18n()
   const submit = (e: SubmitEvent) => {
@@ -35,7 +37,7 @@ export function ComposeModal({ open, onClose, eyebrow, title, description, aside
   }
 
   return (
-    <Modal open={open} onClose={onClose} labelledBy={titleId} wide className="lg:h-[min(760px,calc(100dvh-32px))]">
+    <Modal open={open} onClose={onClose} labelledBy={titleId} wide className="lg:h-[70dvh]">
       <form onSubmit={submit} noValidate className="flex min-h-0 flex-1 flex-col">
         <div className="flex-none border-b border-line p-6 pr-16 sm:p-8 sm:pr-20">
           <p className="text-[15px] font-semibold text-accent">{eyebrow}</p>
@@ -45,13 +47,13 @@ export function ComposeModal({ open, onClose, eyebrow, title, description, aside
           <p className="mt-1.5 text-base text-muted">{description}</p>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain lg:flex-row lg:overflow-hidden">
-          <aside className="order-last flex-none border-t border-line p-4 lg:order-first lg:w-80 lg:overflow-y-auto lg:overscroll-contain lg:border-t-0 lg:border-r">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain @2xl:flex-row @2xl:overflow-hidden">
+          <aside className="order-last flex-none border-t border-line p-4 @2xl:order-first @2xl:w-80 @2xl:overflow-y-auto @2xl:overscroll-contain @2xl:border-t-0 @2xl:border-r">
             <h3 className="px-2 text-sm font-bold text-muted">{asideTitle}</h3>
             <p className="px-2 pt-0.5 pb-2 text-[13px] text-muted">{asideHint}</p>
             {aside}
           </aside>
-          <div className="min-w-0 flex-1 space-y-5 p-6 sm:p-8 lg:overflow-y-auto lg:overscroll-contain">{children}</div>
+          <div className="min-w-0 flex-1 space-y-5 p-6 sm:p-8 @2xl:overflow-y-auto @2xl:overscroll-contain">{children}</div>
         </div>
 
         <div className="flex flex-none flex-wrap items-center justify-end gap-2 border-t border-line px-6 py-4">
@@ -72,7 +74,7 @@ export function ComposeModal({ open, onClose, eyebrow, title, description, aside
             disabled={submitting}
             className="h-11 cursor-pointer rounded-xl bg-accent-fill px-6 text-[15px] font-bold text-white shadow-[0_4px_12px_-4px_oklch(0_0_0/0.3)] transition-[opacity,scale] duration-150 active:scale-95 disabled:cursor-wait disabled:opacity-60"
           >
-            {submitting ? t.compose.submitting : t.compose.submit}
+            {submitting ? t.compose.submitting : (submitLabel ?? t.compose.submit)}
           </button>
         </div>
       </form>

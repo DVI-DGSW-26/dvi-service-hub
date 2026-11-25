@@ -43,7 +43,8 @@
     "today": "Today's schedule from the Flow room",
     "maintenance": "System maintenance and incident notices",
     "news": "Company news from the event archive",
-    "calendar": "This month's events and occasions"
+    "calendar": "This month's events and occasions",
+    "flow": "Latest posts in the Flow external affairs room"
   },
   "header": {
     "title": "Top bar",

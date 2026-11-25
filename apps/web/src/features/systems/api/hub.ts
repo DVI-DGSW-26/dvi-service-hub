@@ -1,4 +1,4 @@
-// 허브 서버의 기존 API — 서비스 목록 · 내 즐겨찾기 · 최근 사용 · 서비스 관리 · 플로우 글.
+// 허브 서버의 기존 API — 서비스 목록 · 내 즐겨찾기 · 최근 사용 · 서비스 관리. 플로우 글은 features/flow
 // feat/flow-posts 브랜치의 src/api.ts(fetch)를 axios 로 옮긴 것이다. 경로 · 모양은 그대로다.
 
 import type { AuthMode, Service, ServiceLink } from '../lib/services'
@@ -82,7 +82,7 @@ export interface AdminService extends Service {
 }
 
 /** 등록 · 수정 요청 본문. id 는 등록할 때만 쓰인다 */
-export type ServiceInput = Omit<AdminService, 'logo'> & {
+export type ServiceInput = Omit<AdminService, 'logo' | 'switcher'> & {
   logo: string | null
   switcher: { position: 'left' | 'right' | null; offset: number | null } | null
 }
@@ -95,36 +95,3 @@ export const adminServicesApi = {
   remove: (serviceId: string) => hubApi.delete(`/admin/services/${seg(serviceId)}`),
   reorder: (ids: string[]) => hubApi.post('/admin/services/reorder', { ids }),
 }
-
-/** 플로우 "대외업무 공유방"의 글 한 건. 로그인한 본인의 플로우 계정 기준이다 */
-export interface FlowPost {
-  id: string
-  /** post 글 · task 업무 · schedule 일정 · todo 할일 */
-  type: 'post' | 'task' | 'schedule' | 'todo' | 'other'
-  title: string
-  content: string
-  author: string
-  /** 한국 시각, 예: 2026-05-09T09:30 */
-  registeredAt?: string
-  commentCount: number
-  /** 본인이 읽었는지. 플로우가 알려주지 않은 글에는 없다 */
-  read?: boolean
-}
-
-export interface FlowPostPage {
-  projectTitle?: string
-  posts: FlowPost[]
-  hasNext: boolean
-  nextCursor?: number
-}
-
-export const flowApi = {
-  posts: (cursor: number, pageSize: number, { signal }: Opts = {}) => hubApi.get<FlowPostPage>('/flow/posts', { params: { cursor, pageSize }, signal }),
-}
-
-/**
- * 그 방을 본인 계정으로 플로우에서 여는 주소. 서버가 플로우의 본인용 로그인 링크로 넘겨 보낸다(302).
- * axios 로 부르지 않고 링크의 href 로 쓴다 — 브라우저가 따라가야 플로우가 열린다.
- * 일정 원문도 이 주소로 연다(명세 9장).
- */
-export const FLOW_OPEN_URL = '/api/hub/flow/open'

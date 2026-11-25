@@ -9,43 +9,34 @@
 //   error      조회가 실패한다 (일정 · 캘린더 502 FLOW_UNAVAILABLE, 소식 502 NEWS_UNAVAILABLE, 공지 · 점검 500)
 //   forbidden  조회가 403 이다 (재직자가 아닌 사람)
 //   slow       응답이 2.5초 걸린다
-//   readonly   쓰기 롤이 없는 사람 — 공지 · 점검 작성 버튼이 안 보인다
+//   readonly   쓰기 롤이 없는 사람 — 공지 · 점검 작성 버튼이 안 보인다. 허브 관리자도 아니다(서비스 관리 버튼이 없고 /admin 은 403)
 //   예) http://localhost:5173/?mock=slow,empty#/
 
 import { AxiosError, AxiosHeaders, CanceledError, type AxiosAdapter, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { auth, hub, apiLog } from '@/shared/api'
-import { services } from '@/features/systems'
 import type { CalendarEvent, Maintenance, MaintenanceInput, MaintenanceKind, NewsPage, Notice, NoticeInput, ScheduleDay, ScheduleItem } from '@/shared/types'
 import { addDays, fromIso } from '@/shared/lib'
 import { flowEvents, seedCredentials, seedMaintenance, seedNews, seedNotices, today, type FlowEvent } from './data'
 import { mockMe } from './info'
+import { HttpError, bad, blank, done, ok, requireText, type Params, type Result } from './respond'
+import { findService, servicesRoute } from './services'
 
 type Scenario = 'empty' | 'error' | 'forbidden' | 'slow' | 'readonly'
 const scenarios = new Set((new URLSearchParams(location.search).get('mock') ?? '').split(',').filter(Boolean) as Scenario[])
 
 // 새로 고침하면 처음 상태로 돌아간다
-const db = { notices: seedNotices(), maintenance: seedMaintenance(), news: seedNews(), credentials: seedCredentials(), nextId: 200 }
+const db = {
+  notices: seedNotices(),
+  maintenance: seedMaintenance(),
+  news: seedNews(),
+  credentials: seedCredentials(),
+  nextId: 200,
+}
 
 // ---------------------------------------------------------------- 응답 · 오류
 
-class HttpError extends Error {
-  constructor(
-    readonly status: number,
-    readonly code: string,
-    message: string,
-    readonly field?: string,
-  ) {
-    super(message)
-  }
-}
-
-const ok = <T>(data: T, message = '성공', status = 200) => ({ status, body: { status, message, data } })
-const done = (message: string) => ({ status: 200, body: { status: 200, message } })
-const bad = (field: string, message: string) => new HttpError(400, 'METHOD_ARGUMENT_NOT_VALID', `${field}: ${message}`, field)
-
 // ---------------------------------------------------------------- 입력 검사 (명세 1.4 · 2.2 · 3.2)
 
-const blank = (s: unknown) => typeof s !== 'string' || s.trim() === ''
 const DATE = /^\d{4}-\d{2}-\d{2}$/
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/
 const validDate = (s: string) => DATE.test(s) && addDays(s, 0) === s
@@ -59,14 +50,6 @@ function cleanUrl(url: unknown): string | undefined {
   if (!/^https?:\/\//.test(u)) throw bad('url', '주소는 http:// 또는 https:// 로 시작해야 합니다.')
   if (u.length > 500) throw bad('url', '주소는 500자 이하로 입력해 주세요.')
   return u
-}
-
-function requireText(input: Record<string, unknown>, field: string, label: string, max: number, trim = true) {
-  const v = input[field]
-  if (blank(v)) throw bad(field, `${label}을(를) 입력해 주세요.`)
-  const s = trim ? String(v).trim() : String(v)
-  if (s.length > max) throw bad(field, `${label}은(는) ${max.toLocaleString()}자 이하로 입력해 주세요.`)
-  return s
 }
 
 function createNotice(input: Partial<NoticeInput>): Notice {
@@ -107,7 +90,7 @@ function createMaintenance(input: Partial<MaintenanceInput>): Maintenance {
   if (end && !start) throw new HttpError(400, 'MAINTENANCE_TIME_INVALID', '종료 시각만 입력할 수 없습니다.', 'start')
   if (start && end && end < start) throw new HttpError(400, 'MAINTENANCE_TIME_INVALID', '종료 시각이 시작 시각보다 빠릅니다.', 'end')
 
-  const service = serviceId ? services.find((s) => s.id === serviceId) : undefined
+  const service = serviceId ? findService(serviceId) : undefined
   if (serviceId && !service) throw new HttpError(400, 'MAINTENANCE_SERVICE_UNKNOWN', '서비스 목록에 없는 시스템입니다.', 'serviceId')
 
   const m: Maintenance = { id: String(db.nextId++), kind: input.kind, title, date: input.date, body }
@@ -161,9 +144,6 @@ function calendarMonth(month: string): CalendarEvent[] {
 
 // ---------------------------------------------------------------- 길 찾기
 
-type Params = Record<string, string | number | undefined>
-interface Result { status: number; body: unknown }
-
 function hubRoute(method: string, path: string, params: Params, input: Record<string, unknown>): Result {
   const read = method === 'get'
   const dashboard = /^\/(notices|maintenance|schedule|calendar|news)/.test(path)
@@ -174,8 +154,8 @@ function hubRoute(method: string, path: string, params: Params, input: Record<st
     throw new HttpError(500, 'UNKNOWN', '서버 오류가 발생했습니다.')
   }
   const empty = scenarios.has('empty')
-
-  if (method === 'get' && path === '/services') return ok(services, '서비스 목록 조회 성공')
+  const served = servicesRoute(method, path, params, input, scenarios)
+  if (served) return served
 
   // 공지
   if (method === 'get' && path === '/notices') {

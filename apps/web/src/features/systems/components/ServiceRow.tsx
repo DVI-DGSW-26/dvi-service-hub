@@ -1,5 +1,6 @@
 import { ArrowUpRight, Star } from 'lucide-react'
 import type { Service } from '../lib/services'
+import { markUsed } from '../api/queries'
 import { useI18n } from '@/shared/i18n'
 import { ServiceBadge, ServiceLogo } from './ServiceCard'
 
@@ -27,6 +28,7 @@ export function ServiceRow({ service: s, favorite, onToggleFavorite }: ServiceRo
           <h3 className="min-w-0 truncate text-base font-bold">
             <a
               href={primary.url}
+              onClick={() => markUsed(s.id)}
               target="_blank"
               rel="noreferrer"
               className="outline-none after:absolute after:inset-0 after:content-[''] focus-visible:underline"
@@ -48,7 +50,7 @@ export function ServiceRow({ service: s, favorite, onToggleFavorite }: ServiceRo
       <div className="hidden flex-none items-center gap-3 text-[13px] lg:flex">
         {s.links.length > 1 &&
           s.links.slice(1).map((l) => (
-            <a key={l.url} className="relative z-10 font-semibold text-accent hover:underline" href={l.url} target="_blank" rel="noreferrer">
+            <a key={l.url} className="relative z-10 font-semibold text-accent hover:underline" href={l.url} target="_blank" rel="noreferrer" onClick={() => markUsed(s.id)}>
               {l.label} ↗
             </a>
           ))}
