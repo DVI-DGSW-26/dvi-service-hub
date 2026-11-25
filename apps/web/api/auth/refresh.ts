@@ -7,15 +7,16 @@
  *
  *   POST  화면(src/shared/api/session.ts)이 세션이 끝나기 전이나 401 을 받았을 때 부른다
  *         200 { exp }   늘렸다
- *         401           거절됐다 — 쿠키를 지웠다. 화면이 통합 로그인으로 보낸다
+ *         401           거절됐다 — 화면이 통합 로그인으로 보낸다
  *         502           Keycloak 에 닿지 못했다 — 세션은 그대로 둔다
  *   GET   middleware 가 세션이 끝난 페이지 이동을 보낸다. 늘리고 ?next= 로 돌려보내거나, 거절되면 통합 로그인으로
  *
- * 갱신이 거절되면(퇴사 · SSO 세션 끝 · 재사용 탐지) 쿠키를 모두 지운다 — 그래야 퇴사 처리 · 권한 변경이 바로 반영된다.
+ * 갱신이 거절되면(퇴사 · SSO 세션 끝 · 재사용 탐지) 통합 로그인으로 보낸다. 쿠키는 지우지 않는다(아래 handler).
+ * 그래도 퇴사 처리 · 권한 변경은 10분 안에 반영된다 — hub_session 을 더 늘릴 수 없다.
  */
 import { REFRESH_COOKIE, readCookie } from '../../lib/session.js';
 import { configError, discover, htmlError, redirect, safePath, type OidcMetadata } from '../../lib/oidc.js';
-import { claimsOf, clearSessionCookies, refreshTokens, sessionCookies } from '../../lib/keycloak.js';
+import { claimsOf, refreshTokens, sessionCookies } from '../../lib/keycloak.js';
 import { clip, log, requestId } from '../../lib/log.js';
 
 export const config = { runtime: 'edge' };
@@ -76,12 +77,12 @@ export default async function handler(req: Request): Promise<Response> {
       : json({ error: '통합 로그인 서버에 연결하지 못했습니다.' }, 502);
   }
   if (outcome === 'rejected' || outcome === 'missing') {
-    // 거절됐을 때만 쿠키를 지운다. hub_rt 가 없는 요청(다른 사이트에서 보낸 POST 등)으로 로그아웃되지 않게
-    const cookies = outcome === 'rejected' ? clearSessionCookies() : [];
-    if (!page) return json({ signedIn: false }, 401, cookies);
+    // 쿠키는 지우지 않는다 — 같은 hub_rt 로 동시에 갱신하면(탭 복원 · middleware 와 화면) 진 쪽 응답이 늦게 와
+    // 이긴 쪽이 방금 심은 새 쿠키를 지운다. 남은 hub_session 은 길어야 10분이고, 다음 로그인이 hub_rt 를 덮어쓴다
+    if (!page) return json({ signedIn: false }, 401);
     const login = new URL('/api/auth/login', url.origin);
     login.searchParams.set('next', next);
-    return redirect(login.toString(), ...cookies);
+    return redirect(login.toString());
   }
 
   return page ? redirect(new URL(next, url.origin).toString(), ...outcome.cookies) : json({ exp: outcome.exp }, 200, outcome.cookies);

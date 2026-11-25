@@ -13,7 +13,7 @@
  * 입사자도 허브에는 들어와서 "부서가 지정되지 않았다"는 안내를 봐야 한다.
  * 빈 화면이나 403 은 본인에게 고장으로 보인다.
  */
-import { AUTH_COOKIE, buildCookie, readCookie, verifySession } from '../../lib/session.js';
+import { AUTH_COOKIE, authCookie, buildCookie, readCookie, verifySession } from '../../lib/session.js';
 import { configError, decodeJwt, discover, htmlError, redirect, safePath,
   type JwtClaims, type OidcMetadata, type PendingLogin } from '../../lib/oidc.js';
 import { sessionCookies, type TokenResponse } from '../../lib/keycloak.js';
@@ -26,14 +26,14 @@ export const config = { runtime: 'edge' };
  * error_description=authentication_expired 로 돌아온다. 다시 시작하면 SSO 가 살아 있어 화면 없이 들어간다.
  * 오류 화면 대신 한 번만 다시 시작한다 — 다시 시작한 로그인(retried)이 또 그러면 오류를 보인다.
  */
-function retryExpiredLogin(url: URL, pending: PendingLogin | null): Response | null {
+function retryExpiredLogin(url: URL, pending: PendingLogin | null, clearPending: string): Response | null {
   if (url.searchParams.get('error_description') !== 'authentication_expired' || pending?.retried) return null;
   log('info', 'login.retry_expired', 'user');
   const login = new URL('/api/auth/login', url.origin);
   login.searchParams.set('next', safePath(pending?.next));
   if (pending?.action) login.searchParams.set('action', pending.action);
   login.searchParams.set('retried', '1');
-  return redirect(login.toString(), buildCookie(AUTH_COOKIE, '', 0));
+  return redirect(login.toString(), clearPending);
 }
 
 /**
@@ -58,14 +58,18 @@ export default async function handler(req: Request): Promise<Response> {
 
   if (!secret || !issuer || !clientId) return configError('서버 환경변수가 설정되지 않았습니다.');
 
+  // 로그인 진행 쿠키는 state 마다 따로다(lib/session.ts) — 돌아온 state 몫만 연다. Keycloak 은 오류에도 state 를 돌려준다
+  const state = url.searchParams.get('state') ?? '';
+  const pending = await verifySession<PendingLogin>(readCookie(req, authCookie(state)), secret, AUTH_COOKIE);
+  const clearPending = buildCookie(authCookie(state), '', 0);
+
   if (url.searchParams.get('error')) {
     // 설정에서 보낸 일(kc_action)을 취소 · 실패한 것이면 로그인은 그대로 두고 설정으로 돌아간다
     const status = url.searchParams.get('kc_action_status');
-    const back = await verifySession<PendingLogin>(readCookie(req, AUTH_COOKIE), secret);
-    if (status && back?.action && back.state === url.searchParams.get('state')) {
-      return redirect(withActionResult(back, status, url.origin), buildCookie(AUTH_COOKIE, '', 0));
+    if (status && pending?.action) {
+      return redirect(withActionResult(pending, status, url.origin), clearPending);
     }
-    const retry = retryExpiredLogin(url, back);
+    const retry = retryExpiredLogin(url, pending, clearPending);
     if (retry) return retry;
     // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- 빈 설명이면 error 코드를 보인다
     const desc = url.searchParams.get('error_description') || url.searchParams.get('error');
@@ -77,8 +81,6 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state');
-  const pending = await verifySession<PendingLogin>(readCookie(req, AUTH_COOKIE), secret);
 
   if (!code || !state || !pending) {
     return htmlError('로그인하지 못했습니다', '로그인 정보가 없거나 만료되었습니다. 처음부터 다시 시도해 주세요.');
@@ -146,6 +148,6 @@ export default async function handler(req: Request): Promise<Response> {
   return redirect(
     withActionResult(pending, url.searchParams.get('kc_action_status'), url.origin),
     ...cookies,
-    buildCookie(AUTH_COOKIE, '', 0),
+    clearPending,
   );
 }

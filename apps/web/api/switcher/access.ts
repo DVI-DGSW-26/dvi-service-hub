@@ -41,7 +41,7 @@ export default async function handler(req: Request): Promise<Response> {
   headers.set('access-control-allow-origin', origin);
   headers.set('access-control-allow-credentials', 'true');
 
-  const data = await verifySession<Access>(readCookie(req, ACCESS_COOKIE), process.env.SESSION_SECRET);
+  const data = await verifySession<Access>(readCookie(req, ACCESS_COOKIE), process.env.SESSION_SECRET, ACCESS_COOKIE);
   if (!data) return new Response(JSON.stringify({ known: false }), { status: 200, headers });
   return new Response(JSON.stringify({ known: true, realm: data.realm ?? [], svc: data.svc ?? {} }), { status: 200, headers });
 }

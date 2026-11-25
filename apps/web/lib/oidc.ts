@@ -10,7 +10,7 @@
 import { toB64url, fromB64url, type Signed } from './session.js';
 import { clip, log, type Who } from './log.js';
 
-/** 로그인 진행 상태 (hub_auth 쿠키). callback 에서 대조한다 */
+/** 로그인 진행 상태 (hub_auth.<state> 쿠키). callback 에서 대조한다 */
 export interface PendingLogin extends Signed {
   state: string;
   nonce: string;
