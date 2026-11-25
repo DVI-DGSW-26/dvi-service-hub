@@ -78,7 +78,7 @@ export function toApiError(error: unknown): ApiError {
     return new ApiError(0, timeout ? 'TIMEOUT' : 'NETWORK_ERROR', timeout ? '서버 응답이 늦어 요청을 멈췄습니다.' : '서버에 연결하지 못했습니다.')
   }
   const { status, data } = error.response
-  // 미들웨어의 401 처럼 본문이 JSON 이 아닐 수 있다
+  // Vercel · 프록시가 직접 준 오류처럼 본문이 JSON 이 아닐 수 있다
   const body: ServerError = data && typeof data === 'object' ? data : {}
   const text = typeof data === 'string' && data.length < 200 ? data : undefined
   return new ApiError(
