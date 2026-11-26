@@ -10,6 +10,8 @@ const config: CapacitorConfig = {
     url: 'https://service-hub.dvi-ind.com',
     // 통합 로그인(Keycloak) · 그 안의 Google 로그인은 앱 안에서 — 여기 없는 주소(다른 서비스 링크)는 시스템 브라우저로 열린다
     allowNavigation: ['api.dvi-ind.com', 'accounts.google.com'],
+    // 허브를 열지 못하면(오프라인 · 화면 주소의 4xx · 5xx) WebView 기본 오류 대신 www/index.html — 다시 시도 버튼이 있다
+    errorPath: 'index.html',
   },
   plugins: {
     // 허브가 첫 화면을 그리면 웹(useAppStart)이 내린다 — 그 전에 빈 WebView 가 보이지 않게.

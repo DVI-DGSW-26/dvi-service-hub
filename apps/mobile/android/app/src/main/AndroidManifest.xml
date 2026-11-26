@@ -35,6 +35,14 @@
         </provider>
     </application>
 
+    <!-- 바로가기 앱 열기(IntentLinks) — Android 11+ 는 다른 앱이 보이지 않아 깔린 앱의 첫 화면을 찾지 못한다 -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />

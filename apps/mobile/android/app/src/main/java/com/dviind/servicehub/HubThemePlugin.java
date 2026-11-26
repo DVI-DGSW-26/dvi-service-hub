@@ -2,6 +2,7 @@ package com.dviind.servicehub;
 
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
@@ -40,6 +41,8 @@ public class HubThemePlugin extends Plugin {
     }
 
     private void paint() {
-        if (color != null) getActivity().getWindow().getDecorView().setBackgroundColor(color);
+        // 창 바탕으로 칠한다 — Android 15+ 는 이 색으로 3버튼 내비 바를 칠하고 밝기로 아이콘 색을 정한다(DecorView.setWindowBackground).
+        // 뷰 바탕만 칠하면 바 · 아이콘이 테마 바탕(휴대폰 라이트면 흰색)에 남는다(S26)
+        if (color != null) getActivity().getWindow().setBackgroundDrawable(new ColorDrawable(color));
     }
 }
