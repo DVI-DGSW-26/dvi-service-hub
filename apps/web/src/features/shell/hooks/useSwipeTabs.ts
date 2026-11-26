@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { hrefOf, type Page } from '@/shared/hooks'
-import { DRAG_START, EASE } from '@/shared/constants'
-import { motionOff, rubberband } from '@/shared/lib'
+import { DRAG_START, EASE, VELOCITY_WINDOW } from '@/shared/constants'
+import { motionOff, releaseSpeed, rubberband, type Trail } from '@/shared/lib'
 import { NAV_ITEMS } from '../lib/navItems'
 
 /** 화면 폭의 이만큼 넘게 밀고 놓으면 넘긴다 */
@@ -11,8 +11,8 @@ const FLING = 0.4
 /** 옆이 위 · 아래보다 이만큼 커야 탭 넘기기로 본다 — 비스듬한 스크롤을 빼앗지 않게 */
 const SLOPE = 1.2
 
-/** 쓰는 중 — 시작점 · 민 거리(dx) · 빠르기(v, px/ms) · 마지막 움직임 시각(t) · 정한 방향 */
-interface Swipe { x: number; y: number; dx: number; v: number; t: number; axis?: 'x' | 'y' }
+/** 쓰는 중 — 시작점 · 민 거리(dx) · 지난 자리(trail, 빠르기용) · 정한 방향 */
+interface Swipe { x: number; y: number; dx: number; trail: Trail; axis?: 'x' | 'y' }
 
 /**
  * 손가락 아래가 스스로 옆으로 움직이는 곳인지 — 거기서 시작한 밀기는 그쪽 몫이다.
@@ -56,7 +56,7 @@ export function useSwipeTabs(page: Page, enabled: boolean) {
       leaving = null
       // #main 밖(탭 바 · 상단 바)은 조상마다 스타일을 읽는 ownsSwipe 까지 가지 않는다
       const free = e.touches.length === 1 && (e.target as Element).closest('#main') && !document.querySelector('dialog[open]') && !ownsSwipe(e.target)
-      s = free ? { x: t.clientX, y: t.clientY, dx: 0, v: 0, t: e.timeStamp } : null
+      s = free ? { x: t.clientX, y: t.clientY, dx: 0, trail: [] } : null
     }
     const move = (e: TouchEvent) => {
       if (!s) return
@@ -67,8 +67,7 @@ export function useSwipeTabs(page: Page, enabled: boolean) {
       s.axis ??= Math.hypot(dx, dy) < DRAG_START ? undefined : Math.abs(dx) > Math.abs(dy) * SLOPE ? 'x' : 'y'
       if (s.axis !== 'x') return
       e.preventDefault()
-      s.v = (dx - s.dx) / Math.max(1, e.timeStamp - s.t)
-      s.t = e.timeStamp
+      s.trail.push({ t: e.timeStamp, p: dx })
       s.dx = dx
       const el = main()
       if (!el) return
@@ -85,13 +84,14 @@ export function useSwipeTabs(page: Page, enabled: boolean) {
       } else delete el.dataset.swiping
       el.style.transform = `translateX(${neighbor(dx) ? dx : rubberband(dx, innerWidth)}px)`
     }
-    const up = () => {
+    const up = (e: TouchEvent) => {
       const done = s
       s = null
       const el = main()
       if (done?.axis !== 'x' || !el) return
       const next = neighbor(done.dx)
-      const flung = Math.abs(done.v) > FLING && Math.sign(done.v) === Math.sign(done.dx)
+      const v = releaseSpeed(done.trail, e.timeStamp, VELOCITY_WINDOW)
+      const flung = Math.abs(v) > FLING && Math.sign(v) === Math.sign(done.dx)
       if (next && (Math.abs(done.dx) > innerWidth * COMMIT || flung)) {
         // 밀던 쪽으로 마저 내보낸 뒤 탭을 옮긴다. 그 자리에는 옆 화면(SwipePeek)이 이미 들어와 있어,
         // 새 화면은 들어오는 움직임 없이 그 자리에 바로 바꿔 놓는다(App 의 usePageIn 이 data-swiped 를 본다) — 두 번 들어오지 않게
@@ -113,9 +113,9 @@ export function useSwipeTabs(page: Page, enabled: boolean) {
     }
 
     // 시스템이 터치를 가져가면(가장자리 뒤로 가기 등) 넘기지 않고 제자리로
-    const cancel = () => {
-      if (s) Object.assign(s, { dx: 0, v: 0 })
-      up()
+    const cancel = (e: TouchEvent) => {
+      if (s) Object.assign(s, { dx: 0, trail: [] })
+      up(e)
     }
 
     addEventListener('touchstart', down, { passive: true })

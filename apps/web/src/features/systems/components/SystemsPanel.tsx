@@ -43,6 +43,8 @@ const SMALL = {
 const TILE_GRID = 'grid-cols-4 gap-x-2 gap-y-1'
 /** 넓은 화면의 반쪽 카드(dense) grid — 칸이 낮은 노트북에서도 한 페이지에 다 들어가게 */
 const DENSE_GRID = 'grid-cols-[repeat(auto-fill,minmax(min(170px,100%),1fr))] gap-2'
+/** 크게(4×4) — 한 줄 카드 넷. 카드 높이로 재면 폭 360px 휴대폰(S26)에서 두 장만 들어갔다 */
+const LARGE = [4, 'grid-rows-4 gap-1.5 [&>li]:min-h-0'] as const
 
 /**
  * 로고 한 칸 — named 면 이름까지, locked 면 흐리게('전체' 보기의 권한 없는 서비스).
@@ -167,7 +169,14 @@ export function SystemsPanel({ me, loading = false, services, allServices, favor
       ) : (
         // 위젯 칸에 다 들어가는 만큼씩 페이지로 — 옆으로 밀거나 아래 점을 눌러 넘긴다. 반쯤 잘린 줄 없이 카드 크기는 모두 같다. 필터를 바꾸면 첫 페이지부터(key)
         // 보통(좁은 화면 4×3)은 카드 대신 휴대폰 홈 화면처럼 로고 · 이름을 한 줄에 넷 — 카드는 한 줄에 하나라 몇 개 안 보인다. 넓은 화면(stack 없음)은 반쪽 카드
-        <CardPages key={filter} count={list.length} label={t.home.systems.pages} grid={stack === 'm' ? TILE_GRID : stack ? undefined : DENSE_GRID} fill={!stack}>
+        <CardPages
+          key={filter}
+          count={list.length}
+          label={t.home.systems.pages}
+          perPage={stack === 'l' ? LARGE[0] : undefined}
+          grid={stack === 'm' ? TILE_GRID : stack === 'l' ? LARGE[1] : stack ? undefined : DENSE_GRID}
+          fill={!stack}
+        >
           {(from, to) =>
             list.slice(from, to).map((s) =>
               stack === 'm' ? (
@@ -176,7 +185,7 @@ export function SystemsPanel({ me, loading = false, services, allServices, favor
                 <ServiceCard
                   key={s.id}
                   service={s}
-                  variant={stack ? 'compact' : 'dense'}
+                  variant={stack && stack !== 'l' ? 'compact' : 'dense'}
                   favorite={favorites.includes(s.id)}
                   onToggleFavorite={onToggleFavorite}
                   locked={filter === 'all' && !canSee(s, me)}

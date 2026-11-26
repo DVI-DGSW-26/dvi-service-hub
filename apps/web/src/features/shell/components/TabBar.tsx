@@ -10,7 +10,9 @@ import { CarryChip, LiquidBlobs } from './LiquidParts'
 import { PullRefresh } from './PullRefresh'
 import { NAV_ITEMS } from '../lib/navItems'
 
-const BAR = 'tab-bar glass-chrome fixed inset-x-3 bottom-3 z-30 rounded-[22px] p-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] lg:hidden'
+// 아래 내비 바(앱은 그 뒤까지 그린다) · 홈 표시줄 위에 띄운다 — 바를 그 아래로 늘리면 3버튼 내비 바를 덮는다(S26).
+// 높이는 그대로라 탭 바 위에 놓는 것들(bottom-[calc(5.25rem+inset)])은 고치지 않는다
+const BAR = 'tab-bar glass-chrome fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-30 rounded-[22px] p-1.5 lg:hidden'
 /** 탭 한 칸 — 아이콘 위 · 글자 아래. 꾸미기 단추(DecorMenu)는 휴대폰에서 글자를 숨기므로 여기서는 다시 보인다 */
 const ITEM =
   'flex min-h-12 w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-2xl text-[11px] font-semibold transition-[background-color,color,scale] duration-150 active:scale-95 [&>span]:not-sr-only'
@@ -28,7 +30,7 @@ export function EditTabBar({ decor, onReset, onDone }: { decor: Decor; onReset: 
           <DecorMenu kind="wallpaper" decor={decor} className={`${ITEM} text-muted`} />
         </li>
         <li>
-          <DecorMenu kind="hero" decor={decor} direct className={`${ITEM} text-muted`} />
+          <DecorMenu kind="hero" decor={decor} className={`${ITEM} text-muted`} />
         </li>
         <li>
           <button type="button" onClick={onReset} title={t.widgets.reset} className={`${ITEM} text-muted`}>
