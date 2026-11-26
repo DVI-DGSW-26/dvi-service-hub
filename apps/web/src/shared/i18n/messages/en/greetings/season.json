@@ -1,0 +1,22 @@
+{
+  "spring": [
+    "Lovely spring day",
+    "Enjoy the spring, {name}",
+    "A season for fresh starts"
+  ],
+  "summer": [
+    "Stay cool out there",
+    "Drink plenty of water, {name}",
+    "Beat the heat today"
+  ],
+  "autumn": [
+    "Lovely autumn day",
+    "Enjoy the crisp air, {name}",
+    "Mind the season change"
+  ],
+  "winter": [
+    "Stay warm today",
+    "Don't catch a cold, {name}",
+    "Hot coffee weather"
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "title": "사내정보",
-  "description": "회사 소식과 조직도를 확인하세요.",
+  "description": "회사 소식과 조직도를 볼 수 있어요.",
   "news": "사내 주요 소식",
   "moreNews": { "one": "소식 {count}건 더 보기 (남은 {left}건)", "other": "소식 {count}건 더 보기 (남은 {left}건)" },
   "org": {

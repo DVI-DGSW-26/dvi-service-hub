@@ -1,9 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { KEYS, readPref, writePref } from '@/shared/lib'
 import { I18nContext } from './context'
-import { en } from './en'
+import { en } from '../messages/en'
 import { interpolate, interpolateNodes } from './interpolate'
-import { ko, type Messages } from './ko'
+import { ko, type Messages } from '../messages/ko'
 import { LOCALE } from './langs'
 import type { I18n, Lang, Plural } from './types'
 

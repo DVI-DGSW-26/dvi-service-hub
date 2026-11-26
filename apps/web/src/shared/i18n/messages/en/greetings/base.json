@@ -1,0 +1,15 @@
+{
+  "name": "{name}",
+  "withName": "{line}, {name}",
+  "plain": {
+    "dawn": "Up early today",
+    "night": "Thanks for working late",
+    "morning": "Good morning",
+    "lateMorning": "Good morning",
+    "lunch": "Enjoy your lunch",
+    "afternoon": "Good afternoon",
+    "lateAfternoon": "Almost done for the day",
+    "evening": "Good evening",
+    "default": "Great to see you"
+  }
+}

@@ -10,8 +10,8 @@
   "urlInvalid": "http:// 나 https:// 로 시작하는 주소를 적어 주세요.",
   "delete": "삭제",
   "deleteNamed": "‘{title}’ 삭제",
-  "confirmDelete": "삭제할까요?",
-  "deleteError": "삭제하지 못했습니다.",
+  "confirmDelete": "삭제하시겠습니까?",
+  "deleteError": "삭제하지 못했어요.",
   "maintenance": {
     "open": "점검 · 안내 작성",
     "eyebrow": "시스템 점검 및 안내",
@@ -27,14 +27,14 @@
     "end": "끝 시각",
     "timeHint": "숫자로 바로 적거나(2230 → 오후 10:30) 시계 버튼으로 고르세요. 시각을 비우면 날짜만 보여줍니다.",
     "timeInvalid": "시각을 읽지 못했습니다. 예: 2230, 22:30, 오후 3",
-    "endBeforeStart": "끝 시각은 시작 시각보다 빠를 수 없습니다.",
+    "endBeforeStart": "끝나는 시각이 시작 시각보다 빨라요.",
     "body": "내용",
     "bodyPlaceholder": "작업 내용, 영향 범위, 문의처 등",
     "url": "관련 링크",
     "urlHint": "누르면 열릴 주소입니다. 비우면 링크 없이 보여줍니다.",
     "list": "등록된 안내",
     "listHint": "날짜가 지난 안내는 다음 날 홈에서 자동으로 내려갑니다.",
-    "listEmpty": "등록된 안내가 없습니다."
+    "listEmpty": "등록된 안내가 없어요."
   },
   "notice": {
     "open": "공지 작성",
@@ -54,6 +54,6 @@
     "urlHint": "플로우 게시글 등 원문 주소입니다. 비우면 링크 없이 보여줍니다.",
     "list": "최근 공지",
     "listHint": "공지는 기간이 없어 삭제해야 내려갑니다.",
-    "listEmpty": "등록된 공지가 없습니다."
+    "listEmpty": "등록된 공지가 없어요."
   }
 }

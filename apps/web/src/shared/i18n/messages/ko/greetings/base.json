@@ -1,0 +1,15 @@
+{
+  "name": "{name} 님",
+  "withName": "{line}, {name}",
+  "plain": {
+    "dawn": "이른 시간에도 반가워요",
+    "night": "늦은 시간까지 수고 많으세요",
+    "morning": "좋은 아침이에요",
+    "lateMorning": "좋은 오전이에요",
+    "lunch": "맛있는 점심 드세요",
+    "afternoon": "좋은 오후예요",
+    "lateAfternoon": "오늘도 수고 많으세요",
+    "evening": "좋은 저녁이에요",
+    "default": "오늘도 반가워요"
+  }
+}

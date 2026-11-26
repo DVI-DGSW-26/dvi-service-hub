@@ -1,0 +1,35 @@
+{
+  "firstVisit": [
+    "Welcome aboard, {name}",
+    "Nice to meet you",
+    "Welcome to the hub"
+  ],
+  "firstLoginToday": [
+    "Good to see you, {name}",
+    "Ready to start the day?",
+    "Welcome back today"
+  ],
+  "returnVisit": [
+    "Back again, {name}",
+    "Welcome back",
+    "Picking up where you left off?"
+  ],
+  "longAbsence": [
+    "Long time no see, {name}",
+    "It's been a while",
+    "Welcome back"
+  ],
+  "longSession": [
+    "Time for a break, {name}",
+    "Stretch it out",
+    "Rest your eyes"
+  ],
+  "taskCompleted": [
+    "Nice work, {name}",
+    "One more done"
+  ],
+  "allTasksCompleted": [
+    "All done, {name}",
+    "Everything wrapped up"
+  ]
+}

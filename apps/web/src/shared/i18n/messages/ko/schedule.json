@@ -3,7 +3,7 @@
   "source": "From 플로우",
   "viewAll": { "one": "전체 {count}건", "other": "전체 {count}건" },
   "listLabel": { "one": "오늘 일정 {count}건 중 {shown}건", "other": "오늘 일정 {count}건 중 {shown}건" },
-  "empty": "오늘 예정된 일정이 없습니다.",
+  "empty": "오늘 예정된 일정이 없어요.",
   "status": { "done": "끝남", "now": "진행 중", "upcoming": "예정", "allDay": "종일" },
   "now": "지금 {time}",
   "currentLeft": "진행 중 일정 {left} 남음",

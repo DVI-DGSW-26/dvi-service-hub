@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { Messages } from './ko'
+import type { Messages } from '../messages/ko'
 
 export type Lang = 'ko' | 'en'
 
