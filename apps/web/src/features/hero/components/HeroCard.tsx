@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { CalendarDays, ChevronLeft, ChevronRight, Megaphone, PenLine, Star, Wrench } from 'lucide-react'
-import { Suspense, lazy, useRef, useState, type MouseEvent, type ReactNode, type TouchEvent } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState, type MouseEvent, type ReactNode, type TouchEvent } from 'react'
 import { useNow, useLazyModal } from '@/shared/hooks'
 import { useI18n, type Plural } from '@/shared/i18n'
 import { canWriteNotice, toIso } from '@/shared/lib'
 import { formatDate, longToday, shortDate } from '@/shared/format'
 import { placeStyle, type DecorPos } from '@/features/decor'
 import type { StackSize } from '@/shared/widget'
+import { noteGreetingVisit, readGreetingContext } from '../lib/greetingContext'
 import { greetings, plainGreeting } from '../lib/greetings'
 import { maintenanceQueries } from '@/features/maintenance'
 import { scheduleQueries } from '@/features/schedule'
@@ -135,15 +136,17 @@ function Count({ entry, value, loading }: { entry: Plural; value?: number; loadi
 }
 
 /**
- * 인사 문구 — 시간대 · 요일에 맞는 문구 중 하나를 새로고침할 때마다 골라 보여준다.
+ * 인사 문구 — 시간대 · 요일 · 날씨 · 방문 기록에 맞는 문구 중 하나를 새로고침할 때마다 골라 보여준다.
  * 문구 길이가 달라도 카드 높이가 같도록 두 줄 자리를 잡아 두고, 한 화면 모드에서는 한 줄로 맞춘다. small 은 작은 인사 카드(반 칸)의 작은 글씨.
  */
 function Greeting({ name, loading, small = false }: { name?: string; loading: boolean; small?: boolean }) {
   // 한 번 고른 자리 · 시각은 그대로 — 이름이 늦게 와도, 켜 둔 채 시간대가 바뀌어도 같은 문구를 쓴다
   const [pick] = useState(Math.random)
   const [now] = useState(() => new Date())
+  const [ctx] = useState(() => readGreetingContext(now))
+  useEffect(noteGreetingVisit, [])
   const { t } = useI18n()
-  const lines = name ? greetings(now, name, t.greetings) : [plainGreeting(now, t.greetings)]
+  const lines = name ? greetings(now, name, t.greetings, ctx) : [plainGreeting(now, t.greetings)]
   const line = lines[Math.floor(pick * lines.length)]
 
   if (small) {
