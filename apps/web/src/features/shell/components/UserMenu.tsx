@@ -1,6 +1,8 @@
-import { ChevronDown, LogOut, Settings } from 'lucide-react'
-import { hrefOf, usePopover } from '@/shared/hooks'
-import { LOGOUT_URL } from '@/features/account'
+import { ChevronDown, Download, LogOut, Settings } from 'lucide-react'
+import { useState } from 'react'
+import { PHONE } from '@/shared/constants'
+import { hrefOf, useMedia, usePopover } from '@/shared/hooks'
+import { LogoutConfirm } from '@/features/account'
 import { useI18n } from '@/shared/i18n'
 import type { Me } from '@/shared/types'
 import { PopoverPanel } from '@/shared/ui'
@@ -10,6 +12,10 @@ const ITEM = 'flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left 
 export function UserMenu({ me }: { me: Me }) {
   const { open, toggle, close, ref } = usePopover()
   const { t, f } = useI18n()
+  // 확인 시트는 메뉴 밖에 둔다 — 메뉴가 닫혀도(바깥 누르기) 시트는 남아야 한다
+  const [confirm, setConfirm] = useState(false)
+  // 앱 받기 — 휴대폰 브라우저에서만(앱 안에서는 이미 앱이고, APK 는 Android 만 깔린다). shortcut: iPhone 앱이 생기면 조건을 넓힌다
+  const getApp = useMedia(PHONE) && !window.Capacitor && /Android/i.test(navigator.userAgent)
 
   return (
     <div ref={ref} className="relative">
@@ -46,13 +52,28 @@ export function UserMenu({ me }: { me: Me }) {
             <Settings className="size-4 text-muted" aria-hidden="true" />
             {t.layout.user.account}
           </a>
-          {/* SSO 세션까지 끊는다 — 다른 사내 서비스도 함께 로그아웃된다. */}
-          <a href={LOGOUT_URL} className={`${ITEM} font-semibold text-danger`}>
+          {getApp && (
+            <a href="/app/" className={ITEM}>
+              <Download className="size-4 text-muted" aria-hidden="true" />
+              {t.release.download.pageTitle}
+            </a>
+          )}
+          {/* SSO 세션까지 끊는다 — 다른 사내 서비스도 함께 로그아웃되니 한 번 더 묻는다 */}
+          <button
+            type="button"
+            onClick={() => {
+              close()
+              setConfirm(true)
+            }}
+            aria-haspopup="dialog"
+            className={`${ITEM} cursor-pointer font-semibold text-danger`}
+          >
             <LogOut className="size-4" aria-hidden="true" />
             {t.layout.user.logout}
-          </a>
+          </button>
         </PopoverPanel>
       )}
+      <LogoutConfirm open={confirm} onClose={() => setConfirm(false)} />
     </div>
   )
 }

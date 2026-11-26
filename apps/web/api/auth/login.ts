@@ -7,7 +7,7 @@
  * ?action= 이 있으면 Keycloak 에 kc_action 으로 넘긴다 (Application Initiated Action) — 설정 화면의
  * 비밀번호 변경 · OTP 등록 · 패스키 등록 · 삭제. 이미 로그인돼 있으면 Keycloak 이 그 화면만 띄우고 돌려보낸다.
  */
-import { AUTH_COOKIE, buildCookie, signSession } from '../../lib/session.js';
+import { AUTH_COOKIE, authCookie, buildCookie, signSession } from '../../lib/session.js';
 import { configError, discover, pkceChallenge, randomString, redirect, safePath, type PendingLogin }
   from '../../lib/oidc.js';
 
@@ -27,7 +27,7 @@ export default async function handler(req: Request): Promise<Response> {
       !clientId && 'OIDC_CLIENT_ID',
       !secret && 'SESSION_SECRET',
     ].filter(Boolean).join(', ');
-    return configError(`환경변수가 설정되지 않았습니다: ${missing}. 관리자에게 문의해 주세요.`);
+    return configError(`환경변수 없음: ${missing}`);
   }
 
   let meta;
@@ -49,6 +49,7 @@ export default async function handler(req: Request): Promise<Response> {
   const pending = await signSession(
     { state, nonce, verifier, next, action, retried, exp: Math.floor(Date.now() / 1000) + 600 } satisfies PendingLogin,
     secret,
+    AUTH_COOKIE,
   );
 
   const auth = new URL(meta.authorization_endpoint);
@@ -63,5 +64,5 @@ export default async function handler(req: Request): Promise<Response> {
   auth.searchParams.set('code_challenge_method', 'S256');
   if (action) auth.searchParams.set('kc_action', action);
 
-  return redirect(auth.toString(), buildCookie(AUTH_COOKIE, pending, 600));
+  return redirect(auth.toString(), buildCookie(authCookie(state), pending, 600));
 }

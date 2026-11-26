@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { hrefOf, type Page } from '@/shared/hooks'
 import { DRAG_START, EASE } from '@/shared/constants'
 import { motionOff, rubberband } from '@/shared/lib'
@@ -31,27 +31,39 @@ function ownsSwipe(target: EventTarget | null) {
 /**
  * 좁은 화면에서 본문(#main)을 옆으로 밀어 탭을 넘긴다 — 앱의 탭처럼 본문이 손을 따라오고, 놓으면 넘어가거나 제자리로.
  * 처음 DRAG_START 만큼 움직인 방향으로 정하고, 옆이면 그때부터 화면 스크롤을 막는다. 끝 탭에서 더 밀면 고무줄처럼 조금만.
- * React 의 터치 핸들러는 passive 라 막을 수 없어 직접 건다
+ * React 의 터치 핸들러는 passive 라 막을 수 없어 직접 건다.
+ * 리스너는 한 번만 걸고 지금 탭은 ref 로 읽는다 — 탭이 바뀔 때마다 다시 걸면 손가락이 닿은 채 바뀐 순간 옛 리스너가 반쯤 민 본문을 남겼다
  */
 export function useSwipeTabs(page: Page, enabled: boolean) {
+  const pageRef = useRef(page)
+  useEffect(() => {
+    pageRef.current = page
+  }, [page])
+
   useEffect(() => {
     if (!enabled) return
-    const index = NAV_ITEMS.findIndex((n) => n.page === page)
     /** dx 쪽(왼쪽으로 밀면 다음)에 있는 탭 */
-    const neighbor = (dx: number) => NAV_ITEMS[index + (dx < 0 ? 1 : -1)] as (typeof NAV_ITEMS)[number] | undefined
+    const neighbor = (dx: number) =>
+      NAV_ITEMS[NAV_ITEMS.findIndex((n) => n.page === pageRef.current) + (dx < 0 ? 1 : -1)] as (typeof NAV_ITEMS)[number] | undefined
     const main = () => document.getElementById('main')
     let s: Swipe | null = null
+    /** 밀어 넘긴 탭 — 새 화면으로 바뀔 때까지(본문이 화면 밖에 있는 동안) 다시 밀지 않는다 */
+    let leaving: Page | null = null
 
     const down = (e: TouchEvent) => {
       const t = e.touches[0]
-      const free = e.touches.length === 1 && !document.querySelector('dialog[open]') && !ownsSwipe(e.target)
-      s = free && (e.target as Element).closest('#main') ? { x: t.clientX, y: t.clientY, dx: 0, v: 0, t: e.timeStamp } : null
+      if (leaving === pageRef.current) return void (s = null)
+      leaving = null
+      // #main 밖(탭 바 · 상단 바)은 조상마다 스타일을 읽는 ownsSwipe 까지 가지 않는다
+      const free = e.touches.length === 1 && (e.target as Element).closest('#main') && !document.querySelector('dialog[open]') && !ownsSwipe(e.target)
+      s = free ? { x: t.clientX, y: t.clientY, dx: 0, v: 0, t: e.timeStamp } : null
     }
     const move = (e: TouchEvent) => {
       if (!s) return
       const t = e.touches[0]
       const dx = t.clientX - s.x
       const dy = t.clientY - s.y
+      const decided = s.axis
       s.axis ??= Math.hypot(dx, dy) < DRAG_START ? undefined : Math.abs(dx) > Math.abs(dy) * SLOPE ? 'x' : 'y'
       if (s.axis !== 'x') return
       e.preventDefault()
@@ -60,6 +72,8 @@ export function useSwipeTabs(page: Page, enabled: boolean) {
       s.dx = dx
       const el = main()
       if (!el) return
+      // 제자리로 돌아가는 중에 다시 잡으면 그 움직임을 멈추고 손을 따른다 — 안 멈추면 움직임이 끝나는 순간 손 자리로 튄다
+      if (!decided) el.getAnimations().forEach((a) => a.cancel())
       // 옆에 드러나는 자리에 옆 탭 화면(SwipePeek) — 끝 탭이라 옆이 없으면 고무줄만.
       // 내려 본 자리에서 밀면 옆 화면은 상단 바 바로 아래부터 보인다
       if (neighbor(dx)) {
@@ -79,8 +93,11 @@ export function useSwipeTabs(page: Page, enabled: boolean) {
       const next = neighbor(done.dx)
       const flung = Math.abs(done.v) > FLING && Math.sign(done.v) === Math.sign(done.dx)
       if (next && (Math.abs(done.dx) > innerWidth * COMMIT || flung)) {
-        // 밀던 쪽으로 마저 내보낸 뒤 탭을 옮긴다 — 새 화면은 반대쪽에서 들어온다(App 의 usePageIn)
+        // 밀던 쪽으로 마저 내보낸 뒤 탭을 옮긴다. 그 자리에는 옆 화면(SwipePeek)이 이미 들어와 있어,
+        // 새 화면은 들어오는 움직임 없이 그 자리에 바로 바꿔 놓는다(App 의 usePageIn 이 data-swiped 를 본다) — 두 번 들어오지 않게
         const out = `translateX(${Math.sign(done.dx) * innerWidth}px)`
+        leaving = pageRef.current
+        el.dataset.swiped = ''
         const go = () => (location.hash = hrefOf(next.page))
         if (motionOff()) return go()
         el.animate([{ transform: el.style.transform }, { transform: out }], { duration: 160, easing: EASE }).finished.then(go, go)
@@ -95,15 +112,21 @@ export function useSwipeTabs(page: Page, enabled: boolean) {
       else el.animate([{ transform: from }, { transform: 'none' }], { duration: 280, easing: EASE }).finished.then(settled, settled)
     }
 
+    // 시스템이 터치를 가져가면(가장자리 뒤로 가기 등) 넘기지 않고 제자리로
+    const cancel = () => {
+      if (s) Object.assign(s, { dx: 0, v: 0 })
+      up()
+    }
+
     addEventListener('touchstart', down, { passive: true })
     addEventListener('touchmove', move, { passive: false })
     addEventListener('touchend', up)
-    addEventListener('touchcancel', up)
+    addEventListener('touchcancel', cancel)
     return () => {
       removeEventListener('touchstart', down)
       removeEventListener('touchmove', move)
       removeEventListener('touchend', up)
-      removeEventListener('touchcancel', up)
+      removeEventListener('touchcancel', cancel)
     }
-  }, [page, enabled])
+  }, [enabled])
 }

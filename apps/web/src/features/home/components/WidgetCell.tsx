@@ -98,7 +98,8 @@ export function WidgetCell({ c, index, list, stack, overlay, def, size, editing,
             <DecorMenu
               kind={def.decor}
               decor={decor}
-              direct
+              // 그림이 있으면 메뉴로(위치 조정 · 기본으로), 없으면 바로 고르기
+              direct={!decor[def.decor]}
               className="flex h-9 cursor-pointer items-center gap-1.5 rounded-full bg-raised px-3.5 text-sm font-semibold text-fg shadow-[0_2px_8px_oklch(0_0_0/0.18)] ring-1 ring-line active:scale-95"
             />
           </div>

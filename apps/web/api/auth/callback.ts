@@ -13,7 +13,7 @@
  * 입사자도 허브에는 들어와서 "부서가 지정되지 않았다"는 안내를 봐야 한다.
  * 빈 화면이나 403 은 본인에게 고장으로 보인다.
  */
-import { AUTH_COOKIE, buildCookie, readCookie, verifySession } from '../../lib/session.js';
+import { AUTH_COOKIE, authCookie, buildCookie, readCookie, verifySession } from '../../lib/session.js';
 import { configError, decodeJwt, discover, htmlError, redirect, safePath,
   type JwtClaims, type OidcMetadata, type PendingLogin } from '../../lib/oidc.js';
 import { sessionCookies, type TokenResponse } from '../../lib/keycloak.js';
@@ -26,14 +26,14 @@ export const config = { runtime: 'edge' };
  * error_description=authentication_expired 로 돌아온다. 다시 시작하면 SSO 가 살아 있어 화면 없이 들어간다.
  * 오류 화면 대신 한 번만 다시 시작한다 — 다시 시작한 로그인(retried)이 또 그러면 오류를 보인다.
  */
-function retryExpiredLogin(url: URL, pending: PendingLogin | null): Response | null {
+function retryExpiredLogin(url: URL, pending: PendingLogin | null, clearPending: string): Response | null {
   if (url.searchParams.get('error_description') !== 'authentication_expired' || pending?.retried) return null;
   log('info', 'login.retry_expired', 'user');
   const login = new URL('/api/auth/login', url.origin);
   login.searchParams.set('next', safePath(pending?.next));
   if (pending?.action) login.searchParams.set('action', pending.action);
   login.searchParams.set('retried', '1');
-  return redirect(login.toString(), buildCookie(AUTH_COOKIE, '', 0));
+  return redirect(login.toString(), clearPending);
 }
 
 /**
@@ -58,33 +58,36 @@ export default async function handler(req: Request): Promise<Response> {
 
   if (!secret || !issuer || !clientId) return configError('서버 환경변수가 설정되지 않았습니다.');
 
+  // 로그인 진행 쿠키는 state 마다 따로다(lib/session.ts) — 돌아온 state 몫만 연다. Keycloak 은 오류에도 state 를 돌려준다
+  const state = url.searchParams.get('state') ?? '';
+  const pending = await verifySession<PendingLogin>(readCookie(req, authCookie(state)), secret, AUTH_COOKIE);
+  const clearPending = buildCookie(authCookie(state), '', 0);
+
   if (url.searchParams.get('error')) {
     // 설정에서 보낸 일(kc_action)을 취소 · 실패한 것이면 로그인은 그대로 두고 설정으로 돌아간다
     const status = url.searchParams.get('kc_action_status');
-    const back = await verifySession<PendingLogin>(readCookie(req, AUTH_COOKIE), secret);
-    if (status && back?.action && back.state === url.searchParams.get('state')) {
-      return redirect(withActionResult(back, status, url.origin), buildCookie(AUTH_COOKIE, '', 0));
+    if (status && pending?.action) {
+      return redirect(withActionResult(pending, status, url.origin), clearPending);
     }
-    const retry = retryExpiredLogin(url, back);
+    const retry = retryExpiredLogin(url, pending, clearPending);
     if (retry) return retry;
-    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- 빈 설명이면 error 코드를 보인다
-    const desc = url.searchParams.get('error_description') || url.searchParams.get('error');
-    // URL 쿼리는 누구나 넣을 수 있어 로그에는 코드 모양만 남긴다
-    return htmlError('로그인하지 못했습니다', `통합 로그인에서 거절되었습니다. (${desc})`, 400, {
+    // URL 쿼리는 누구나 넣을 수 있어 화면 · 로그 모두 코드 모양만 쓴다 — 회사 주소에 남이 쓴 문장이 뜨지 않게
+    const error = errorCode(url.searchParams.get('error'));
+    const description = errorCode(url.searchParams.get('error_description'));
+    return htmlError('로그인하지 못했어요', '통합 로그인이 요청을 거절했어요.\n처음부터 다시 로그인해 주세요.', 400, {
       who: 'keycloak',
-      fields: { error: errorCode(url.searchParams.get('error')), description: errorCode(url.searchParams.get('error_description')) },
+      fields: { error, description },
+      code: [error, description].filter((c) => c && c !== 'other').join(' · '),
     });
   }
 
   const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state');
-  const pending = await verifySession<PendingLogin>(readCookie(req, AUTH_COOKIE), secret);
 
   if (!code || !state || !pending) {
-    return htmlError('로그인하지 못했습니다', '로그인 정보가 없거나 만료되었습니다. 처음부터 다시 시도해 주세요.');
+    return htmlError('로그인 시간이 지났어요', '처음부터 다시 로그인해 주세요.');
   }
   if (pending.state !== state) {
-    return htmlError('로그인하지 못했습니다', '로그인 요청이 유효하지 않습니다. 처음부터 다시 시도해 주세요.');
+    return htmlError('로그인하지 못했어요', '로그인 요청이 맞지 않아요.\n처음부터 다시 로그인해 주세요.');
   }
 
   let meta: OidcMetadata;
@@ -108,7 +111,7 @@ export default async function handler(req: Request): Promise<Response> {
       headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
       body: form,
     });
-  } catch { return htmlError('로그인하지 못했습니다', '통합 로그인 서버에 연결하지 못했습니다.', 502); }
+  } catch { return htmlError('통합 로그인에 연결하지 못했어요', '잠시 뒤 다시 시도해 주세요.', 502); }
   if (!res.ok) {
     let detail = '';
     try {
@@ -117,35 +120,34 @@ export default async function handler(req: Request): Promise<Response> {
       detail = err.error_description || err.error || '';
     } catch { /* 본문이 JSON 이 아니면 상태코드만 쓴다 */ }
     // 미리보기 배포는 주소가 매번 달라 redirect_uri 를 등록할 수 없다
-    const hint = /redirect/i.test(detail)
-      ? ' 미리보기(Preview) 배포에서는 로그인할 수 없습니다. 운영 주소로 접속해 주세요.'
-      : '';
-    return htmlError('로그인하지 못했습니다',
-      `통합 로그인 서버가 토큰 발급을 거절했습니다. (${res.status}${detail ? ` · ${detail}` : ''})${hint}`, 502);
+    const msg = /redirect/i.test(detail)
+      ? '미리보기(Preview) 배포에서는 로그인할 수 없어요.\n운영 주소로 접속해 주세요.'
+      : '통합 로그인이 로그인을 거절했어요.\n잠시 뒤 다시 로그인해 주세요.';
+    return htmlError('로그인하지 못했어요', msg, 502, { code: `${res.status}${detail ? ` · ${detail}` : ''}` });
   }
 
   const token = (await res.json().catch(() => ({}))) as TokenResponse;
-  if (!token.id_token) return htmlError('로그인하지 못했습니다', '계정 정보를 받지 못했습니다.', 502);
+  if (!token.id_token) return htmlError('로그인하지 못했어요', '계정 정보를 받지 못했어요.\n잠시 뒤 다시 로그인해 주세요.', 502);
 
   let claims: JwtClaims, access: JwtClaims | null = null;
   try { claims = decodeJwt(token.id_token); }
-  catch { return htmlError('로그인하지 못했습니다', '계정 정보를 해석하지 못했습니다.', 502); }
+  catch { return htmlError('로그인하지 못했어요', '계정 정보를 읽지 못했어요.\n잠시 뒤 다시 로그인해 주세요.', 502); }
   try { access = token.access_token ? decodeJwt(token.access_token) : null; }
   catch { /* 역할 정보만 못 읽는 것 — 링크가 덜 보일 뿐 로그인은 된다 */ }
 
   /* 토큰 검증 */
   const audOk = Array.isArray(claims.aud) ? claims.aud.includes(clientId) : claims.aud === clientId;
-  if (!audOk) return htmlError('로그인하지 못했습니다', '이 사이트를 위해 발급된 계정 정보가 아닙니다.', 401);
-  if (claims.iss !== meta.issuer) return htmlError('로그인하지 못했습니다', '발급처가 올바르지 않습니다.', 401);
-  if (claims.nonce !== pending.nonce) return htmlError('로그인하지 못했습니다', '로그인 응답이 요청과 맞지 않습니다.', 401);
-  if (!claims.exp || claims.exp * 1000 < Date.now()) return htmlError('로그인하지 못했습니다', '계정 정보가 만료되었습니다.', 401);
-  if (!claims.sub) return htmlError('로그인하지 못했습니다', '계정 식별자(sub)가 없습니다.', 502);
+  if (!audOk) return htmlError('로그인하지 못했어요', '이 사이트용 계정 정보가 아니에요.\n처음부터 다시 로그인해 주세요.', 401, { code: 'aud' });
+  if (claims.iss !== meta.issuer) return htmlError('로그인하지 못했어요', '계정 정보의 발급처가 맞지 않아요.\n처음부터 다시 로그인해 주세요.', 401, { code: 'iss' });
+  if (claims.nonce !== pending.nonce) return htmlError('로그인하지 못했어요', '로그인 응답이 요청과 맞지 않아요.\n처음부터 다시 로그인해 주세요.', 401, { code: 'nonce' });
+  if (!claims.exp || claims.exp * 1000 < Date.now()) return htmlError('로그인 시간이 지났어요', '처음부터 다시 로그인해 주세요.', 401, { code: 'exp' });
+  if (!claims.sub) return htmlError('로그인하지 못했어요', '계정 정보에 식별자가 없어요.\n관리자에게 알려 주세요.', 502, { code: 'sub' });
 
   // 세션은 짧게 만들고 refresh token 으로 늘린다 (lib/keycloak.ts)
   const { cookies } = await sessionCookies(token, claims, access, secret);
   return redirect(
     withActionResult(pending, url.searchParams.get('kc_action_status'), url.origin),
     ...cookies,
-    buildCookie(AUTH_COOKIE, '', 0),
+    clearPending,
   );
 }

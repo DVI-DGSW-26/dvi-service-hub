@@ -1,0 +1,17 @@
+{
+  "title": "사내정보",
+  "description": "회사 소식과 조직도를 볼 수 있어요.",
+  "news": "사내 주요 소식",
+  "moreNews": { "one": "소식 {count}건 더 보기 (남은 {left}건)", "other": "소식 {count}건 더 보기 (남은 {left}건)" },
+  "org": {
+    "open": "조직도 보기",
+    "eyebrow": "Organization Chart",
+    "title": "조직도",
+    "summary": "대표이사 아래 {teams}개 팀 · {units}개 파트",
+    "search": "팀 · 파트 찾기",
+    "searchPlaceholder": "예: 품질, 인사",
+    "teams": "팀",
+    "units": { "one": "{count}개 파트", "other": "{count}개 파트" },
+    "noResults": "‘{query}’에 맞는 팀이나 파트가 없어요."
+  }
+}

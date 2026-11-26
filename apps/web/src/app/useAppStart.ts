@@ -24,16 +24,19 @@ export function useAppStart() {
 
 /**
  * 화면(page)을 옮기면 본문(main)이 옮긴 방향(dir: 뒤 +, 앞 −, 같은 화면 안이면 0)에서 조금 밀려 들어온다. 홈은 떠나도 숨겨 둘 뿐이라(App 의 Activity)
- * main 을 새로 그리지 않고 여기서 움직인다. 밀어 넘긴 본문(useSwipeTabs)이 화면 밖에 남긴 자리 · 옆 자리표시도 걷는다
+ * main 을 새로 그리지 않고 여기서 움직인다. 밀어 넘긴 본문(useSwipeTabs)이 화면 밖에 남긴 자리 · 옆 자리표시도 걷는다.
+ * 밀어 넘겼으면(data-swiped) 옆 화면이 이미 그 자리에 들어와 있으니 움직이지 않고 바로 바꿔 놓는다
  */
 export function usePageIn(page: string, dir: number | undefined) {
   const ref = useRef<HTMLElement>(null)
   useLayoutEffect(() => {
     const el = ref.current
     if (!el || !dir) return
+    const swiped = 'swiped' in el.dataset
+    delete el.dataset.swiped
     el.style.transform = ''
     delete el.dataset.swiping
-    if (!motionOff()) {
+    if (!swiped && !motionOff()) {
       el.animate([{ opacity: 0, translate: `${Math.sign(dir) * PAGE_IN.dx}px 0` }, { opacity: 1, translate: '0 0' }], { duration: PAGE_IN.ms, easing: PAGE_IN.easing })
     }
   }, [page, dir]) // 같은 방향으로 두 번 옮겨도(홈 → 업무시스템 → 정보) 화면이 바뀌면 다시 움직인다

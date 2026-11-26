@@ -49,6 +49,11 @@
 ::view-transition-group(root) {
   animation-duration: 0.35s;
 }
+/* 테마를 넘길 때는 위젯도 화면 한 장에 같이 찍는다 — 이름이 남으면 따로 찍혀 열린 시트(dialog) · 그 막 위로 올라온다.
+   이름은 WidgetCell 의 인라인 style 이라 !important 로 이긴다 */
+:root.theme-fade :is([data-stack], .stack-frame) {
+  view-transition-name: none !important;
+}
 ::view-transition-group(.stack-widget) {
   animation-duration: 300ms;
   animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);

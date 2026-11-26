@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Grid3x3, LayoutGrid, List, Settings2 } from 'lucide-react'
 import { lazy, Suspense, useState, type ComponentType } from 'react'
 import { useLazyModal } from '@/shared/hooks'
-import { NoDepartmentNotice, SearchBox, PageTitle, Segmented } from '@/shared/ui'
+import { LoadError, NoDepartmentNotice, SearchBox, PageTitle, Segmented } from '@/shared/ui'
 import { ServiceCard } from './ServiceCard'
 import { ServiceRow } from './ServiceRow'
 import { ServiceTile } from './ServiceTile'
@@ -11,7 +11,7 @@ import type { Category, Service } from '../lib/services'
 import { useI18n } from '@/shared/i18n'
 import { hasNoDepartment, KEYS, readPref, writePref } from '@/shared/lib'
 import { matchesQuery } from '../lib/access'
-import { preferenceQueries } from '../api/queries'
+import { preferenceQueries, serviceQueries } from '../api/queries'
 import type { Me } from '@/shared/types'
 
 const ServiceAdmin = lazy(() => import('./ServiceAdmin').then((m) => ({ default: m.ServiceAdmin })))
@@ -61,6 +61,7 @@ export function SystemsPage({ me, loading = false, services, query, onQueryChang
   const visible = services.filter((s) => (category === '전체' || s.category === category) && matchesQuery(s, query))
   // 관리 버튼 · 최근 사용은 허브 서버의 내 정보(GET /me) — 즐겨찾기와 같은 캐시
   const prefs = useQuery(preferenceQueries.me()).data
+  const listFailed = useQuery(serviceQueries.list()).isError
   const recent = (prefs?.recent ?? []).flatMap((id) => services.filter((s) => s.id === id))
   const admin = useLazyModal()
 
@@ -72,6 +73,8 @@ export function SystemsPage({ me, loading = false, services, query, onQueryChang
       <SearchBox value={query} onChange={onQueryChange} className="mb-4 md:hidden" />
 
       {hasNoDepartment(me) && <NoDepartmentNotice className="mb-4" />}
+      {/* 서버 목록을 못 받아 앱에 든 목록(useServices)으로 열었다 — 멀쩡해 보여 모르고 지나가지 않게 */}
+      {listFailed && <LoadError message={t.systems.bundledList} className="glass mb-4 justify-between rounded-2xl py-2.5 pr-2.5 pl-4 text-sm" />}
 
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2" role="group" aria-label={t.systems.categoryGroup}>

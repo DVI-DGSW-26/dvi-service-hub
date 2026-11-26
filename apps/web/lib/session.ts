@@ -13,6 +13,8 @@ const dec = new TextDecoder();
 export const SESSION_COOKIE = 'hub_session';
 export const IDTOKEN_COOKIE = 'hub_idt'; // 전체 로그아웃(id_token_hint)에만 쓴다
 export const AUTH_COOKIE = 'hub_auth'; // 로그인 진행 중에만 쓰는 임시 쿠키
+/** 로그인 진행 쿠키는 state 마다 따로 둔다 — 한 칸이면 여러 탭이 같이 로그인할 때 서로 덮어 먼저 시작한 탭이 실패한다 */
+export const authCookie = (state: string) => `${AUTH_COOKIE}.${state}`;
 /** Keycloak refresh token — 세션을 늘리는 /api/auth/refresh 에만 실려 간다 (lib/keycloak.ts) */
 export const REFRESH_COOKIE = 'hub_rt';
 /**
@@ -66,24 +68,29 @@ export function fromB64url(str: string): Uint8Array<ArrayBuffer> {
   return out;
 }
 
-const hmacKey = (secret: string) =>
-  crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
+/**
+ * 쿠키마다 다른 키로 서명한다 — 한 키면 누구나 받는 hub_auth(로그인 시작) · hub_access 를 hub_session 자리에 넣어 로그인 검사를 통과한다.
+ * hub_session 만 SESSION_SECRET 그대로 쓴다(service-hub-server 가 이 키로 연다).
+ */
+const hmacKey = (secret: string, cookie: string) =>
+  crypto.subtle.importKey('raw', enc.encode(cookie === SESSION_COOKIE ? secret : `${secret}:${cookie}`),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
 
-/** 세션 값을 서명해 쿠키 문자열로 만든다 */
+/** 값을 cookie 쿠키 몫의 키로 서명해 쿠키 문자열로 만든다 */
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- T 가 있어야 객체 리터럴에 쿠키 형식 밖의 필드가 섞이면 잡힌다
-export async function signSession<T extends Signed>(payload: T, secret: string): Promise<string> {
+export async function signSession<T extends Signed>(payload: T, secret: string, cookie = SESSION_COOKIE): Promise<string> {
   const body = toB64url(enc.encode(JSON.stringify(payload)));
-  const sig = toB64url(await crypto.subtle.sign('HMAC', await hmacKey(secret), enc.encode(body)));
+  const sig = toB64url(await crypto.subtle.sign('HMAC', await hmacKey(secret, cookie), enc.encode(body)));
   return `${body}.${sig}`;
 }
 
 /** 서명을 확인하고 본문을 읽는다. 만료는 보지 않는다. 서명 · 모양이 틀리면 null */
-async function openSigned<T extends Signed>(token: string | null, secret: string | undefined): Promise<T | null> {
+async function openSigned<T extends Signed>(token: string | null, secret: string | undefined, cookie: string): Promise<T | null> {
   if (!token || !secret || !token.includes('.')) return null;
   const [body, sig] = token.split('.');
   let ok = false;
   try {
-    ok = await crypto.subtle.verify('HMAC', await hmacKey(secret), fromB64url(sig), enc.encode(body));
+    ok = await crypto.subtle.verify('HMAC', await hmacKey(secret, cookie), fromB64url(sig), enc.encode(body));
   } catch { return null; }
   if (!ok) return null;
   try {
@@ -91,12 +98,13 @@ async function openSigned<T extends Signed>(token: string | null, secret: string
   } catch { return null; }
 }
 
-/** 서명과 만료를 확인한다. 유효하지 않으면 null */
+/** cookie 쿠키 몫의 키로 서명과 만료를 확인한다. 유효하지 않으면 null */
 export async function verifySession<T extends Signed = Session>(
   token: string | null,
   secret: string | undefined,
+  cookie = SESSION_COOKIE,
 ): Promise<T | null> {
-  const data = await openSigned<T>(token, secret);
+  const data = await openSigned<T>(token, secret, cookie);
   return data?.exp && data.exp * 1000 >= Date.now() ? data : null;
 }
 
@@ -108,7 +116,7 @@ export async function verifySession<T extends Signed = Session>(
  */
 export async function sessionProblem(token: string | null, secret: string | undefined): Promise<'none' | 'expired' | 'invalid'> {
   if (!token) return 'none';
-  return (await openSigned(token, secret)) ? 'expired' : 'invalid';
+  return (await openSigned(token, secret, SESSION_COOKIE)) ? 'expired' : 'invalid';
 }
 
 /** Cookie 헤더에서 값 하나를 꺼낸다 */
@@ -129,7 +137,7 @@ export function readCookie(req: Request, name: string): string | null {
 export function buildCookie(name: string, value: string, maxAge: number): string {
   const bits = [
     `${name}=${encodeURIComponent(value)}`,
-    `Path=${COOKIE_PATH[name] ?? '/'}`,
+    `Path=${COOKIE_PATH[name.split('.')[0]] ?? '/'}`, // hub_auth.<state> 도 hub_auth 의 경로로
     'HttpOnly',
     'Secure',
     `SameSite=${name === ACCESS_COOKIE ? 'None' : 'Lax'}`,
@@ -141,5 +149,5 @@ export function buildCookie(name: string, value: string, maxAge: number): string
 /** 세션에서 역할만 떼어 서명한 쿠키. exp 에 끝난다 — 짧은 세션이 아니라 refresh token 과 같은 시각을 넘긴다 */
 export async function buildAccessCookie(session: Signed & Partial<Pick<Session, 'realm' | 'svc'>>, secret: string): Promise<string> {
   const maxAge = Math.max(0, session.exp - Math.floor(Date.now() / 1000));
-  return buildCookie(ACCESS_COOKIE, await signSession({ realm: session.realm, svc: session.svc, exp: session.exp }, secret), maxAge);
+  return buildCookie(ACCESS_COOKIE, await signSession({ realm: session.realm, svc: session.svc, exp: session.exp }, secret, ACCESS_COOKIE), maxAge);
 }

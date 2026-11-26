@@ -1,0 +1,89 @@
+{
+  "hero": {
+    "lead": "오늘도 DVI Portal에서 필요한 업무와 정보를 빠르게 확인하세요.",
+    "greetingLoading": "인사말 불러오는 중",
+    "schedule": { "one": "오늘 일정 {count}건", "other": "오늘 일정 {count}건" },
+    "maintenance": { "one": "점검 · 안내 {count}건", "other": "점검 · 안내 {count}건" },
+    "favorites": { "one": "즐겨찾기 {count}개", "other": "즐겨찾기 {count}개" }
+  },
+  "notice": {
+    "label": "전사 공지",
+    "important": "중요",
+    "empty": "새 공지가 없어요.",
+    "prev": "이전 공지",
+    "next": "다음 공지",
+    "original": "원문 보기",
+    "more": "눌러서 전체 보기"
+  },
+  "maintenance": {
+    "title": "시스템 점검 및 안내",
+    "empty": "예정된 점검이 없어요.",
+    "open": "시스템 열기",
+    "more": { "one": "외 {count}건 더 보기", "other": "외 {count}건 더 보기" },
+    "prev": "이전 안내",
+    "next": "다음 안내",
+    "kind": { "MAINTENANCE": "점검", "NOTICE": "안내", "INCIDENT": "장애" }
+  },
+  "news": {
+    "title": "사내 주요 소식",
+    "viewAll": { "one": "전체 {count}건", "other": "전체 {count}건" },
+    "empty": "새 소식이 없어요.",
+    "original": "원문 보기",
+    "prev": "이전 소식",
+    "next": "다음 소식",
+    "others": "다른 소식"
+  },
+  "noDepartment": "아직 부서가 지정되지 않아 일부 서비스가 보이지 않습니다. 관리팀에 문의해주세요.",
+  "quickLinks": {
+    "title": "빠른 바로가기",
+    "openWith": {
+      "title": "어디서 열까요?",
+      "web": "웹으로 열기",
+      "webHint": "브라우저 새 탭에서",
+      "app": "앱으로 열기",
+      "appHint": "앱이 없으면 웹으로",
+      "dontAsk": "다시 묻지 않기"
+    }
+  },
+  "systems": {
+    "title": "업무시스템",
+    "total": { "one": "총 {count}개", "other": "총 {count}개" },
+    "filterLabel": "표시할 서비스",
+    "mine": "권한별",
+    "all": "전체",
+    "favorites": "즐겨찾기 {count}",
+    "locked": "권한 없음",
+    "lockedHint": "권한이 없어 열 수 없어요",
+    "loading": "업무시스템 불러오는 중",
+    "noFavorites": "아직 즐겨찾기한 서비스가 없어요.",
+    "noFavoritesHint": "카드 오른쪽 위의 별을 눌러 추가하세요.",
+    "noAccess": "지금 계정으로 쓸 수 있는 서비스가 없어요.",
+    "pages": "업무시스템 페이지",
+    "mobileAll": { "one": "업무시스템 {count}개 모두 보기", "other": "업무시스템 {count}개 모두 보기" },
+    "noAccessHint": "권한이 필요하면 IT부서에 알려 주세요."
+  },
+  "flow": {
+    "title": "대외업무 공유방",
+    "source": "플로우",
+    "open": "플로우에서 열기",
+    "empty": "아직 올라온 글이 없어요.",
+    "untitled": "(제목 없음)",
+    "unread": "안 읽음",
+    "comments": {
+      "one": "댓글 {count}",
+      "other": "댓글 {count}"
+    },
+    "type": {
+      "post": "글",
+      "task": "업무",
+      "schedule": "일정",
+      "todo": "할일",
+      "other": "글"
+    },
+    "notice": {
+      "FLOW_ACCOUNT_UNKNOWN": "회사 메일 계정으로 로그인해야 볼 수 있어요.",
+      "FLOW_FORBIDDEN": "이 플로우 방의 참여자만 볼 수 있어요.",
+      "FLOW_PROJECT_NOT_FOUND": "플로우에서 계정이나 방을 찾지 못했어요."
+    }
+  }
+}

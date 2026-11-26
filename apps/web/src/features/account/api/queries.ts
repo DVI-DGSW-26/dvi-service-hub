@@ -5,12 +5,15 @@ import { accountApi } from './account'
 import { fetchMe } from './auth'
 
 export const accountQueries = {
-  /** /api/auth/me — 앱을 여는 동안 한 번. 세션이 끝나면 fetchMe 가 로그인으로 보낸다 */
+  /**
+   * /api/auth/me — 받으면 앱을 여는 동안 한 번. 세션이 끝나면 fetchMe 가 로그인으로 보낸다.
+   * 연결이 끊겨 못 받았으면(null) 다시 보거나 연결이 돌아올 때 또 묻는다 — 이름 · 관리자 버튼이 빠진 채 남지 않게
+   */
   me: () =>
     queryOptions({
       queryKey: ['auth', 'me'],
       queryFn: ({ signal }) => fetchMe({ signal }),
-      staleTime: Infinity,
+      staleTime: (q) => (q.state.data ? Infinity : 0),
       retry: false,
     }),
 

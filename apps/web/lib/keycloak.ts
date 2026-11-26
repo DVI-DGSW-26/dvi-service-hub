@@ -11,8 +11,8 @@
  * ── 갱신을 한 곳에서만 하는 이유 ──────────────────────────────
  * refresh token 은 한 번만 쓸 수 있다 (Keycloak 재사용 탐지). 같은 브라우저에서 두 요청이 동시에
  * 갱신하면 하나가 실패한다. 그래서 갱신은 /api/auth/refresh 에서만 하고, hub_rt 도 그 경로에만 실려 간다.
- * 화면도 한 번에 하나만 부른다 (src/shared/api/session.ts).
- * 갱신이 거절되면(퇴사 · SSO 세션 끝 · 재사용 탐지) 쿠키를 모두 지워 다시 로그인하게 한다.
+ * 화면은 탭끼리 줄을 세워 부른다 (src/shared/api/session.ts). middleware 가 보내는 페이지 이동은 그 줄 밖이라 겹칠 수 있다 —
+ * 그래서 거절된 갱신은 쿠키를 지우지 않고 통합 로그인으로만 보낸다(이긴 쪽 새 쿠키를 지우지 않게). SSO 가 살아 있으면 화면 없이 돌아온다.
  */
 import { ACCESS_COOKIE, IDTOKEN_COOKIE, REFRESH_COOKIE, SESSION_COOKIE, SESSION_SECONDS, buildAccessCookie, buildCookie,
   signSession, type Session } from './session.js';
@@ -90,7 +90,7 @@ export async function sessionCookies(
   return { cookies, exp: session.exp };
 }
 
-/** 로그인 쿠키를 모두 지운다 — 갱신이 거절됐을 때 · 로그아웃 */
+/** 로그인 쿠키를 모두 지운다 — 로그아웃 */
 export const clearSessionCookies = () =>
   [SESSION_COOKIE, REFRESH_COOKIE, IDTOKEN_COOKIE, ACCESS_COOKIE].map((name) => buildCookie(name, '', 0));
 

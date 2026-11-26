@@ -1,4 +1,119 @@
 <!doctype html>
-<meta charset="utf-8" />
-<title>DVI 서비스 허브</title>
-<p>허브에 연결하지 못했습니다. 네트워크를 확인해 주세요.</p>
+<!--
+  허브를 열지 못했을 때 앱이 띄우는 화면(capacitor.config.ts 의 server.errorPath).
+  연결 실패, 그리고 화면 주소가 4xx · 5xx 를 받았을 때(통합 로그인 · Google 의 오류 화면) 온다 — 허브의 로그인 오류 화면은 200 이라 오지 않는다.
+  모양은 허브의 로그인 오류 화면(apps/web/lib/oidc.ts 의 htmlError)과 같다. 앱에 들어가는 파일이라 고치면 새 APK 를 내야 바뀐다
+-->
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <title>DVI 서비스 허브</title>
+    <!-- 테마는 시스템 설정을 따른다 — 이 화면은 https://localhost/ 로 떠서(Capacitor 의 hostname) 허브에서 고른 테마(localStorage)를 읽지 못한다 -->
+    <style>
+      :root {
+        --bg: oklch(0.968 0.004 262);
+        --fg: oklch(0.23 0.01 262);
+        --muted: oklch(0.5 0.012 262);
+        --fill: oklch(0.53 0.2 262);
+        color-scheme: light;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) {
+          --bg: oklch(0.16 0.008 262);
+          --fg: oklch(0.97 0.003 262);
+          --muted: oklch(0.76 0.01 262);
+          color-scheme: dark;
+        }
+      }
+      :root[data-theme='dark'] {
+        --bg: oklch(0.16 0.008 262);
+        --fg: oklch(0.97 0.003 262);
+        --muted: oklch(0.76 0.01 262);
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        box-sizing: border-box;
+        display: grid;
+        place-items: center;
+        padding: 24px max(24px, env(safe-area-inset-right)) 24px max(24px, env(safe-area-inset-left));
+        background: var(--bg);
+        color: var(--fg);
+        font: 15px/1.6 'Pretendard Variable', Pretendard, system-ui, -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif;
+        text-align: center;
+        word-break: keep-all;
+      }
+      main {
+        max-width: 22rem;
+        display: grid;
+        justify-items: center;
+      }
+      .logo {
+        display: grid;
+        place-items: center;
+        width: 64px;
+        height: 64px;
+        margin-bottom: 24px;
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 2px 8px oklch(0 0 0 / 0.12), 0 0 0 1px oklch(0 0 0 / 0.05);
+      }
+      .logo svg {
+        width: 46px;
+        height: 46px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 20px;
+        font-weight: 700;
+      }
+      p {
+        margin: 0 0 28px;
+        color: var(--muted);
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        min-height: 48px;
+        padding: 0 28px;
+        border: 0;
+        border-radius: 14px;
+        background: var(--fill);
+        color: #fff;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .btn:active {
+        scale: 0.97;
+      }
+      .btn:focus-visible {
+        outline: 2px solid var(--fill);
+        outline-offset: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <!-- 허브 로고(apps/web/public/favicon.svg) — 연결이 없어도 보이게 글에 넣었다 -->
+      <span class="logo">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <g transform="translate(17,17) scale(.66)">
+            <path id="m" d="M28,5.10 A50,50 0 0 1 84.5,86.19 L84.5,65.94 A38,38 0 0 0 40,13.34 L40,49.8 A10,10 0 0 0 50,59.8 L55.8,59.8 L55.8,71.8 L50,71.8 A22,22 0 0 1 28,49.8 Z" fill="#2F5BFF" />
+            <use href="#m" transform="rotate(180 50 50)" />
+          </g>
+          <circle cx="50" cy="50" r="47" fill="none" stroke="#8EA5FF" stroke-width="2" stroke-linecap="round" stroke-dasharray="0 5.2" />
+          <circle cx="83.23" cy="16.77" r="6.5" fill="#fff" />
+          <circle cx="83.23" cy="16.77" r="4" fill="#2F5BFF" />
+        </svg>
+      </span>
+      <h1>허브를 열지 못했어요</h1>
+      <p>인터넷 연결을 확인하고 다시 시도해 주세요.<br />계속 안 되면 잠시 뒤에 열어 주세요.</p>
+      <!-- capacitor.config.ts 의 server.url 과 같은 주소 — 옮기면 둘 다 고친다 -->
+      <button type="button" class="btn" onclick="location.href = 'https://service-hub.dvi-ind.com/'">다시 시도</button>
+    </main>
+  </body>
+</html>

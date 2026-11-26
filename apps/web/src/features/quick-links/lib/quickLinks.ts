@@ -23,7 +23,7 @@ export const quickLinks: QuickLink[] = [
     icon: 'flow',
     url: FLOW_WEB,
     // pc: 설치할 때 앱이 직접 등록하는 스킴(레지스트리 HKCU\Software\Classes\flownew)
-    // shortcut: Android 앱이 flownew 를 받는지는 확인 못 했다 — 안 받으면 웹으로 열린다. 앱이 받는 주소를 알게 되면 바꾼다
+    // shortcut: Android 앱이 flownew 를 받는지는 확인 못 했다 — 허브 앱은 안 받으면 Flow 앱 첫 화면을 열고(IntentLinks), Chrome 은 웹으로 간다. 앱이 받는 주소를 알게 되면 바꾼다
     app: { pc: 'flownew://', android: android('com.webcash.bizplay.collabo', 'flownew://', FLOW_WEB) },
     ask: true,
   },

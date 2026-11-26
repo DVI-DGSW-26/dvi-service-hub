@@ -1,0 +1,39 @@
+{
+  "newYear": [
+    "Happy New Year",
+    "Here's to a great year, {name}",
+    "A fresh start"
+  ],
+  "monthStart": [
+    "A new month begins",
+    "New month, {name}",
+    "Fresh month, fresh start"
+  ],
+  "monthEnd": [
+    "Last days of the month",
+    "Great month, {name}",
+    "Wrapping up the month"
+  ],
+  "yearEnd": [
+    "Thanks for a great year",
+    "Happy holidays, {name}",
+    "See you in the new year"
+  ],
+  "holiday": [
+    "Happy holiday",
+    "Enjoy the day off, {name}",
+    "Working the holiday? Thanks"
+  ],
+  "seollal": [
+    "Happy Lunar New Year",
+    "Enjoy Seollal, {name}"
+  ],
+  "chuseok": [
+    "Happy Chuseok",
+    "Enjoy the holiday, {name}"
+  ],
+  "christmas": [
+    "Merry Christmas!",
+    "Merry Christmas, {name}"
+  ]
+}

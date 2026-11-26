@@ -1,0 +1,54 @@
+{
+  "time": {
+    "00:00": [
+      "Midnight! Still here, {name}?",
+      "A new day just started"
+    ],
+    "11:11": [
+      "11:11, make a wish",
+      "Four ones, lucky you"
+    ],
+    "12:34": [
+      "12:34, all in order",
+      "1, 2, 3, 4, step by step"
+    ],
+    "15:00": [
+      "3 PM, snack time"
+    ]
+  },
+  "date": {
+    "03-14": [
+      "Happy Pi Day",
+      "3.14, a very round day"
+    ],
+    "04-01": [
+      "It's April Fools' Day",
+      "Double-check everything today"
+    ],
+    "05-01": [
+      "Happy Labor Day",
+      "You're the star today, {name}"
+    ],
+    "11-11": [
+      "Happy Pepero Day",
+      "A day full of ones"
+    ]
+  },
+  "safetyDay": [
+    "It's Safety Inspection Day",
+    "Check the equipment, {name}",
+    "The 4th: one more safety check"
+  ],
+  "friday13": [
+    "Friday the 13th, check twice!",
+    "Extra careful today"
+  ],
+  "rare": [
+    "Zero accidents, one more day!",
+    "You're today's hidden MVP, {name}",
+    "Machines and people need rest",
+    "Rooting for zero defects",
+    "Tighten that helmet strap",
+    "The plant runs thanks to you, {name}"
+  ]
+}

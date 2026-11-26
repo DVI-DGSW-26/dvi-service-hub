@@ -14,7 +14,7 @@ interface DecorMenuProps {
   className: string
   /** 펼침 패널 자리 — 기본은 단추 아래 오른쪽 끝 */
   panelClassName?: string
-  /** 메뉴 없이 누르면 바로 이미지 고르기(인사 카드) — 고르면 위치 조정이 이어지고, 기본으로는 위치 조정 독에서 */
+  /** 메뉴 없이 누르면 바로 이미지 고르기(그림이 아직 없는 인사 카드) — 고르면 위치 조정이 이어진다 */
   direct?: boolean
 }
 

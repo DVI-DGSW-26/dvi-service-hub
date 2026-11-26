@@ -1,0 +1,34 @@
+{
+  "weekend": [
+    "Thanks for coming in today",
+    "Weekend hero, {name}"
+  ],
+  "mon": [
+    "Let's kick off the week, {name}",
+    "Happy Monday",
+    "A brand-new week"
+  ],
+  "tue": [
+    "Stay strong this Tuesday"
+  ],
+  "wed": [
+    "Halfway through the week"
+  ],
+  "thu": [
+    "Two days to the weekend"
+  ],
+  "fri": [
+    "Happy Friday",
+    "Great work this week, {name}",
+    "Weekend's nearly here, {name}",
+    "One last push, it's Friday"
+  ],
+  "sat": [
+    "Happy Saturday",
+    "Thanks for coming in, {name}"
+  ],
+  "sun": [
+    "Happy Sunday",
+    "Sunday shift? Thanks, {name}"
+  ]
+}

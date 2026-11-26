@@ -168,12 +168,17 @@ export function StackBoard({ layout, defs, editing, onEdit, onPick, onDone, rend
     follow()
   })
 
-  // 골라진 뒤에는 터치로 움직여도 화면이 스크롤되지 않게 — 브라우저가 미리 알도록 판에 늘 걸어 두고, 고른 동안만 막는다
+  // 골라진 뒤에는 터치로 움직여도 화면이 스크롤되지 않게 — 브라우저가 미리 알도록 판에 늘 걸어 두고, 고른 동안만 막는다.
+  // 캡처로 먼저 받아 위젯 안(업무시스템 카드 넘기기 등)으로 내려보내지 않는다 — 위젯과 안의 카드가 같이 움직이지 않게
   useEffect(() => {
     const board = boardRef.current
-    const block = (e: TouchEvent) => held.current?.lifted && e.preventDefault()
-    board?.addEventListener('touchmove', block, { passive: false })
-    return () => board?.removeEventListener('touchmove', block)
+    const block = (e: TouchEvent) => {
+      if (!held.current?.lifted) return
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    board?.addEventListener('touchmove', block, { capture: true, passive: false })
+    return () => board?.removeEventListener('touchmove', block, { capture: true })
   }, [])
 
   /** 길게 눌렀다 — 쉴 때면 편집을 켜고, 그 위젯을 고른다. 실제로 움직이기 전까지는 고른 그대로 */

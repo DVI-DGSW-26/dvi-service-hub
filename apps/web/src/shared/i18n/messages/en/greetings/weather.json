@@ -1,0 +1,37 @@
+{
+  "sunny": [
+    "Sunny skies today",
+    "Soak up some sun, {name}",
+    "Clear skies out there"
+  ],
+  "cloudy": [
+    "A bit cloudy today",
+    "Brighten up the day, {name}",
+    "Cloudy, but you shine"
+  ],
+  "rainy": [
+    "It's raining today",
+    "Mind the wet roads, {name}",
+    "Don't forget an umbrella"
+  ],
+  "snowy": [
+    "It's snowing",
+    "Watch for ice, {name}",
+    "Bundle up today"
+  ],
+  "hot": [
+    "It's a hot one",
+    "Stay hydrated, {name}",
+    "Take it easy in the heat"
+  ],
+  "cold": [
+    "It's freezing today",
+    "Bundle up, {name}",
+    "Warm drink weather"
+  ],
+  "dusty": [
+    "Air quality is poor",
+    "Mask up outside, {name}",
+    "Take care of your lungs"
+  ]
+}

@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { startTransition, useEffect, useLayoutEffect, useState } from 'react'
 
 export type Page = 'home' | 'systems' | 'info' | 'account'
 
@@ -22,18 +22,12 @@ function parse(hash: string): Route {
   return { page, param: second || undefined }
 }
 
-/** 탭마다 마지막으로 보던 스크롤 위치 */
-const scrolls = new Map<Page, number>()
-
 export function useHashRoute(): Route {
   const [route, setRoute] = useState(() => parse(location.hash))
-  const page = useRef(route.page)
 
   useEffect(() => {
     const onChange = () => {
       const next = parse(location.hash)
-      scrolls.set(page.current, scrollY)
-      page.current = next.page
       // 새 화면 코드를 받는 동안 빈칸 대신 지금 화면을 둔다 — 받아 두었으면(App 의 미리 받기) 바로 넘어간다
       startTransition(() => setRoute((r) => ({ ...next, dir: PAGES.indexOf(next.page) - PAGES.indexOf(r.page) })))
     }
@@ -41,9 +35,10 @@ export function useHashRoute(): Route {
     return () => removeEventListener('hashchange', onChange)
   }, [])
 
-  // 앱의 탭처럼 다른 탭에서 돌아오면 보던 자리로, 같은 화면 안에서 옮기면(#/info/a → b) 맨 위로. 처음 열 때(dir 없음)는 브라우저에 맡긴다
+  // 화면을 옮기면 늘 맨 위부터 — 탭마다 보던 자리를 기억하면 밀어 넘길 때 옆 화면(맨 위)과 달라 화면이 한 번 더 바뀌었다.
+  // 처음 열 때(dir 없음)는 브라우저에 맡긴다
   useLayoutEffect(() => {
-    if (route.dir !== undefined) scrollTo({ top: route.dir ? (scrolls.get(route.page) ?? 0) : 0, behavior: 'instant' })
+    if (route.dir !== undefined) scrollTo({ top: 0, behavior: 'instant' })
   }, [route])
 
   return route

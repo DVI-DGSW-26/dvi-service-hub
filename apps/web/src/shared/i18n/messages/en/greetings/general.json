@@ -1,0 +1,31 @@
+{
+  "welcome": [
+    "Great to see you",
+    "Welcome, {name}",
+    "Have a great day, {name}"
+  ],
+  "encouragement": [
+    "Cheering you on",
+    "One step at a time",
+    "You've got this, {name}",
+    "Every bit counts"
+  ],
+  "focus": [
+    "Ready to dive in?",
+    "First things first",
+    "Stay focused, {name}"
+  ],
+  "refresh": [
+    "Take a moment",
+    "Water break, {name}?",
+    "Look out the window"
+  ],
+  "safety": [
+    "Zero accidents today",
+    "Safety comes first",
+    "Got your safety gear, {name}?",
+    "Check before you start",
+    "Stay safe today",
+    "A tidy floor is a safe floor"
+  ]
+}

@@ -26,6 +26,9 @@ export const KEYS = {
   apiLog: 'portal-api-log',
   /** 빠른 바로가기를 웹 · 앱 중 어디로 열지 '다시 묻지 않기'로 정한 답 — quick-links/lib/openApp.ts */
   openWith: 'portal-open-with',
+  /** 인사 문구를 고르는 데 쓰는 마지막 방문 · 받아 둔 날씨 — hero/lib/greetingContext.ts */
+  greetVisit: 'portal-greet-visit',
+  greetWeather: 'portal-greet-weather',
 } as const
 
 export function readPref(key: string): string | null {
