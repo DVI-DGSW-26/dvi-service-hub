@@ -102,8 +102,8 @@ export function TodayModal({ items, now, date, open, onClose }: TodayModalProps)
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col @2xl:flex-row">
-        {/* 날짜 고르기 — 좁은 화면에서는 엄지가 닿는 맨 아래에서 가로로 넘긴다(달력 크게 보기의 달 넘기기와 같은 자리) */}
-        <nav aria-label={t.schedule.dates} className="order-last flex-none border-t border-line @2xl:order-none @2xl:w-60 @2xl:border-t-0 @2xl:border-r">
+        {/* 날짜 고르기 — 좁은 화면에서는 머리 바로 아래에서 가로로 넘긴다(다른 시트의 탭 줄과 같은 자리) */}
+        <nav aria-label={t.schedule.dates} className="flex-none border-b border-line @2xl:w-60 @2xl:border-b-0 @2xl:border-r">
           <ul className="flex gap-1.5 overflow-x-auto p-3 [scrollbar-width:none] @2xl:h-full @2xl:[scrollbar-width:auto] @2xl:flex-col @2xl:overflow-y-auto @2xl:overscroll-contain">
             {days.map((d, i) => {
               const active = !q && i === day

@@ -98,13 +98,16 @@ export function HeroCard({ me, loading = false, favoriteCount, image, size, clas
   }
 
   return (
-    <section className={`hero @container relative flex flex-col justify-center overflow-hidden rounded-3xl fit:gap-4 fit:px-8 fit:py-6 ${size ? 'gap-4 p-5' : 'gap-6 p-6 sm:p-8'} ${className}`}>
+    // 넘치면 가운데 정렬이 위 · 아래를 같이 자른다 — center-safe 로 위(날짜)부터 붙인다. 글꼴을 키운 휴대폰에서 칸보다 길어진다
+    <section className={`hero @container relative flex flex-col justify-center-safe overflow-hidden rounded-3xl fit:gap-4 fit:px-8 fit:py-6 ${size ? 'gap-4 p-5' : 'gap-6 p-6 sm:p-8'} ${className}`}>
       {/* 카드 높이에 맞춰 잘리지 않게 그리고, 왼쪽으로 갈수록 배경에 녹인다 */}
       {picture ?? (
         <HeroIllustration className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-auto max-w-[62%] mask-[linear-gradient(to_right,transparent,black_45%)] sm:block dark:opacity-35 dark:saturate-50" />
       )}
 
-      <div className="relative sm:max-w-[60%]">
+      {/* 칸이 모자라면 여기(인사 · 안내 · 요약)만 줄어든다 — 날짜와 공지 줄은 늘 보인다.
+          세로로 줄 바꿈(flex-wrap)해 안 들어가는 줄은 옆 칸으로 넘겨 통째로 숨긴다 — 반쯤 잘린 줄이 보이지 않게 */}
+      <div className="relative flex min-h-0 flex-col flex-wrap content-start overflow-hidden *:w-full sm:max-w-[60%]">
         <p className="text-[15px] font-semibold text-accent">{longToday(now, lang)}</p>
         <Greeting name={me?.name} loading={loading} />
         {/* 한 칸 높이에서는 안내 문구를 뺀다 — 큰 칸(L)에서만 */}
@@ -124,7 +127,7 @@ export function HeroCard({ me, loading = false, favoriteCount, image, size, clas
         </div>
       </div>
 
-      <NoticeTicker canWrite={canWriteNotice(me)} compact={!!size} />
+      <NoticeTicker canWrite={canWriteNotice(me)} compact={!!size} className="flex-none" />
     </section>
   )
 }
