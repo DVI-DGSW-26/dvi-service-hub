@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react'
+import { Suspense, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react'
 import type { Decor } from '@/features/decor'
 import type { WidgetLayout } from '../hooks/useWidgetLayout'
 import { colWidth, rowHeight, sizeFor, span, type Page } from '../lib/widgetLayout'
@@ -12,7 +12,7 @@ import { PageDots } from './PageDots'
 import { type WidgetContext, type WidgetDef } from '../lib/widgetDef'
 import { WidgetCell } from './WidgetCell'
 import { StackBoard } from './StackBoard'
-import { WideBoard } from './WideBoard'
+import { LazyWideBoard } from './LazyWideBoard'
 
 interface WidgetGridProps {
   layout: WidgetLayout
@@ -113,16 +113,18 @@ export function WidgetGrid({ layout, defs, ctx, editing, onEdit, onPick, onDone,
           ) : (
             area.width > 0 &&
             (area.lg ? (
-              <WideBoard
-                {...{ layout, pageCount, colW, rowH, editing, viewRef }}
-                downAtRef={downAt}
-                pickUpRef={pickUp}
-                onDone={onDone}
-                draggingRef={dragging}
-                width={area.width}
-                onEdge={setEdge}
-                renderWidget={widget}
-              />
+              <Suspense>
+                <LazyWideBoard
+                  {...{ layout, pageCount, colW, rowH, editing, viewRef }}
+                  downAtRef={downAt}
+                  pickUpRef={pickUp}
+                  onDone={onDone}
+                  draggingRef={dragging}
+                  width={area.width}
+                  onEdge={setEdge}
+                  renderWidget={widget}
+                />
+              </Suspense>
             ) : (
               // 좁은 화면 — 모든 페이지를 4칸 격자 판에, 좁은 화면 순서 · 크기대로. 편집도 그 자리에서
               <StackBoard layout={layout.narrow} defs={defs} editing={editing} onEdit={onEdit} onPick={onPick} onDone={onDone} renderWidget={widget} />
