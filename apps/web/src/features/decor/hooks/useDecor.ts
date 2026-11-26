@@ -37,15 +37,18 @@ export function useDecor() {
     writePref(POS_KEY[kind], p === CENTER ? null : JSON.stringify(p))
   }
 
-  /** 그림을 바꾼다(null 이면 기본으로). 못 읽는 파일이면 throw, 저장 공간이 모자라면 이번 화면에만 두고 false. 새 그림은 가운데에서 위치 조정을 시작한다 */
-  const set = async (kind: DecorKind, file: File | null) => {
-    const url = file && (await fitImage(file, MAX[kind]))
+  /**
+   * 그림을 바꾼다 — 고른 파일, 기본 배경 주소(lib/presets), null 이면 기본으로. 못 읽는 파일이면 throw, 저장 공간이 모자라면 이번 화면에만 두고 false.
+   * 고른 파일은 가운데에서 위치 조정을 시작한다. 기본 배경은 칸에 맞게 그려 두어 바로 쓴다
+   */
+  const set = async (kind: DecorKind, pick: File | string | null) => {
+    const url = typeof pick === 'string' ? pick : pick && (await fitImage(pick, MAX[kind]))
     setImages((s) => ({ ...s, [kind]: url }))
     savePos(kind, CENTER)
     try {
       if (url) localStorage.setItem(KEY[kind], url)
       else localStorage.removeItem(KEY[kind])
-      if (url) setAdjusting(kind)
+      if (pick instanceof File) setAdjusting(kind)
       return true
     } catch {
       // 예전 그림이 남아 새로고침 때 되살아나지 않게

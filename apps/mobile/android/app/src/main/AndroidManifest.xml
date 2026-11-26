@@ -46,6 +46,8 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 웹의 navigator.vibrate(위젯 길게 누르기 등) — WebView 는 이 권한이 없으면 아무 말 없이 진동하지 않는다. Chrome(PWA)은 자기 권한으로 울린다 -->
+    <uses-permission android:name="android.permission.VIBRATE" />
     <!-- 앱이 스스로 새 버전을 깐다(AppUpdatePlugin) -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <!-- Android 12+ 에서 자기 업데이트를 확인 창 없이 — 이 권한을 가진 버전부터 다음 업데이트가 조용히 깔린다 -->

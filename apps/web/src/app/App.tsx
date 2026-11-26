@@ -116,8 +116,8 @@ export default function App() {
         {t.layout.skipToContent}
       </button>
 
-      {/* 홈 배경 그림(위젯 편집의 꾸미기). 배경 위치 조정 중에는 위젯을 숨기고, 인사 카드 그림 조정 중에는 다른 위젯을 흐린다(아래 main) */}
-      {home && decor.wallpaper && <Wallpaper src={decor.wallpaper} pos={decor.pos.wallpaper} />}
+      {/* 홈 배경 그림(위젯 편집의 꾸미기) — 다른 탭에서는 흐리고 진하게 덮어 깔기만(muted). 배경 위치 조정 중에는 위젯을 숨기고, 인사 카드 그림 조정 중에는 다른 위젯을 흐린다(아래 main) */}
+      {decor.wallpaper && <Wallpaper src={decor.wallpaper} pos={decor.pos.wallpaper} muted={!home} />}
       {editing && adjusting && <DecorAdjust decor={decor} />}
       {/* 편집 도구 · 완료는 화면 아래 독에 — 상단 바는 그 항목 고치기만 */}
       {/* 좁은 화면은 탭 바가 편집 막대가 되고(EditTabBar), 이 독은 그림 위치 조정 때만 */}

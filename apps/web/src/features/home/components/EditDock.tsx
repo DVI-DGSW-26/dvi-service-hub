@@ -36,7 +36,7 @@ export function EditDock({ decor, onTidy, onUndo, onReset, onDone, side }: EditD
       role="toolbar"
       aria-label={kind ? t.widgets.decor.adjust : t.widgets.dock}
       style={{ '--side': `${side}px` } as CSSProperties}
-      className="glass-strong animate-materialize fixed inset-x-3 bottom-3 z-40 flex flex-wrap items-center gap-x-1 gap-y-2 rounded-[22px] p-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] lg:inset-x-auto lg:bottom-6 lg:left-[calc((100%+var(--side))/2)] lg:w-max lg:max-w-[calc(100vw-24px)] lg:-translate-x-1/2 lg:justify-center lg:rounded-2xl lg:p-2"
+      className="glass-strong animate-materialize fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 flex flex-wrap items-center gap-x-1 gap-y-2 rounded-[22px] p-1.5 lg:inset-x-auto lg:bottom-6 lg:left-[calc((100%+var(--side))/2)] lg:w-max lg:max-w-[calc(100vw-24px)] lg:-translate-x-1/2 lg:justify-center lg:rounded-2xl lg:p-2"
     >
       {kind && pos ? (
         <>
@@ -53,7 +53,7 @@ export function EditDock({ decor, onTidy, onUndo, onReset, onDone, side }: EditD
               className="w-32 accent-(--color-accent-fill)"
             />
           </label>
-          {/* 인사 카드는 메뉴 없이 바로 고르므로(DecorMenu direct) 기본 그림으로 되돌리기는 여기서 */}
+          {/* 조정하다 마음이 바뀌면 메뉴를 다시 열지 않고 기본으로 */}
           <button
             type="button"
             onClick={() => {

@@ -2,10 +2,10 @@ import { useEffect, useRef, type PointerEvent } from 'react'
 import type { Decor, DecorPos } from '../hooks/useDecor'
 import { panBy, placeStyle } from '../lib/wallpaper'
 
-/** 홈 배경 그림(위젯 편집의 꾸미기) — 화면에 고정해 깔고 바탕색을 반쯤 덮어 옅게(styles/home.css 의 .wallpaper) */
-export function Wallpaper({ src, pos }: { src: string; pos: DecorPos }) {
+/** 홈 배경 그림(위젯 편집의 꾸미기) — 화면에 고정해 깔고 바탕색을 반쯤 덮어 옅게. muted 면(홈 밖) 흐리고 더 덮어 글자를 방해하지 않게(styles/home.css 의 .wallpaper) */
+export function Wallpaper({ src, pos, muted = false }: { src: string; pos: DecorPos; muted?: boolean }) {
   return (
-    <div aria-hidden="true" className="wallpaper">
+    <div aria-hidden="true" data-muted={muted || undefined} className="wallpaper">
       <img data-decor="wallpaper" src={src} alt="" style={placeStyle(pos)} />
     </div>
   )

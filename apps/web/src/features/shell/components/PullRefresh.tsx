@@ -97,11 +97,11 @@ export function PullRefresh({ enabled }: { enabled: boolean }) {
   }, [enabled])
 
   return (
-    // 상단 바 바로 아래에서 내려온다 — 평소에는 투명
+    // 상단 바 바로 아래에서 내려온다 — 평소에는 투명. z-50 · 강조색 바탕: 반투명 bg-raised 는 다크 테마의 어두운 인사 카드 위에서 거의 안 보였다
     <div
       ref={ref}
       aria-hidden="true"
-      className="pointer-events-none fixed top-[calc(4.5rem+env(safe-area-inset-top))] left-1/2 z-10 grid size-10 -translate-x-1/2 place-items-center rounded-full bg-raised text-accent opacity-0 shadow-[0_2px_10px_oklch(0_0_0/0.18)] ring-1 ring-line lg:hidden"
+      className="pointer-events-none fixed top-[calc(4.5rem+env(safe-area-inset-top))] left-1/2 z-50 grid size-10 -translate-x-1/2 place-items-center rounded-full bg-accent-fill text-white opacity-0 shadow-[0_4px_14px_oklch(0_0_0/0.35)] ring-1 ring-white/20 lg:hidden"
     >
       <RotateCw ref={iconRef} className="size-5" strokeWidth={2.4} />
     </div>

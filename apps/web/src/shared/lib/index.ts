@@ -2,6 +2,7 @@ export { addDays, addMonths, dtf, eventsOn, fromIso, inMonth, monthKey, monthOf,
 export type { Month } from './calendar'
 export { fitImage } from './image'
 export { motionOff, reducedMotion } from './motion'
+export { releaseSpeed, type Trail } from './trail'
 export { KEYS, readPref, writePref } from './prefs'
 export { canWriteMaintenance, canWriteNotice, hasNoDepartment } from './roles'
 export { project, rubberband, settle, snap, spring, step } from './spring'

@@ -71,6 +71,19 @@
       "hero": "이미지 변경"
     },
     "default": "기본",
+    "presets": "기본 배경",
+    "names": {
+      "dawn": "새벽",
+      "ocean": "바다",
+      "forest": "숲",
+      "aurora": "오로라",
+      "sunset": "노을",
+      "lavender": "라벤더",
+      "sand": "모래",
+      "mint": "민트",
+      "night": "밤하늘",
+      "blossom": "벚꽃"
+    },
     "choose": "이미지 선택",
     "reset": "기본으로",
     "adjust": "위치 조정",

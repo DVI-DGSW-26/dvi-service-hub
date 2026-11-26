@@ -1,4 +1,6 @@
 import { useEffect, type RefObject } from 'react'
+import { VELOCITY_WINDOW } from '@/shared/constants'
+import { releaseSpeed, type Trail } from '@/shared/lib'
 
 // 넘길 페이지 고르기 — Android ViewPager(determineTargetPage)와 같다: 25dp 넘게 끌고 400dp/s 넘게 던졌으면 던진 쪽으로,
 // 아니면 절반 넘게 끌었을 때만. 그리고 Compose Pager 의 기본(PagerSnapDistance.atMost(1))처럼 한 번에 한 페이지까지
@@ -19,8 +21,8 @@ const WHEEL_GAP = 200
 const landing = (near: number, v: number, flung: boolean, last: number) =>
   Math.max(0, Math.min(last, flung ? (v < 0 ? Math.ceil(near) : Math.floor(near)) : Math.round(near)))
 
-/** 쓰는 중 — 시작점 · 시작 시각(at) · 시작 페이지 · 끈 거리(d) · 그린 거리(shown) · 빠르기(v) · 마지막 움직임 시각(t) · 방향 */
-interface Swipe { x: number; y: number; at: number; from: number; resting: boolean; d: number; shown: number; v: number; t: number; axis?: 'x' | 'y' }
+/** 쓰는 중 — 시작점 · 시작 시각(at) · 시작 페이지 · 끈 거리(d) · 그린 거리(shown) · 지난 자리(trail, 빠르기용) · 방향 */
+interface Swipe { x: number; y: number; at: number; from: number; resting: boolean; d: number; shown: number; trail: Trail; axis?: 'x' | 'y' }
 
 /**
  * 페이지 틀(ref, 자식마다 페이지 하나 · 옆으로 scroll-snap)을 손가락으로 넘기기 — 옆으로도 위 · 아래로도, 넘어간 결과는 같다.
@@ -57,7 +59,7 @@ export function useSwipePages(ref: RefObject<HTMLElement | null>, pageCount: num
     const down = (e: TouchEvent) => {
       const t = e.touches[0]
       // 쉬는 중에 쓸어도 화면이 스크롤되지 않게 받기는 받고, 넘기지는 않는다
-      s = e.touches.length === 1 ? { x: t.clientX, y: t.clientY, at: e.timeStamp, from: at(), resting: performance.now() < rest, d: 0, shown: 0, v: 0, t: e.timeStamp } : null
+      s = e.touches.length === 1 ? { x: t.clientX, y: t.clientY, at: e.timeStamp, from: at(), resting: performance.now() < rest, d: 0, shown: 0, trail: [] } : null
     }
     const drag = (e: TouchEvent) => {
       if (!s) return
@@ -71,9 +73,7 @@ export function useSwipePages(ref: RefObject<HTMLElement | null>, pageCount: num
       }
       e.preventDefault()
       const d = s.axis === 'x' ? dx : dy
-      // 빠르기는 마지막 움직임으로(놓기 직전에 멈췄으면 던지기가 아니다)
-      s.v = (d - s.d) / Math.max(1, e.timeStamp - s.t)
-      s.t = e.timeStamp
+      s.trail.push({ t: e.timeStamp, p: d })
       s.d = d
       // 페이지가 없는 쪽은 버티며 조금만 — 옆은 끝 페이지까지 따라오고(여러 페이지 넘기기), 위 · 아래는 한 페이지
       const [lo, hi] = s.axis === 'x' ? [(s.from - pageCount + 1) * view.clientWidth, s.from * view.clientWidth] : ok(s.from - Math.sign(d)) ? [-Infinity, Infinity] : [0, 0]
@@ -83,8 +83,8 @@ export function useSwipePages(ref: RefObject<HTMLElement | null>, pageCount: num
     const up = (e: TouchEvent) => {
       if (!s?.axis) return void (s = null)
       const { axis, from, d, shown, resting } = s
-      // 마지막 움직임이 오래전이면 멈췄다 놓은 것
-      const v = e.timeStamp - s.t > 100 ? 0 : s.v
+      // 놓기 직전에 멈췄으면 0 — 던지기가 아니다
+      const v = releaseSpeed(s.trail, e.timeStamp, VELOCITY_WINDOW)
       const multi = axis === 'x' && e.timeStamp - s.at >= HOLD_MULTI
       s = null
       const size = axis === 'x' ? view.clientWidth : view.clientHeight
