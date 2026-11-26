@@ -66,8 +66,6 @@ export function TopBar({ me, meLoading, page, query, onQueryChange, theme, onEdi
   // 휴대폰은 상단 바를 고치지 않는다 — 편집 중에도 · 고친 설정이 있어도 늘 같은 모양(좁아 항목 줄이 들어갈 자리도 없다)
   const phone = useMedia(PHONE)
   const scrolled = useScrolled(0)
-  // 큰 제목(PageTitle 의 h1) 이 바 밑으로 다 들어간 즈음
-  const pastTitle = useScrolled(52)
   // 드래그 중인 항목 — 놓기 전에는 순서를 안 바꾸고 transform 으로만 보여 준다(바로 바꾸면 폭이 다른 항목끼리 자리가 왔다 갔다 한다)
   const [drag, setDrag] = useState<{ from: number; to: number; dx: number; step: number } | null>(null)
   // 손에 든 값은 ref 에도 — 빠르게 놓으면 다시 그리기 전에 pointerup 이 와서 state 가 한 박자 늦다
@@ -161,8 +159,8 @@ export function TopBar({ me, meLoading, page, query, onQueryChange, theme, onEdi
       <div className="lg:hidden">
         <Brand compact />
       </div>
-      {/* 지금 어디에 있는지 — 휴대폰에서 큰 제목(PageTitle)이 있는 화면은 그 제목이 바 밑으로 들어간 뒤에 나타난다 */}
-      <p className={`min-w-0 truncate leading-tight transition-opacity duration-200 ${phone && page !== 'home' && !pastTitle ? 'opacity-0' : ''}`}>
+      {/* 지금 어디에 있는지 — 어느 화면이든 늘 보인다(휴대폰에서 큰 제목 아래로 숨기면 화면마다 달라 보였다) */}
+      <p className="min-w-0 truncate leading-tight">
         <span className="hidden text-xs text-muted sm:block">DVI Portal</span>
         <span className="block text-[15px] font-bold tracking-[-0.01em] sm:text-base">{t.layout.pages[page]}</span>
       </p>
