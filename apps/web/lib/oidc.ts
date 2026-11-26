@@ -104,9 +104,9 @@ export function redirect(location: string, ...cookies: string[]): Response {
   return new Response(null, { status: 302, headers });
 }
 
-/** 설정이 빠졌을 때 사람이 읽을 수 있는 화면을 돌려준다 */
+/** 설정이 빠졌을 때 사람이 읽을 수 있는 화면을 돌려준다 — 무엇이 빠졌는지(msg)는 작은 글씨로 */
 export function configError(msg: string): Response {
-  return htmlError('설정이 필요합니다', msg, 500);
+  return htmlError('설정이 필요해요', '허브 설정이 빠져 로그인할 수 없어요.\n관리자에게 알려 주세요.', 500, { code: msg });
 }
 
 /** 허브 로고(public/favicon.svg 에서 메타데이터를 뺀 것) — 오류 화면은 로그인 전이라 그림 파일 대신 글에 넣는다 */
@@ -133,13 +133,15 @@ const PAGE_HEAD =
   "body{margin:0;min-height:100dvh;box-sizing:border-box;display:grid;place-items:center;padding:24px max(24px,env(safe-area-inset-right)) 24px max(24px,env(safe-area-inset-left));background:var(--bg);color:var(--fg);font:15px/1.6 'Pretendard Variable',Pretendard,system-ui,-apple-system,'Segoe UI','Malgun Gothic',sans-serif;text-align:center;word-break:keep-all}" +
   'main{max-width:22rem;display:grid;justify-items:center}' +
   '.logo{display:grid;place-items:center;width:64px;height:64px;margin-bottom:24px;border-radius:18px;background:#fff;box-shadow:0 2px 8px oklch(0 0 0/.12),0 0 0 1px oklch(0 0 0/.05)}.logo svg{width:46px;height:46px}' +
-  'h1{margin:0 0 8px;font-size:20px;font-weight:700}p{margin:0 0 28px;color:var(--muted)}' +
+  'h1{margin:0 0 8px;font-size:20px;font-weight:700;text-wrap:balance}p{margin:0 0 28px;color:var(--muted);text-wrap:balance}' +
+  '.code{margin:-18px 0 28px;font:12px/1.5 ui-monospace,Consolas,monospace;opacity:.75;overflow-wrap:anywhere}' +
   '.btn{display:inline-flex;align-items:center;min-height:48px;padding:0 28px;border:0;border-radius:14px;background:var(--fill);color:#fff;font:inherit;font-weight:600;text-decoration:none;cursor:pointer}' +
   '.btn:active{scale:.97}.btn:focus-visible{outline:2px solid var(--fill);outline-offset:3px}' +
   '</style>';
 
 /**
- * title · msg 는 평문이다 — 쿼리값(error_description)이 들어오므로 반드시 이스케이프한다.
+ * title · msg · code 는 평문이다 — 이스케이프해서 넣는다. msg 의 \n 은 줄바꿈. 짧게 쓰고 줄은 직접 나눈다(휴대폰 폭).
+ * code 는 오류 코드 · 상태처럼 사람이 읽을 필요는 적은 값 — 설명 아래 작은 글씨로 따로 둔다.
  * 로그인 흐름이 실패한 화면은 모두 여기를 지나 로그를 남긴다. who 를 안 주면 상태로 정한다 — 500 설정 · 502 Keycloak · 4xx 요청.
  * 로그에는 msg 를 줄여 남긴다. msg 에 누구나 넣을 수 있는 값(URL 쿼리)이 섞였으면 부르는 쪽이 fields 로 대신 줄 것을 넘긴다.
  * 응답 상태는 200 이다 — 앱(Capacitor errorPath)은 화면 주소가 4xx · 5xx 를 받으면 이 화면 대신 '허브를 열지 못했습니다'를 띄운다.
@@ -149,15 +151,16 @@ export function htmlError(
   title: string,
   msg: string,
   status = 400,
-  logAs: { who?: Who; fields?: Record<string, unknown> } = {},
+  opts: { who?: Who; fields?: Record<string, unknown>; code?: string } = {},
 ): Response {
-  log(status >= 500 ? 'error' : 'warn', 'auth.error_page', logAs.who ?? (status === 500 ? 'config' : status >= 500 ? 'keycloak' : 'request'),
-    { status, title, ...(logAs.fields ?? { detail: clip(msg) }) });
+  log(status >= 500 ? 'error' : 'warn', 'auth.error_page', opts.who ?? (status === 500 ? 'config' : status >= 500 ? 'keycloak' : 'request'),
+    { status, title, ...(opts.fields ?? { detail: clip(msg), code: clip(opts.code) }) });
   title = esc(title);
-  msg = esc(msg);
+  msg = esc(msg).replace(/\n/g, '<br>');
+  const code = opts.code ? `<p class="code">${esc(opts.code)}</p>` : '';
   return new Response(
     `<!doctype html><html lang="ko"><meta charset="utf-8"><title>${title}</title>${PAGE_HEAD}` +
-    `<main><span class="logo">${LOGO}</span><h1>${title}</h1><p>${msg}</p>` +
+    `<main><span class="logo">${LOGO}</span><h1>${title}</h1><p>${msg}</p>${code}` +
     '<a class="btn" href="/api/auth/login">다시 로그인</a></main></html>',
     { status: 200, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } },
   );

@@ -74,7 +74,7 @@ export function SystemsPage({ me, loading = false, services, query, onQueryChang
 
       {hasNoDepartment(me) && <NoDepartmentNotice className="mb-4" />}
       {/* 서버 목록을 못 받아 앱에 든 목록(useServices)으로 열었다 — 멀쩡해 보여 모르고 지나가지 않게 */}
-      {listFailed && <LoadError message={t.systems.bundledList} className="glass mb-4 rounded-2xl px-4 py-3 text-sm" />}
+      {listFailed && <LoadError message={t.systems.bundledList} className="glass mb-4 justify-between rounded-2xl py-2.5 pr-2.5 pl-4 text-sm" />}
 
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2" role="group" aria-label={t.systems.categoryGroup}>

@@ -73,7 +73,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   if (outcome === 'unreachable') {
     return page
-      ? htmlError('로그인을 이어가지 못했습니다', '통합 로그인 서버에 연결하지 못했습니다. 잠시 뒤 다시 시도해 주세요.', 502)
+      ? htmlError('통합 로그인에 연결하지 못했어요', '잠시 뒤 다시 시도해 주세요.', 502)
       : json({ error: '통합 로그인 서버에 연결하지 못했습니다.' }, 502);
   }
   if (outcome === 'rejected' || outcome === 'missing') {

@@ -132,24 +132,22 @@ function showLoginStuck() {
   box.id = 'login-stuck'
   box.setAttribute('role', 'alert')
   box.className =
-    'glass-strong animate-materialize fixed inset-x-3 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-50 flex items-start gap-3 rounded-[22px] p-4 pr-2 text-fg ' +
-    'lg:inset-x-auto lg:right-6 lg:bottom-6 lg:w-[25rem]'
+    'glass-strong animate-materialize fixed inset-x-3 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-50 flex items-center gap-3 rounded-2xl py-2.5 pr-1.5 pl-3 text-fg ' +
+    'lg:inset-x-auto lg:right-6 lg:bottom-6 lg:w-[22rem]'
   box.innerHTML =
-    '<span class="grid size-10 flex-none place-items-center rounded-full bg-accent-soft text-accent" aria-hidden="true">' +
-    '<svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<span class="grid size-8 flex-none place-items-center rounded-full bg-accent-soft text-accent" aria-hidden="true">' +
+    '<svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
     '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></svg></span>' +
-    '<div class="min-w-0 flex-1 pt-0.5"><p class="text-[15px] font-semibold"></p><p class="mt-1 text-sm text-muted break-keep"></p>' +
-    '<a class="mt-3 inline-flex min-h-10 items-center rounded-xl bg-accent-fill px-4 text-sm font-semibold text-white transition-[scale] active:scale-95"></a></div>' +
-    '<button type="button" class="grid size-9 flex-none cursor-pointer place-items-center rounded-full text-muted transition-colors hover:bg-subtle hover:text-fg">' +
-    '<svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>'
+    '<div class="min-w-0 flex-1 leading-snug"><p class="text-sm font-semibold"></p><p class="text-[13px] text-muted"></p></div>' +
+    '<a class="flex h-8 flex-none items-center rounded-lg bg-accent-fill px-3 text-[13px] font-semibold text-white transition-[scale] active:scale-95"></a>' +
+    '<button type="button" class="grid size-8 flex-none cursor-pointer place-items-center rounded-full text-muted transition-colors hover:bg-subtle hover:text-fg">' +
+    '<svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>'
   const [title, detail] = box.querySelectorAll('p')
-  title.textContent = en ? "Couldn't keep you signed in" : '로그인을 이어가지 못했습니다'
-  detail.textContent = en
-    ? 'You went through sign-in, but the session was refused again. Wait a moment, then sign in again.'
-    : '통합 로그인을 다녀왔는데도 로그인이 유지되지 않았습니다. 잠시 뒤 다시 로그인해 주세요.'
+  title.textContent = en ? "You've been signed out" : '로그인이 끊겼어요'
+  detail.textContent = en ? 'Please sign in again.' : '다시 로그인해 주세요.'
   const [link] = box.querySelectorAll('a')
   link.href = loginUrl()
-  link.textContent = en ? 'Sign in again' : '다시 로그인'
+  link.textContent = en ? 'Sign in' : '로그인'
   const [close] = box.querySelectorAll('button')
   close.setAttribute('aria-label', en ? 'Close' : '닫기')
   close.addEventListener('click', () => box.remove())

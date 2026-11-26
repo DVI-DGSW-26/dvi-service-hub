@@ -27,7 +27,7 @@ export default async function handler(req: Request): Promise<Response> {
       !clientId && 'OIDC_CLIENT_ID',
       !secret && 'SESSION_SECRET',
     ].filter(Boolean).join(', ');
-    return configError(`환경변수가 설정되지 않았습니다: ${missing}. 관리자에게 문의해 주세요.`);
+    return configError(`환경변수 없음: ${missing}`);
   }
 
   let meta;

@@ -31,22 +31,23 @@ export function SkeletonList({ rows, className = 'h-12' }: { rows: number; class
 const failed = (q: Query) => q.state.status === 'error' || q.state.data === null
 
 /** 불러오기 실패. 조회는 재직자(employee)만 되므로 403 이면 다시 시도하라고 하지 않고 이유를 알려 준다 (명세 1.2) */
-export function LoadError({ error, message, className = 'py-6 text-center text-sm' }: { error?: unknown; message?: string; className?: string }) {
+export function LoadError({ error, message, className = 'justify-center py-6 text-center text-sm' }: { error?: unknown; message?: string; className?: string }) {
   const { t } = useI18n()
   const queryClient = useQueryClient()
   const retrying = useIsFetching({ predicate: failed }) > 0
   const forbidden = isApiError(error) && error.status === 403
   if (forbidden) return <p className={`text-muted ${className}`}>{t.common.loadForbidden}</p>
+  // 문구와 버튼을 한 줄에 — 자리가 모자라면 버튼만 다음 줄로
   return (
-    <div className={`text-muted ${className}`} role="status">
-      {message ?? t.common.loadError}{' '}
+    <div className={`flex flex-wrap items-center gap-x-3 gap-y-2 text-muted ${className}`} role="status">
+      <span className="min-w-0">{message ?? t.common.loadError}</span>
       <button
         type="button"
         onClick={() => void queryClient.refetchQueries({ type: 'active', predicate: failed })}
         disabled={retrying}
-        className="ml-1 inline-flex min-h-8 cursor-pointer items-center gap-1.5 rounded-full bg-subtle px-3 align-middle text-[13px] font-semibold text-fg ring-1 ring-line transition-[background-color,scale] hover:bg-raised active:scale-95 disabled:cursor-default disabled:opacity-60"
+        className="inline-flex h-7 flex-none cursor-pointer items-center gap-1 rounded-full bg-subtle px-2.5 text-xs font-semibold text-fg ring-1 ring-line transition-[background-color,scale] hover:bg-raised active:scale-95 disabled:cursor-default disabled:opacity-60"
       >
-        <RotateCw className={`size-3.5 ${retrying ? 'animate-spin' : ''}`} aria-hidden="true" />
+        <RotateCw className={`size-3 ${retrying ? 'animate-spin' : ''}`} aria-hidden="true" />
         {retrying ? t.common.retrying : t.common.retry}
       </button>
     </div>
